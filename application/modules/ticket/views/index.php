@@ -759,13 +759,45 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	}
 
 
-	function changeTicketStatus(ticketId, status, statusText) {
+	function changeTicketStatus(ticketId, status, statusText, currentStatus = null, manHourPlan = null) {
 		var modalContent = '';
 		var showReasonInput = false;
+		var showManHourInput = false;
+		var showManHourPlanInput = false;
 
 		switch (status) {
 			case 1: // Process
-				modalContent = '<h2>Ubah status ticket menjadi Process?</h2>';
+				// CEK apakah man_hour_plan sudah diisi
+				if (!manHourPlan || manHourPlan == 0 || manHourPlan == null) {
+					modalContent = `
+                    <div class="mb-3">
+                        <h2>Man Hour Plan belum diisi!</h2>
+                        <div class="form-group mt-3">
+                            <label for="manHourPlan" class="form-label">
+                                <i class="fa-solid fa-clock"></i> Man Hour Plan <small class="text-danger">*</small>
+                            </label>
+                            <div class="input-group">
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    id="manHourPlan"
+                                    placeholder="Contoh: 4"
+                                    min="0.5"
+                                    step="0.5"
+                                    required
+                                >
+                                <span class="input-group-text">jam</span>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="fa-solid fa-info-circle"></i> Masukkan estimasi waktu yang dibutuhkan untuk menyelesaikan ticket ini
+                            </small>
+                        </div>
+                    </div>
+                `;
+					showManHourPlanInput = true;
+				} else {
+					modalContent = '<h2>Ubah status ticket menjadi Process?</h2>';
+				}
 				break;
 
 			case 2: // Pending
@@ -774,26 +806,56 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 			case 3: // Cancel
 				modalContent = `
-					<div class="mb-3">
-						<h2>Ubah status ticket menjadi Cancel?</h2>
-						<div class="form-group mt-3">
-							<label for="cancelReason" class="form-label">
-								Alasan Pembatalan <small class="text-danger"></small>
-							</label>
-							<textarea
-								class="form-control"
-								id="cancelReason"
-								rows="3"
-								placeholder="Masukkan alasan pembatalan..."
-							></textarea>
-						</div>
-					</div>
-				`;
+                <div class="mb-3">
+                    <h2>Ubah status ticket menjadi Cancel?</h2>
+                    <div class="form-group mt-3">
+                        <label for="cancelReason" class="form-label">
+                            Alasan Pembatalan <small class="text-danger">*</small>
+                        </label>
+                        <textarea
+                            class="form-control"
+                            id="cancelReason"
+                            rows="3"
+                            placeholder="Masukkan alasan pembatalan..."
+                        ></textarea>
+                    </div>
+                </div>
+            `;
 				showReasonInput = true;
 				break;
 
 			case 4: // Done
-				modalContent = '<h2>Ubah status ticket menjadi Done?</h2>';
+				// Cek apakah dari status Process (1)
+				if (currentStatus == 1) {
+					modalContent = `
+                    <div class="mb-3">
+                        <h2>Ubah status ticket menjadi Done?</h2>
+                        <div class="form-group mt-3">
+                            <label for="manHourActual" class="form-label">
+                                <i class="fa-solid fa-clock"></i> Man Hour Actual <small class="text-danger">*</small>
+                            </label>
+                            <div class="input-group">
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    id="manHourActual"
+                                    placeholder="Contoh: 2.5"
+                                    min="0"
+                                    step="0.5"
+                                    required
+                                >
+                                <span class="input-group-text">jam</span>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="fa-solid fa-info-circle"></i> Masukkan waktu aktual yang dihabiskan untuk menyelesaikan ticket ini
+                            </small>
+                        </div>
+                    </div>
+                `;
+					showManHourInput = true;
+				} else {
+					modalContent = '<h2>Ubah status ticket menjadi Done?</h2>';
+				}
 				break;
 
 			default:
@@ -810,10 +872,35 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			cancelButtonColor: '#6c757d',
 			showLoaderOnConfirm: true,
 			preConfirm: () => {
-				var cancelReason = showReasonInput ? $('#cancelReason').val() : '';
-				if (status === 3 && (!cancelReason || !cancelReason.trim())) {
-					Swal.showValidationMessage('Alasan pembatalan wajib diisi');
-					return false;
+				var cancelReason = '';
+				var manHourActual = '';
+				var manHourPlanInput = '';
+
+				// Validasi Cancel Reason
+				if (showReasonInput) {
+					cancelReason = $('#cancelReason').val();
+					if (!cancelReason || !cancelReason.trim()) {
+						Swal.showValidationMessage('Alasan pembatalan wajib diisi');
+						return false;
+					}
+				}
+
+				// Validasi Man Hour Plan
+				if (showManHourPlanInput) {
+					manHourPlanInput = $('#manHourPlan').val();
+					if (!manHourPlanInput || manHourPlanInput <= 0) {
+						Swal.showValidationMessage('Man Hour Plan wajib diisi');
+						return false;
+					}
+				}
+
+				// Validasi Man Hour Actual
+				if (showManHourInput) {
+					manHourActual = $('#manHourActual').val();
+					if (!manHourActual || manHourActual <= 0) {
+						Swal.showValidationMessage('Man Hour Actual wajib diisi');
+						return false;
+					}
 				}
 
 				return new Promise((resolve, reject) => {
@@ -823,7 +910,10 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 						data: {
 							id: ticketId,
 							status: status,
-							cancel_reason: cancelReason ? cancelReason.trim() : ''
+							current_status: currentStatus,
+							cancel_reason: cancelReason ? cancelReason.trim() : '',
+							man_hour_actual: manHourActual ? parseFloat(manHourActual) : '',
+							man_hour_plan: manHourPlanInput ? parseFloat(manHourPlanInput) : ''
 						},
 						dataType: 'json',
 						success: function(response) {
@@ -891,9 +981,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	function buildHistoryTimeline(historyData) {
 		var timeline = '';
 
-		// =========================
+
 		// ACTION TYPE CONFIG
-		// =========================
 		var actionTypeLabels = {
 			0: {
 				icon: 'fa-plus-circle',
@@ -937,9 +1026,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			}
 		};
 
-		// =========================
+
 		// STATUS LABEL
-		// =========================
 		var statusLabels = {
 			0: 'Open',
 			1: 'Process',
@@ -950,9 +1038,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			6: 'Revisi'
 		};
 
-		// =========================
+
 		// LOOP HISTORY
-		// =========================
 		historyData.forEach(function(item) {
 			var actionInfo = actionTypeLabels[item.action_type] || {
 				icon: 'fa-circle',
@@ -962,9 +1049,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 			var description = item.description || '';
 
-			// =========================
+
 			// STATUS CHANGE INFO
-			// =========================
 			if (item.old_status !== null && item.new_status !== null && item.old_status != item.new_status) {
 				var oldStatusText = statusLabels[item.old_status] || item.old_status;
 				var newStatusText = statusLabels[item.new_status] || item.new_status;
@@ -978,9 +1064,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				</small>`;
 			}
 
-			// =========================
+
 			// APPROVAL LEVEL INFO
-			// =========================
 			if (item.action_type == 4 && item.old_status == item.new_status) {
 				description += `
 				<br>
@@ -999,9 +1084,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				</small>`;
 			}
 
-			// =========================
+
 			// REJECT INFO
-			// =========================
 			if (item.action_type == 5) {
 				description += `
 				<br>
@@ -1011,9 +1095,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				</small>`;
 			}
 
-			// =========================
+
 			// REMARK / NOTE
-			// =========================
 			if (item.cause_pic && item.cause_pic.trim() !== '') {
 				description += `
 				<br>
@@ -1023,9 +1106,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				</small>`;
 			}
 
-			// =========================
+
 			// BUILD HTML
-			// =========================
 			timeline += `
 					<div class="timeline-item">
 						<div class="timeline-marker" style="background-color: ${actionInfo.color};">
@@ -1504,7 +1586,9 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		$(document).on('click', '.process-status', function(e) {
 			e.preventDefault();
 			var ticketId = $(this).data('id');
-			changeTicketStatus(ticketId, 1, 'Process');
+			var currentStatus = $(this).data('current-status');
+			var manHourPlan = $(this).data('man-hour-plan');
+			changeTicketStatus(ticketId, 1, 'Process', currentStatus, manHourPlan);
 		});
 
 		$(document).on('click', '.pending-status', function(e) {
@@ -1522,7 +1606,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		$(document).on('click', '.done-status', function(e) {
 			e.preventDefault();
 			var ticketId = $(this).data('id');
-			changeTicketStatus(ticketId, 4, 'Done');
+			var currentStatus = $(this).data('current-status');
+			changeTicketStatus(ticketId, 4, 'Done', currentStatus);
 		});
 
 		$(document).on('click', '.approve-status', function(e) {

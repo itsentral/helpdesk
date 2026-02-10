@@ -89,7 +89,6 @@ $loginUserId = $this->auth->user_id();
 
                             <?php if ((int)$row['status'] === 4): ?>
                                 <div class="mt-1">
-
                                     <?php if ($isApprove == 1): ?>
                                         <span class="badge bg-success">
                                             <i class="fa-solid fa-check-double"></i> Approved
@@ -100,24 +99,21 @@ $loginUserId = $this->auth->user_id();
                                             <i class="fa-solid fa-xmark"></i> Rejected
                                         </span>
 
-                                    <?php elseif (
-                                        $approvalLevel > 1 &&
-                                        $currentLevel == ($approvalLevel - 1) &&
-                                        $isApprove == 0
-                                    ): ?>
-                                        <span class="badge bg-warning text-dark">
-                                            <i class="fa-solid fa-user-check"></i>
-                                            Menunggu Konfirmasi Pembuat
-                                        </span>
-
-                                    <?php elseif ($currentLevel < ($approvalLevel - 1)): ?>
-                                        <span class="badge bg-secondary">
-                                            <i class="fa-solid fa-clock"></i>
-                                            Menunggu Approval
-                                        </span>
-
+                                    <?php elseif ($isApprove == 0): ?>
+                                        <?php if ($currentLevel < $approvalLevel): ?>
+                                            <?php if ($approvalLevel > 1 && $currentLevel == ($approvalLevel - 1)): ?>
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fa-solid fa-user-check"></i>
+                                                    Menunggu Konfirmasi Pembuat
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-secondary">
+                                                    <i class="fa-solid fa-clock"></i>
+                                                    Menunggu Approval
+                                                </span>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     <?php endif; ?>
-
                                 </div>
                             <?php endif; ?>
 
@@ -215,6 +211,8 @@ $loginUserId = $this->auth->user_id();
                                         <button type="button"
                                             class="btn btn-primary btn-sm px-2 py-1 process-status"
                                             data-id="<?= $row['id'] ?>"
+                                            data-current-status="<?= $status ?>"
+                                            data-man-hour-plan="<?= $row['man_hour_plan'] ?? 0 ?>"
                                             title="Process Ticket">
                                             <i class="fa-solid fa-angles-right"></i>
                                         </button>
@@ -245,6 +243,7 @@ $loginUserId = $this->auth->user_id();
                                         <button type="button"
                                             class="btn btn-success btn-sm px-2 py-1 done-status"
                                             data-id="<?= $row['id'] ?>"
+                                            data-current-status="<?= $status ?>"
                                             title="Done Ticket">
                                             <i class="fa-solid fa-clipboard-check"></i>
                                         </button>

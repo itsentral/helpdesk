@@ -21,7 +21,7 @@ $sub_categories = isset($sub_categories) ? $sub_categories : [];
 $causes = isset($helpdesk->causes) ? $helpdesk->causes : '';
 $action_plan = isset($helpdesk->action_plan) ? $helpdesk->action_plan : '';
 $due_date = isset($helpdesk->due_date) ? $helpdesk->due_date : '';
-$man_hour = isset($helpdesk->man_hour) ? $helpdesk->man_hour : '';
+$man_hour_plan = isset($helpdesk->man_hour_plan) ? $helpdesk->man_hour_plan : '';
 $pic_id = isset($helpdesk->pic_id) ? $helpdesk->pic_id : '';
 $pic = isset($helpdesk->pic) ? $helpdesk->pic : '';
 $status = isset($helpdesk->status) ? $helpdesk->status : 'Open';
@@ -622,19 +622,19 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 
                     <div class="col-md-3">
                         <label class="form-label">
-                            <i class="fa-solid fa-clock"></i> Man Hour
+                            <i class="fa-solid fa-clock"></i> Man Hour Plan
                         </label>
                         <?php if ($is_readonly): ?>
                             <div class="view-field">
                                 <?php
-                                $man_hour = isset($helpdesk->man_hour) ? $helpdesk->man_hour : '';
-                                echo $man_hour ? htmlspecialchars($man_hour) . ' jam' : '-';
+                                $man_hour_plan = isset($helpdesk->man_hour_plan) ? $helpdesk->man_hour_plan : '';
+                                echo $man_hour_plan ? htmlspecialchars($man_hour_plan) . ' jam' : '-';
                                 ?>
                             </div>
                         <?php else: ?>
                             <div class="input-group">
-                                <input type="number" class="form-control" name="man_hour" id="man_hour"
-                                    value="<?= isset($helpdesk->man_hour) ? $helpdesk->man_hour : '' ?>"
+                                <input type="number" class="form-control" name="man_hour_plan" id="man_hour_plan"
+                                    value="<?= isset($helpdesk->man_hour_plan) ? $helpdesk->man_hour_plan : '' ?>"
                                     placeholder="0" min="0" step="0.5"
                                     <?= $is_readonly ? 'readonly' : '' ?>>
                                 <span class="input-group-text">jam</span>
@@ -746,6 +746,67 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
             $(this).find('.btn-remove').attr('onclick', `removeFilePreview(${i})`);
         });
     }
+
+    function loadPicByClient(clientId, selectedId = '') {
+        if (clientId) {
+            $.ajax({
+                url: siteurl + active_controller + 'get_pic_by_client',
+                type: 'POST',
+                data: {
+                    client_id: clientId
+                },
+                dataType: 'json',
+                beforeSend: function() {
+                    $('#pic_id').html('<option value="">Loading...</option>');
+                    $('#pic_id').prop('disabled', true);
+                    $('#approval_by_id').html('<option value="">Loading...</option>');
+                    $('#approval_by_id').prop('disabled', true);
+                },
+                success: function(response) {
+                    var picOptions = '<option value="">- Select PIC -</option>';
+                    var approvalOptions = '<option value="">- Select Approval -</option>';
+
+                    if (response.status == 1 && response.data.length > 0) {
+                        $.each(response.data, function(index, user) {
+                            var selectedPic = (selectedId && selectedId == user.id_user) ? 'selected' : '';
+                            var selectedApproval = '<?= isset($helpdesk->approval_by_id) ? $helpdesk->approval_by_id : "" ?>';
+
+                            picOptions += '<option value="' + user.id_user + '" ' + selectedPic + '>' + user.nm_lengkap + '</option>';
+
+                            var isApprovalSelected = (selectedApproval && selectedApproval == user.id_user) ? 'selected' : '';
+                            approvalOptions += '<option value="' + user.id_user + '" ' + isApprovalSelected + '>' + user.nm_lengkap + '</option>';
+                        });
+                    } else {
+                        picOptions = '<option value="">Tidak ada PIC tersedia untuk client ini</option>';
+                        approvalOptions = '<option value="">Tidak ada approval tersedia untuk client ini</option>';
+                    }
+
+                    $('#pic_id').html(picOptions);
+                    $('#pic_id').prop('disabled', false);
+
+                    $('#approval_by_id').html(approvalOptions);
+                    $('#approval_by_id').prop('disabled', false);
+                },
+                error: function() {
+                    $('#pic_id').html('<option value="">- Select PIC -</option>');
+                    $('#pic_id').prop('disabled', false);
+                    $('#approval_by_id').html('<option value="">- Select Approval -</option>');
+                    $('#approval_by_id').prop('disabled', false);
+                }
+            });
+        } else {
+            $('#pic_id').html('<option value="">- Select PIC -</option>');
+            $('#pic_id').prop('disabled', false);
+            $('#approval_by_id').html('<option value="">- Select Approval -</option>');
+            $('#approval_by_id').prop('disabled', false);
+        }
+    }
+
+    // Load PIC on page load if editing
+    <?php if ($mode === 'edit' && !empty($helpdesk->client_id)): ?>
+        var selectedPicId = '<?= isset($pic_id) ? $pic_id : "" ?>';
+        loadPicByClient('<?= $helpdesk->client_id ?>', selectedPicId);
+    <?php endif; ?>
 
     $(document).ready(function() {
         var isReadonly = <?= $is_readonly ? 'true' : 'false' ?>;
@@ -1175,6 +1236,38 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     }
                 });
             });
+
+            $('#client_id').change(function() {
+                var clientId = $(this).val();
+
+                if (clientId) {
+                    loadPicByClient(clientId);
+                } else {
+                    // Reset PIC dan Approval jika client di-clear
+                    $('#pic_id').html('<option value="">Pilih Client terlebih dahulu</option>');
+                    $('#pic_id').prop('disabled', true);
+                    $('#pic_id').val('').trigger('change');
+
+                    $('#approval_by_id').html('<option value="">Pilih Client terlebih dahulu</option>');
+                    $('#approval_by_id').prop('disabled', true);
+                    $('#approval_by_id').val('').trigger('change');
+                }
+            });
+
+            var initialClientId = $('#client_id').val();
+            if (!initialClientId) {
+                $('#pic_id').html('<option value="">Pilih Client terlebih dahulu</option>');
+                $('#pic_id').prop('disabled', true);
+                $('#approval_by_id').html('<option value="">Pilih Client terlebih dahulu</option>');
+                $('#approval_by_id').prop('disabled', true);
+            } else {
+                <?php if ($mode === 'edit'): ?>
+                    var selectedPicId = '<?= isset($pic_id) ? $pic_id : "" ?>';
+                    loadPicByClient(initialClientId, selectedPicId);
+                <?php else: ?>
+                    loadPicByClient(initialClientId);
+                <?php endif; ?>
+            }
 
         <?php endif; ?>
     });

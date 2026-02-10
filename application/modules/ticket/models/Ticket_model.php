@@ -17,26 +17,6 @@ class Ticket_model extends BF_Model
         $this->ENABLE_DELETE  = has_permission('Ticket.Delete');
     }
 
-    // public function get_all_ticket()
-    // {
-    //     $user_id = $this->auth->user_id();
-
-    //     $this->db->order_by('id', 'DESC');
-    //     $this->db->where('is_delete', 0);
-    //     $this->db->where('status !=', 3);
-    //     $this->db->where('is_approve !=', 1);
-
-    //     if ($user_id != 7) { // 7 = admin
-    //         $this->db->group_start()
-    //             ->where('create_by_id', $user_id)
-    //             ->or_where('pic_id', $user_id)
-    //             ->or_where('approval_by_id', $user_id)
-    //             ->group_end();
-    //     }
-
-    //     return $this->db->get('helpdesk')->result_array();
-    // }
-
     public function get_all_ticket()
     {
         $user_id = $this->auth->user_id();
@@ -78,7 +58,6 @@ class Ticket_model extends BF_Model
 
         return $this->db->get()->result_array();
     }
-
 
     public function get_approved_ticket()
     {
@@ -184,6 +163,19 @@ class Ticket_model extends BF_Model
         $this->db->where('st_aktif', 1);
         $this->db->where('deleted', 0);
         $this->db->order_by('nm_lengkap', 'ASC');
+        return $this->db->get()->result();
+    }
+
+    public function get_users_by_client($client_id)
+    {
+        $this->db->select('u.id_user, u.username, u.nm_lengkap, u.email');
+        $this->db->from('users u');
+        $this->db->join('helpdesk_user_client huc', 'huc.id_user = u.id_user', 'inner');
+        $this->db->where('u.st_aktif', 1);
+        $this->db->where('u.deleted', 0);
+        $this->db->where('huc.client_id', $client_id);
+        $this->db->where('huc.is_active', 1);
+        $this->db->order_by('u.nm_lengkap', 'ASC');
         return $this->db->get()->result();
     }
 
@@ -423,15 +415,15 @@ class Ticket_model extends BF_Model
         $this->db->from('helpdesk_chat hc');
         $this->db->join('helpdesk h', 'h.id = hc.helpdesk_id', 'inner');
         $this->db->join(
-                        'helpdesk_chat_read_status hcrs',
-                        "hc.id = hcrs.chat_id AND hcrs.user_id = '$user_id'",
-                        'left'
-                    );
+            'helpdesk_chat_read_status hcrs',
+            "hc.id = hcrs.chat_id AND hcrs.user_id = '$user_id'",
+            'left'
+        );
         $this->db->join(
-                        'helpdesk_user_client huc',
-                        'huc.client_id = h.client_id AND huc.id_user = ' . (int)$user_id . ' AND huc.is_active = 1',
-                        'left'
-                    );
+            'helpdesk_user_client huc',
+            'huc.client_id = h.client_id AND huc.id_user = ' . (int)$user_id . ' AND huc.is_active = 1',
+            'left'
+        );
         $this->db->join('users u', 'u.id_user = ' . (int)$user_id, 'left');
 
         $this->db->where('hc.sender_id !=', $user_id);
@@ -515,27 +507,4 @@ class Ticket_model extends BF_Model
 
         return $this->db->query($sql)->result();
     }
-
-    // Fungsi untuk mendapatkan chat messages dengan status read per user
-    //    public function get_chat_messages_with_read_status($helpdesk_id, $current_user_id)
-    // {
-    //     // Gunakan query builder biasa tanpa parameter binding di subquery
-    //     $query = $this->db->query("
-    //         SELECT 
-    //             hc.*, 
-    //             (SELECT COUNT(*) 
-    //              FROM helpdesk_chat_read_status hcrs2 
-    //              WHERE hcrs2.chat_id = hc.id AND hcrs2.is_read = 1) as total_readers,
-    //             (SELECT COUNT(*) 
-    //              FROM helpdesk_chat_read_status hcrs3 
-    //              WHERE hcrs3.chat_id = hc.id 
-    //                 AND hcrs3.user_id = ? 
-    //                 AND hcrs3.is_read = 1) as is_read_by_me
-    //         FROM helpdesk_chat hc
-    //         WHERE hc.helpdesk_id = ?
-    //         ORDER BY hc.create_date ASC
-    //     ", [$current_user_id, $helpdesk_id]);
-
-    //     return $query->result();
-    // }
 }

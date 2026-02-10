@@ -55,7 +55,7 @@ class Dashboard_model extends BF_Model
      * and $deleted_by_field.
      */
     protected $log_user = true;
-    
+
     /**
      * Function construct used to load some library, do some actions, etc.
      */
@@ -64,13 +64,15 @@ class Dashboard_model extends BF_Model
         parent::__construct();
     }
 
-    public function monitor_eoq() {
-      $query="SELECT * FROM monitor_eoq";
-      return $this->db->query($query);
+    public function monitor_eoq()
+    {
+        $query = "SELECT * FROM monitor_eoq";
+        return $this->db->query($query);
     }
 
-    public function barang_masuk(){
-         $query="SELECT
+    public function barang_masuk()
+    {
+        $query = "SELECT
             sum(log_transaksidt.jumlahrealisasi) as masuk
             FROM
             log_transaksidt
@@ -79,13 +81,14 @@ class Dashboard_model extends BF_Model
             log_transaksiht.post='1' AND log_transaksidt.statussaldo='1' AND log_transaksiht.tipetransaksi='2'";
         $query = $this->db->query($query);
         if ($query->num_rows() > 0) {
-         return $query->row()->masuk;
+            return $query->row()->masuk;
         }
         return false;
     }
 
-    public function barang_keluar(){
-         $query="SELECT
+    public function barang_keluar()
+    {
+        $query = "SELECT
             sum(log_transaksidt.jumlahrealisasi) as realisasi
             FROM
             log_transaksidt
@@ -94,13 +97,14 @@ class Dashboard_model extends BF_Model
             log_transaksiht.post='1' AND log_transaksidt.statussaldo='1' AND log_transaksiht.tipetransaksi='3'";
         $query = $this->db->query($query);
         if ($query->num_rows() > 0) {
-         return $query->row()->realisasi;
+            return $query->row()->realisasi;
         }
         return false;
     }
 
-    public function pengajuan_pending(){
-         $query="SELECT
+    public function pengajuan_pending()
+    {
+        $query = "SELECT
             sum(log_prapodt.jumlah) as pending
             FROM
             log_prapodt
@@ -109,13 +113,14 @@ class Dashboard_model extends BF_Model
             log_prapoht.sts_pp='0'";
         $query = $this->db->query($query);
         if ($query->num_rows() > 0) {
-         return $query->row()->pending;
+            return $query->row()->pending;
         }
         return false;
     }
 
-    public function pengajuan_acc(){
-         $query="SELECT
+    public function pengajuan_acc()
+    {
+        $query = "SELECT
             sum(log_prapodt.jumlah) as pending
             FROM
             log_prapodt
@@ -124,11 +129,74 @@ class Dashboard_model extends BF_Model
             log_prapoht.sts_pp='1'";
         $query = $this->db->query($query);
         if ($query->num_rows() > 0) {
-         return $query->row()->pending;
+            return $query->row()->pending;
         }
         return false;
     }
 
+    public function get_user_clients($user_id)
+    {
+        return $this->db
+            ->select('huc.*, hc.name_app')
+            ->from('helpdesk_user_client huc')
+            ->join('helpdesk_client hc', 'hc.id = huc.client_id')
+            ->where('huc.id_user', $user_id)
+            ->where('huc.is_active', 1)
+            ->where('hc.is_delete', 0)
+            ->get()
+            ->result();
+    }
 
-    
+    public function get_status_data($client_id, $date_from, $date_to)
+    {
+        return $this->db
+            ->select('status, COUNT(*) as total')
+            ->from('helpdesk')
+            ->where('client_id', $client_id)
+            ->where('is_delete', 0)
+            ->where('DATE(create_date) >=', $date_from)
+            ->where('DATE(create_date) <=', $date_to)
+            ->group_by('status')
+            ->get()
+            ->result();
+    }
+
+    public function get_category_data($client_id, $date_from, $date_to)
+    {
+        return $this->db
+            ->select('category_name, COUNT(*) as total')
+            ->from('helpdesk')
+            ->where('client_id', $client_id)
+            ->where('is_delete', 0)
+            ->where('DATE(create_date) >=', $date_from)
+            ->where('DATE(create_date) <=', $date_to)
+            ->group_by('category_name')
+            ->get()
+            ->result();
+    }
+
+    public function get_daily_data($client_id, $date_from, $date_to)
+    {
+        return $this->db
+            ->select('DATE(create_date) as date, COUNT(*) as total')
+            ->from('helpdesk')
+            ->where('client_id', $client_id)
+            ->where('is_delete', 0)
+            ->where('DATE(create_date) >=', $date_from)
+            ->where('DATE(create_date) <=', $date_to)
+            ->group_by('DATE(create_date)')
+            ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+    }
+
+    public function get_total_tickets($client_id, $date_from, $date_to)
+    {
+        return $this->db
+            ->where('client_id', $client_id)
+            ->where('is_delete', 0)
+            ->where('DATE(create_date) >=', $date_from)
+            ->where('DATE(create_date) <=', $date_to)
+            ->count_all_results('helpdesk');
+    }
 }

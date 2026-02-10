@@ -41,14 +41,9 @@ class Ticket extends Admin_Controller
 
     $user_id = $this->auth->user_id();
     $helpdesk = $this->Ticket_model->get_all_ticket();
-
-    // Get unread counts
     $unread_counts = $this->Ticket_model->get_all_unread_counts($user_id);
 
     $data['helpdesk'] = $helpdesk;
-    // echo '<pre>';
-    // var_dump($helpdesk);die;
-    // echo '</pre>';
     $data['unread_counts'] = $unread_counts;
 
     $this->template->render('table/list_helpdesk', $data);
@@ -159,6 +154,28 @@ class Ticket extends Admin_Controller
     $this->template->render('form_ticket', $data);
   }
 
+  public function get_pic_by_client()
+  {
+    $client_id = $this->input->post('client_id');
+
+    if (empty($client_id)) {
+      echo json_encode([
+        'status' => 0,
+        'message' => 'Client ID tidak valid',
+        'data' => []
+      ]);
+      return;
+    }
+
+    $users = $this->Ticket_model->get_users_by_client($client_id);
+
+    echo json_encode([
+      'status' => 1,
+      'message' => 'Success',
+      'data' => $users
+    ]);
+  }
+
   public function get_sub_categories_select()
   {
     $category_id = $this->input->post('category_id');
@@ -239,7 +256,7 @@ class Ticket extends Admin_Controller
       'causes'            => $this->input->post('causes'),
       'action_plan'       => $this->input->post('action_plan'),
       'due_date'          => $this->input->post('due_date'),
-      'man_hour'          => $this->input->post('man_hour'),
+      'man_hour_plan'     => $this->input->post('man_hour_plan'),
       'pic_id'            => $pic_id,
       'pic'               => $pic_name,
       'client_id'         => $client_id,
@@ -439,10 +456,9 @@ class Ticket extends Admin_Controller
       return;
     }
 
-    $this->load->model('Ticket_model');
-
-    $id     = $this->input->post('id');
-    $status = $this->input->post('status');
+    $id             = $this->input->post('id');
+    $status         = $this->input->post('status');
+    $current_status = $this->input->post('current_status');
 
     if (empty($id) || !is_numeric($status)) {
       echo json_encode([
@@ -459,6 +475,34 @@ class Ticket extends Admin_Controller
         'message' => 'Ticket tidak ditemukan'
       ]);
       return;
+    }
+
+    // VALIDASI Man Hour Plan jika status berubah ke Process (1)
+    if ((int)$status === 1) {
+      $man_hour_plan = $this->input->post('man_hour_plan');
+      $existing_plan = $old_ticket->man_hour_plan ?? 0;
+
+      // Jika existing plan kosong DAN input juga kosong
+      if ((!$existing_plan || $existing_plan == 0) && (!$man_hour_plan || $man_hour_plan <= 0)) {
+        echo json_encode([
+          'status' => 0,
+          'message' => 'Man Hour Plan wajib diisi sebelum memproses ticket'
+        ]);
+        return;
+      }
+    }
+
+    // Validasi Man Hour Actual jika status berubah dari Process (1) ke Done (4)
+    if ((int)$status === 4 && (int)$current_status === 1) {
+      $man_hour_actual = $this->input->post('man_hour_actual');
+
+      if (empty($man_hour_actual) || $man_hour_actual <= 0) {
+        echo json_encode([
+          'status' => 0,
+          'message' => 'Man Hour Actual wajib diisi saat mengubah status ke Done'
+        ]);
+        return;
+      }
     }
 
     $statusText = [
@@ -480,20 +524,32 @@ class Ticket extends Admin_Controller
       'update_by_id' => $this->auth->user_id()
     ];
 
-    // cancel reason
+    // Handle Cancel Reason
     if ($status == 3 && $this->input->post('cancel_reason')) {
       $data['cancel_reason'] = $this->input->post('cancel_reason');
     }
 
-    // 🔥 RESET APPROVAL (HANYA INI)
+    // Handle Man Hour Plan jika diisi (saat process)
+    if ((int)$status === 1 && $this->input->post('man_hour_plan')) {
+      $data['man_hour_plan'] = (float)$this->input->post('man_hour_plan');
+    }
+
+    // Handle Man Hour Actual - Tambahkan jika ada nilai sebelumnya (untuk kasus revisi)
+    if ((int)$status === 4 && $this->input->post('man_hour_actual')) {
+      $new_man_hour = (float)$this->input->post('man_hour_actual');
+      $old_man_hour = (float)($old_ticket->man_hour_actual ?? 0);
+
+      $data['man_hour_actual'] = $old_man_hour > 0 ? ($old_man_hour + $new_man_hour) : $new_man_hour;
+    }
+
+    // Reset approval jika dari rejected ke process
     if ((int)$status === 1 && (int)$old_ticket->is_approve === 2) {
       $data['is_approve']         = 0;
-      $data['approval_reason']   = null;
-      $data['approval_2_reason'] = null;
+      $data['approval_reason']    = null;
+      $data['approval_2_reason']  = null;
     }
 
     $result = $this->Ticket_model->update_ticket_status($id, $data);
-
     $description = 'Status diubah menjadi ' . $statusName;
 
     if ((int)$status === 4) {
@@ -501,7 +557,6 @@ class Ticket extends Admin_Controller
     }
 
     if ($result) {
-
       $this->Ticket_model->save_history([
         'helpdesk_id'  => $id,
         'no_ticket'    => $old_ticket->no_ticket,
@@ -527,15 +582,12 @@ class Ticket extends Admin_Controller
     }
   }
 
-
   public function get_ticket_details($id)
   {
     if (!has_permission('Helpdesk.View')) {
       echo json_encode(['status' => 0, 'message' => 'Access denied']);
       return;
     }
-
-    $this->load->model('Ticket_model');
     $ticket = $this->Ticket_model->get_ticket_by_id($id);
 
     if ($ticket) {
@@ -572,11 +624,7 @@ class Ticket extends Admin_Controller
       return $this->_json(0, 'Ticket tidak ditemukan');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | REJECT (FINAL)
-    |--------------------------------------------------------------------------
-    */
+    // REJECT (FINAL)
     if ($action === 'reject') {
 
       $this->Ticket_model->update_ticket_approval($id, [
@@ -585,8 +633,6 @@ class Ticket extends Admin_Controller
         'current_approval_level' => 0,
         'approval_reason'        => $reason,
         'approval_2_reason'      => null,
-        // 'approval_by'            => $userNm,
-        // 'approval_by_id'         => $userId,
         'approval_date'          => $now,
         'update_date'            => $now
       ]);
@@ -607,17 +653,10 @@ class Ticket extends Admin_Controller
       return $this->_json(1, 'Ticket berhasil di-reject');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | APPROVAL
-    |--------------------------------------------------------------------------
-    */
-
+    // APPROVAL
     $nextLevel = (int)$ticket->current_approval_level + 1;
 
-    // =========================
     // LEVEL 1 APPROVAL
-    // =========================
     if ($nextLevel === 1 && (int)$ticket->approval_level >= 1) {
 
       $update = [
@@ -660,9 +699,7 @@ class Ticket extends Admin_Controller
       );
     }
 
-    // =========================
     // LEVEL 2 (FINAL)
-    // =========================
     if ($nextLevel === 2 && (int)$ticket->approval_level === 2) {
 
       $this->Ticket_model->update_ticket_approval($id, [
@@ -721,89 +758,6 @@ class Ticket extends Admin_Controller
 
     echo json_encode($result);
   }
-
-  // public function get_chat_messages($helpdesk_id)
-  // {
-  //   $this->auth->restrict($this->viewPermission);
-
-  //   $messages = $this->Ticket_model->get_chat_messages($helpdesk_id);
-
-  //   if ($messages) {
-  //     echo json_encode(['status' => 1, 'data' => $messages]);
-  //   } else {
-  //     echo json_encode(['status' => 0, 'message' => 'No messages found']);
-  //   }
-  // }
-
-  // public function send_chat_message()
-  // {
-  //   // $this->auth->restrict($this->managePermission);
-
-  //   $helpdesk_id = $this->input->post('helpdesk_id');
-  //   $message = trim($this->input->post('message'));
-  //   $user_id = $this->auth->user_id();
-  //   $user_name = $this->auth->user_name();
-
-  //   if (empty($helpdesk_id)) {
-  //     echo json_encode(['status' => 0, 'message' => 'Helpdesk ID required']);
-  //     return;
-  //   }
-
-  //   // Validasi: harus ada message ATAU file
-  //   $hasMessage = !empty($message);
-  //   $hasFile = !empty($_FILES['chat_file']['name']);
-
-  //   if (!$hasMessage && !$hasFile) {
-  //     echo json_encode(['status' => 0, 'message' => 'Message atau file harus diisi']);
-  //     return;
-  //   }
-
-  //   $data = [
-  //     'helpdesk_id' => $helpdesk_id,
-  //     'message' => $message ?: '', // Jika kosong, isi dengan '-'
-  //     'sender_id' => $user_id,
-  //     'sender_name' => $user_name,
-  //     'create_date' => date('Y-m-d H:i:s')
-  //   ];
-
-  //   // Handle file upload
-  //   if ($hasFile) {
-  //     $config['upload_path'] = './uploads/helpdesk_chat/';
-  //     $config['allowed_types'] = 'jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|zip|rar';
-  //     $config['max_size'] = 5120; // 5MB
-  //     $config['encrypt_name'] = TRUE;
-
-  //     // Create directory if not exists
-  //     if (!is_dir($config['upload_path'])) {
-  //       mkdir($config['upload_path'], 0777, TRUE);
-  //     }
-
-  //     // PENTING: Initialize upload config
-  //     $this->upload->initialize($config);
-
-  //     if ($this->upload->do_upload('chat_file')) {
-  //       $upload_data = $this->upload->data();
-
-  //       // Simpan encrypted filename dan original name
-  //       $data['file_name'] = $upload_data['file_name']; // encrypted name
-  //       $data['original_name'] = $_FILES['chat_file']['name']; // original name
-  //       $data['file_type'] = $upload_data['file_type'];
-  //       $data['file_size'] = $upload_data['file_size'] * 1024; // Convert to bytes
-  //     } else {
-  //       $error = $this->upload->display_errors('', '');
-  //       echo json_encode(['status' => 0, 'message' => 'Upload gagal: ' . $error]);
-  //       return;
-  //     }
-  //   }
-
-  //   $insert = $this->Ticket_model->insert_chat_message($data);
-
-  //   if ($insert) {
-  //     echo json_encode(['status' => 1, 'message' => 'Message sent successfully']);
-  //   } else {
-  //     echo json_encode(['status' => 0, 'message' => 'Failed to send message']);
-  //   }
-  // }
 
   public function download_chat_file($chat_id)
   {
