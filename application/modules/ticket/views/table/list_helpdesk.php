@@ -12,14 +12,8 @@ $loginUserId = $this->auth->user_id();
                 <th style="min-width: 20px;">No</th>
                 <th style="min-width: 80px;">No Tiket</th>
                 <th style="min-width: 200px;">Report</th>
-                <!-- <th style="min-width: 150px;">Category</th> -->
-                <!-- <th style="min-width: 150px;">Sub Category</th> -->
-                <!-- <th style="min-width: 180px;">Causes</th> -->
-                <!-- <th style="min-width: 180px;">Action Plan</th> -->
                 <th style="min-width: 150px;">Create By</th>
                 <th style="min-width: 110px;">Due Date</th>
-                <!-- <th style="min-width: 120px;">PIC</th> -->
-                <!-- <th style="min-width: 150px;">Approve By</th> -->
                 <th style="min-width: 100px;" class="text-center">Action</th>
             </tr>
         </thead>
@@ -147,19 +141,47 @@ $loginUserId = $this->auth->user_id();
                             </small>
                         </td>
                         <td class="text-nowrap">
-                            <i class="fa-solid fa-calendar-days text-muted"></i>
-                            <?php
-                            $dueDate = $row['due_date'];
+                            <!-- Due Date -->
+                            <div>
+                                <i class="fa-solid fa-calendar-days text-muted"></i>
+                                <?php
+                                $dueDate = $row['due_date'];
 
-                            if (
-                                empty($dueDate) ||
-                                $dueDate === '0000-00-00'
-                            ) {
-                                echo '-';
-                            } else {
-                                echo date('d-m-Y', strtotime($dueDate));
-                            }
-                            ?>
+                                if (
+                                    empty($dueDate) ||
+                                    $dueDate === '0000-00-00'
+                                ) {
+                                    echo '-';
+                                } else {
+                                    echo date('d-m-Y', strtotime($dueDate));
+                                }
+                                ?>
+                            </div>
+
+                            <!-- Sub Category Badge -->
+                            <?php if (!empty($row['sub_name'])): ?>
+                                <div class="mt-1">
+                                    <?php
+                                    $subName = strtolower($row['sub_name']);
+                                    $badgeClass = 'bg-secondary'; // default
+
+                                    // Tentukan warna badge berdasarkan sub category
+                                    if (strpos($subName, 'bugs konsep') !== false) {
+                                        $badgeClass = 'bg-danger';
+                                    } elseif (strpos($subName, 'bugs program') !== false) {
+                                        $badgeClass = 'bg-warning text-dark';
+                                    } elseif (strpos($subName, 'development') !== false) {
+                                        $badgeClass = 'bg-primary';
+                                    } elseif (strpos($subName, 'maintenance') !== false) {
+                                        $badgeClass = 'bg-info';
+                                    }
+                                    ?>
+                                    <span class="badge <?= $badgeClass ?>">
+                                        <i class="fa-solid fa-tag"></i>
+                                        <?= htmlspecialchars($row['sub_name']) ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                         </td>
 
                         <?php

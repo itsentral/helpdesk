@@ -72,6 +72,30 @@ $ENABLE_VIEW = has_permission('Ticket.View');
                                     <i class="fa-solid fa-check-double"></i> Approved
                                 </span>
                             </div>
+
+                            <?php if (!empty($row['sub_category_name'])): ?>
+                                <div class="mt-1">
+                                    <?php
+                                    $subName = strtolower($row['sub_category_name']);
+                                    $badgeClass = 'bg-secondary'; // default
+
+                                    // Tentukan warna badge berdasarkan sub category
+                                    if (strpos($subName, 'bugs konsep') !== false) {
+                                        $badgeClass = 'bg-danger';
+                                    } elseif (strpos($subName, 'bugs program') !== false) {
+                                        $badgeClass = 'bg-warning text-dark';
+                                    } elseif (strpos($subName, 'development') !== false) {
+                                        $badgeClass = 'bg-primary';
+                                    } elseif (strpos($subName, 'maintenance') !== false) {
+                                        $badgeClass = 'bg-info';
+                                    }
+                                    ?>
+                                    <span class="badge <?= $badgeClass ?>">
+                                        <i class="fa-solid fa-tag"></i>
+                                        <?= htmlspecialchars($row['sub_category_name']) ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <div class="text-truncate" style="max-width: 200px;"

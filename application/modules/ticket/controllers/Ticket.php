@@ -291,7 +291,7 @@ class Ticket extends Admin_Controller
           $this->Ticket_model->save_history([
             'helpdesk_id' => $id,
             'no_ticket'   => $old_ticket->no_ticket,
-            'action_type' => 7, // update data
+            'action_type' => 8, // update data
             'description' => 'Data ticket diperbarui'
           ]);
         }

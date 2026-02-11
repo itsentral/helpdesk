@@ -114,6 +114,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	}
 
 	/* Chat Styles */
+	/* Chat Styles */
 	.chat-message {
 		margin-bottom: 15px;
 		display: flex;
@@ -133,6 +134,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		padding: 10px 15px;
 		border-radius: 15px;
 		word-wrap: break-word;
+		position: relative;
 	}
 
 	.chat-message.sent .chat-bubble {
@@ -148,10 +150,19 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	}
 
 	.chat-sender {
-		font-size: 11px;
+		font-size: 14px;
 		font-weight: bold;
-		margin-bottom: 3px;
-		padding: 0 5px;
+		margin-bottom: 5px;
+		color: #007bff;
+	}
+
+	.chat-message.sent .chat-sender {
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.message-content {
+		font-size: 14px;
+		line-height: 1.4;
 	}
 
 	.chat-time {
@@ -302,7 +313,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		}
 	}
 
-	/* scrollbar */
 	.readers-list::-webkit-scrollbar {
 		width: 6px;
 	}
@@ -344,6 +354,25 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	#chatMessages {
 		background-color: #e5f2ff;
 		background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%2347a8ff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+	}
+
+	.chat-image {
+		margin-top: 8px;
+	}
+
+	.chat-image-preview {
+		display: block;
+		object-fit: cover;
+		transition: transform 0.2s ease;
+	}
+
+	.chat-image-preview:hover {
+		transform: scale(1.02);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	}
+
+	.chat-file a {
+		word-break: break-all;
 	}
 </style>
 
@@ -520,6 +549,11 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<!-- Viewer.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
+
+<!-- Viewer.js JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
 
 <script>
 	let currentHelpdeskId = null;
@@ -527,6 +561,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	let unreadCountInterval = null;
 	let shouldAutoScroll = true;
 	let userHasScrolledUp = false;
+	let lastRenderedMessages = [];
+	let viewerInstance = null;
 
 	function checkIfUserScrolledUp() {
 		const chatMessages = $('#chatMessages')[0];
@@ -556,11 +592,24 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		$('#scrollToBottomBtn').fadeOut();
 	}
 
-	$('#modalChatRoom').on('hidden.bs.modal', function() {
+	$('#modalChatRoom').on('hidden.bs.modal', function(e) {
+		// CEK: Jangan jalankan cleanup jika viewer sedang aktif
+		if ($(this).data('viewer-active') === true) {
+			console.log('Viewer is active, skip modal cleanup');
+			return;
+		}
+
+		// CEK: Jangan jalankan jika masih ada viewer container
+		if ($('.viewer-container').length > 0) {
+			console.log('Viewer container exists, skip modal cleanup');
+			return;
+		}
+
 		stopChatRefresh();
 		currentHelpdeskId = null;
 		shouldAutoScroll = true;
 		userHasScrolledUp = false;
+		lastRenderedMessages = [];
 
 		$('#chatMessagesContent').html('');
 		$('#chatMessage').val('');
@@ -981,7 +1030,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	function buildHistoryTimeline(historyData) {
 		var timeline = '';
 
-
 		// ACTION TYPE CONFIG
 		var actionTypeLabels = {
 			0: {
@@ -1023,6 +1071,11 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				icon: 'fa-user-check',
 				text: 'Final Approval',
 				color: '#198754'
+			},
+			8: {
+				icon: 'fa-pen-to-square',
+				text: 'Data Updated',
+				color: '#0d6efd'
 			}
 		};
 
@@ -1199,6 +1252,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 		shouldAutoScroll = true;
 		userHasScrolledUp = false;
+		lastRenderedMessages = []; // Reset tracking
 
 		markChatAsRead(helpdeskId);
 		$('.chat-unread-badge-' + helpdeskId).hide().text('0');
@@ -1298,42 +1352,53 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 	function renderChatMessages(messages, isNewMessage = false) {
 		const currentUserId = '<?= $this->auth->user_id() ?>';
-		let html = '';
 
 		userHasScrolledUp = checkIfUserScrolledUp();
 		shouldAutoScroll = isNewMessage && !userHasScrolledUp;
+
+		const messagesChanged = JSON.stringify(messages) !== JSON.stringify(lastRenderedMessages);
+
+		if (!messagesChanged && $('#chatMessagesContent').children().length > 0) {
+			return;
+		}
+
+		lastRenderedMessages = [...messages];
+
+		let html = '';
 
 		messages.forEach(function(msg) {
 			const isSent = msg.sender_id == currentUserId;
 			const messageClass = isSent ? 'sent' : 'received';
 
 			html += `
-            <div class="chat-message ${messageClass}" data-message-id="${msg.id}">
-                ${!isSent ? `<div class="chat-sender">${msg.sender_name}</div>` : ''}
-                <div class="chat-bubble">
-                    <div class="message-content">${msg.message}</div>
-                    ${msg.file_name ? renderChatFile(msg) : ''}
-                    ${isSent ? `
-                        <div class="chat-read-status ${msg.read_count > 0 ? 'has-readers' : ''}" 
-                             data-chat-id="${msg.id}"
-                             data-read-count="${msg.read_count}"
-                             style="cursor: ${msg.read_count > 0 ? 'pointer' : 'default'};">
-                            <small>
-                                ${msg.read_count > 0 
-                                    ? `<i class="fa-solid fa-check-double text-primary"></i> 
-                                       <span class="read-count-text">Dilihat (${msg.read_count})</span>`
-                                    : `<i class="fa-solid fa-check text-muted"></i> Terkirim`
-                                }
-                            </small>
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="chat-time">${formatChatTime(msg.create_date)}</div>
-            </div>
-        `;
+				<div class="chat-message ${messageClass}" data-message-id="${msg.id}">
+					<div class="chat-bubble">
+						${!isSent ? `<div class="chat-sender">${msg.sender_name}</div>` : ''}
+						<div class="message-content">${msg.message}</div>
+						${msg.file_name ? renderChatFile(msg) : ''}
+						${isSent ? `
+							<div class="chat-read-status ${msg.read_count > 0 ? 'has-readers' : ''}" 
+								data-chat-id="${msg.id}"
+								data-read-count="${msg.read_count}"
+								style="cursor: ${msg.read_count > 0 ? 'pointer' : 'default'};">
+								<small>
+									${msg.read_count > 0 
+										? `<i class="fa-solid fa-check-double text-primary"></i> 
+										<span class="read-count-text">Dilihat (${msg.read_count})</span>`
+										: `<i class="fa-solid fa-check text-muted"></i> Terkirim`
+									}
+								</small>
+							</div>
+						` : ''}
+					</div>
+					<div class="chat-time">${formatChatTime(msg.create_date)}</div>
+				</div>
+			`;
 		});
 
 		$('#chatMessagesContent').html(html);
+
+		// HAPUS bagian initializeImageViewer()
 
 		$('.chat-read-status.has-readers').on('click', function(e) {
 			e.stopPropagation();
@@ -1464,9 +1529,31 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	}
 
 	function renderChatFile(msg) {
-		const icon = getFileIcon(msg.file_type);
 		const downloadUrl = siteurl + active_controller + 'download_chat_file/' + msg.id;
 
+		// Cek apakah file adalah image
+		if (msg.file_type && msg.file_type.includes('image')) {
+			return `
+            <div class="chat-file chat-image">
+                <img src="${downloadUrl}" 
+                     alt="${msg.original_name || msg.file_name}"
+                     class="chat-image-preview"
+                     data-viewer-src="${downloadUrl}"
+                     style="max-width: 200px; max-height: 200px; border-radius: 8px; cursor: pointer;">
+                <div class="mt-1">
+                    <small>
+                        <a href="${downloadUrl}" download>
+                            <i class="fa-solid fa-download"></i> ${msg.original_name || msg.file_name}
+                        </a>
+                        <small class="text-muted">(${formatFileSize(msg.file_size)})</small>
+                    </small>
+                </div>
+            </div>
+        `;
+		}
+
+		// Untuk file non-image
+		const icon = getFileIcon(msg.file_type);
 		return `
         <div class="chat-file">
             <a href="${downloadUrl}" download>
@@ -1474,8 +1561,45 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
                 <small>(${formatFileSize(msg.file_size)})</small>
             </a>
         </div>
-    	`;
+    `;
 	}
+
+	// function initializeImageViewer() {
+	// 	// Destroy viewer instance yang lama jika ada
+	// 	if (viewerInstance) {
+	// 		viewerInstance.destroy();
+	// 		viewerInstance = null;
+	// 	}
+
+	// 	// Ambil semua image di chat
+	// 	const images = document.querySelectorAll('.chat-image-preview');
+
+	// 	if (images.length > 0) {
+	// 		// Create viewer instance baru
+	// 		viewerInstance = new Viewer(document.getElementById('chatMessagesContent'), {
+	// 			filter: function(image) {
+	// 				return image.classList.contains('chat-image-preview');
+	// 			},
+	// 			navbar: false,
+	// 			title: true,
+	// 			toolbar: {
+	// 				zoomIn: true,
+	// 				zoomOut: true,
+	// 				oneToOne: true,
+	// 				reset: true,
+	// 				rotateLeft: true,
+	// 				rotateRight: true,
+	// 				flipHorizontal: true,
+	// 				flipVertical: true,
+	// 				download: true,
+	// 			},
+	// 			viewed() {
+	// 				// Callback ketika image ditampilkan
+	// 				console.log('Image viewed');
+	// 			}
+	// 		});
+	// 	}
+	// }
 
 	function getFileIcon(fileType) {
 		if (!fileType) return 'fa-file';
@@ -1800,6 +1924,58 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				}
 			}
 
+		});
+
+		$(document).on('click', '.chat-image-preview', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+
+			const $allImages = $('.chat-image-preview');
+			const currentIndex = $allImages.index(this);
+
+			// Buat container di BODY, bukan di dalam modal
+			const $tempContainer = $('<div id="tempViewerContainer" style="display:none;"></div>');
+
+			// Clone semua images
+			$allImages.each(function() {
+				const $clone = $(this).clone();
+				$tempContainer.append($clone);
+			});
+
+			// Append ke body (di luar modal)
+			$('body').append($tempContainer);
+
+			// Buat viewer
+			const viewer = new Viewer($tempContainer[0], {
+				inline: false,
+				navbar: $allImages.length > 1,
+				title: true,
+				toolbar: {
+					zoomIn: 1,
+					zoomOut: 1,
+					oneToOne: 1,
+					reset: 1,
+					rotateLeft: 1,
+					rotateRight: 1,
+					download: 1,
+				},
+				viewed: () => {
+					console.log('Image viewed');
+				},
+				hidden: () => {
+					console.log('Viewer hidden, cleaning up temp container');
+					setTimeout(() => {
+						try {
+							viewer.destroy();
+						} catch (e) {
+							console.log('Destroy error:', e);
+						}
+						$tempContainer.remove();
+					}, 100);
+				}
+			});
+
+			viewer.view(currentIndex);
 		});
 
 	});

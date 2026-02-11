@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Report - <?= $client_info->name_app ?></title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+            padding: 20px;
+            background: #fff;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .chart-container {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .chart-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .chart-box {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .chart-box h3 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #555;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        .chart-box.bugs {
+            border-color: #dc3545;
+        }
+
+        .chart-box.issues {
+            border-color: #ffc107;
+        }
+
+        .chart-box.bugs-open {
+            border-color: #fd7e14;
+        }
+
+        .chart-box.issues-open {
+            border-color: #20c997;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 30px 0 15px 0;
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table thead {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        table th {
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid #dee2e6;
+        }
+
+        table td {
+            padding: 10px 8px;
+            font-size: 11px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+
+        .status-open {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .status-process {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .status-pending {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .status-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .status-done {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-close {
+            background-color: #343a40;
+            color: white;
+        }
+
+        .status-revisi {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+
+        .no-print {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .btn-print {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .btn-print:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-close {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-close:hover {
+            background-color: #545b62;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                padding: 10px;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            .chart-box {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .chart-row {
+                page-break-inside: avoid;
+            }
+
+            table {
+                page-break-inside: auto;
+            }
+
+            table tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Print/Close Buttons -->
+    <div class="no-print">
+        <button onclick="window.print()" class="btn-print">
+            🖨️ Print / Save as PDF
+        </button>
+        <button onclick="window.close()" class="btn-close">
+            ✖ Close
+        </button>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>WEEKLY REPORT - HELPDESK TICKETS</h1>
+        <p><strong><?= $client_info->name_app ?></strong></p>
+        <p>Periode: <?= date('d F Y', strtotime($date_from)) ?> - <?= date('d F Y', strtotime($date_to)) ?></p>
+    </div>
+
+    <!-- Chart Summary (2x2 Grid) -->
+    <div class="chart-container">
+        <!-- Row 1 -->
+        <div class="chart-row">
+            <div class="chart-box bugs">
+                <h3>Total Bugs & Error</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartBugs"></canvas>
+                </div>
+            </div>
+            <div class="chart-box issues">
+                <h3>Total User Issues</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartIssues"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="chart-row">
+            <div class="chart-box bugs-open">
+                <h3>Bugs & Error (Open)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartBugsOpen"></canvas>
+                </div>
+            </div>
+            <div class="chart-box issues-open">
+                <h3>User Issues (Open)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chartIssuesOpen"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Table -->
+    <h2 class="table-title">Detail Tickets</h2>
+    <table>
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 3%;">No</th>
+                <th class="text-center" style="width: 9%;">Create Date</th>
+                <th style="width: 10%;">Create By</th>
+                <th style="width: 20%;">Report</th>
+                <th style="width: 17%;">Causes</th>
+                <th style="width: 17%;">Action Plan</th>
+                <th style="width: 10%;">Approval By</th>
+                <th class="text-center" style="width: 9%;">Approval Date</th>
+                <th class="text-center" style="width: 5%;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($all_tickets)): ?>
+                <tr>
+                    <td colspan="9" class="text-center">No data available</td>
+                </tr>
+            <?php else: ?>
+                <?php
+                $no = 1;
+                foreach ($all_tickets as $ticket):
+                    // Status mapping
+                    $status_map = [
+                        0 => ['label' => 'Open', 'class' => 'status-open'],
+                        1 => ['label' => 'Process', 'class' => 'status-process'],
+                        2 => ['label' => 'Pending', 'class' => 'status-pending'],
+                        3 => ['label' => 'Cancel', 'class' => 'status-cancel'],
+                        4 => ['label' => 'Done', 'class' => 'status-done'],
+                        5 => ['label' => 'Close', 'class' => 'status-close'],
+                        6 => ['label' => 'Revisi', 'class' => 'status-revisi']
+                    ];
+
+                    $status_info = $status_map[$ticket->status] ?? ['label' => 'Unknown', 'class' => ''];
+                ?>
+                    <tr>
+                        <td class="text-center"><?= $no++ ?></td>
+                        <td class="text-center"><?= date('d/m/Y H:i', strtotime($ticket->create_date)) ?></td>
+                        <td><?= $ticket->create_by ?></td>
+                        <td><?= $ticket->report ?></td>
+                        <td><?= $ticket->causes ?: '-' ?></td>
+                        <td><?= $ticket->action_plan ?: '-' ?></td>
+                        <td><?= $ticket->approval_by ?: '-' ?></td>
+                        <td class="text-center">
+                            <?= $ticket->approval_date ? date('d/m/Y', strtotime($ticket->approval_date)) : '-' ?>
+                        </td>
+                        <td class="text-center">
+                            <span class="status-badge <?= $status_info['class'] ?>">
+                                <?= $status_info['label'] ?>
+                            </span>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Generated on <?= date('d F Y H:i:s') ?></p>
+        <p>&copy; <?= date('Y') ?> <?= $client_info->name_app ?> - Helpdesk System</p>
+    </div>
+
+    <script>
+        // Prepare data from PHP
+        const dailyData = <?= json_encode($daily_data) ?>;
+
+        // Helper function to format date with month name
+        function formatDateWithMonthName(dateString) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const date = new Date(dateString);
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            return `${day} ${month}`;
+        }
+
+        // Create date maps
+        const bugsMap = {};
+        const bugsOpenMap = {};
+        const issuesMap = {};
+        const issuesOpenMap = {};
+
+        dailyData.bugs.forEach(item => {
+            bugsMap[item.date] = parseInt(item.total);
+        });
+
+        dailyData.bugs_open.forEach(item => {
+            bugsOpenMap[item.date] = parseInt(item.total);
+        });
+
+        dailyData.issues.forEach(item => {
+            issuesMap[item.date] = parseInt(item.total);
+        });
+
+        dailyData.issues_open.forEach(item => {
+            issuesOpenMap[item.date] = parseInt(item.total);
+        });
+
+        // Get all unique dates
+        const allDates = new Set([
+            ...dailyData.bugs.map(item => item.date),
+            ...dailyData.bugs_open.map(item => item.date),
+            ...dailyData.issues.map(item => item.date),
+            ...dailyData.issues_open.map(item => item.date)
+        ]);
+        const labels = Array.from(allDates).sort();
+        const formattedLabels = labels.map(date => formatDateWithMonthName(date));
+
+        // Chart configuration
+        const chartConfig = {
+            type: 'line',
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 0 // Disable animation for faster print
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: true
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 10
+                            },
+                            callback: function(value) {
+                                if (Number.isInteger(value)) {
+                                    return value;
+                                }
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                }
+            }
+        };
+
+        // Chart 1: Total Bugs & Error
+        new Chart(document.getElementById('chartBugs'), {
+            ...chartConfig,
+            data: {
+                labels: formattedLabels,
+                datasets: [{
+                    label: 'Total',
+                    data: labels.map(date => bugsMap[date] || 0),
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#dc3545',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            }
+        });
+
+        // Chart 2: Total User Issues
+        new Chart(document.getElementById('chartIssues'), {
+            ...chartConfig,
+            data: {
+                labels: formattedLabels,
+                datasets: [{
+                    label: 'Total',
+                    data: labels.map(date => issuesMap[date] || 0),
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ffc107',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            }
+        });
+
+        // Chart 3: Bugs & Error (Open)
+        new Chart(document.getElementById('chartBugsOpen'), {
+            ...chartConfig,
+            data: {
+                labels: formattedLabels,
+                datasets: [{
+                    label: 'Open',
+                    data: labels.map(date => bugsOpenMap[date] || 0),
+                    borderColor: '#fd7e14',
+                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fd7e14',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            }
+        });
+
+        // Chart 4: User Issues (Open)
+        new Chart(document.getElementById('chartIssuesOpen'), {
+            ...chartConfig,
+            data: {
+                labels: formattedLabels,
+                datasets: [{
+                    label: 'Open',
+                    data: labels.map(date => issuesOpenMap[date] || 0),
+                    borderColor: '#20c997',
+                    backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#20c997',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            }
+        });
+
+        window.addEventListener('load', function() {
+            setTimeout(() => window.print(), 500);
+        });
+    </script>
+</body>
+
+</html>

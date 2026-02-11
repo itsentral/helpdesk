@@ -21,9 +21,9 @@ class Ticket_model extends BF_Model
     {
         $user_id = $this->auth->user_id();
 
-        $this->db->select('helpdesk.*');
+        $this->db->select('helpdesk.*, hsc.sub_name');
         $this->db->from('helpdesk');
-
+        $this->db->join('helpdesk_sub_category hsc', 'hsc.id = helpdesk.sub_category_id', 'left');
         // user
         $this->db->join('users u', 'u.id_user = ' . (int)$user_id, 'left');
 
@@ -35,6 +35,12 @@ class Ticket_model extends BF_Model
             AND huc.is_active = 1',
             'left'
         );
+
+        $this->db->order_by("CASE 
+            WHEN LOWER(hsc.sub_name) LIKE '%bugs konsep%' THEN 1
+            WHEN LOWER(hsc.sub_name) LIKE '%bugs program%' THEN 2
+            ELSE 3
+        END", '', FALSE);
 
         $this->db->order_by('helpdesk.id', 'DESC');
         $this->db->where('helpdesk.is_delete', 0);

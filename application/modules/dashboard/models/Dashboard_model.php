@@ -64,76 +64,6 @@ class Dashboard_model extends BF_Model
         parent::__construct();
     }
 
-    public function monitor_eoq()
-    {
-        $query = "SELECT * FROM monitor_eoq";
-        return $this->db->query($query);
-    }
-
-    public function barang_masuk()
-    {
-        $query = "SELECT
-            sum(log_transaksidt.jumlahrealisasi) as masuk
-            FROM
-            log_transaksidt
-            INNER JOIN log_transaksiht ON log_transaksidt.notransaksi = log_transaksiht.notransaksi
-            WHERE 
-            log_transaksiht.post='1' AND log_transaksidt.statussaldo='1' AND log_transaksiht.tipetransaksi='2'";
-        $query = $this->db->query($query);
-        if ($query->num_rows() > 0) {
-            return $query->row()->masuk;
-        }
-        return false;
-    }
-
-    public function barang_keluar()
-    {
-        $query = "SELECT
-            sum(log_transaksidt.jumlahrealisasi) as realisasi
-            FROM
-            log_transaksidt
-            INNER JOIN log_transaksiht ON log_transaksidt.notransaksi = log_transaksiht.notransaksi
-            WHERE 
-            log_transaksiht.post='1' AND log_transaksidt.statussaldo='1' AND log_transaksiht.tipetransaksi='3'";
-        $query = $this->db->query($query);
-        if ($query->num_rows() > 0) {
-            return $query->row()->realisasi;
-        }
-        return false;
-    }
-
-    public function pengajuan_pending()
-    {
-        $query = "SELECT
-            sum(log_prapodt.jumlah) as pending
-            FROM
-            log_prapodt
-            INNER JOIN log_prapoht ON log_prapodt.nopp = log_prapoht.nopp
-            WHERE 
-            log_prapoht.sts_pp='0'";
-        $query = $this->db->query($query);
-        if ($query->num_rows() > 0) {
-            return $query->row()->pending;
-        }
-        return false;
-    }
-
-    public function pengajuan_acc()
-    {
-        $query = "SELECT
-            sum(log_prapodt.jumlah) as pending
-            FROM
-            log_prapodt
-            INNER JOIN log_prapoht ON log_prapodt.nopp = log_prapoht.nopp
-            WHERE 
-            log_prapoht.sts_pp='1'";
-        $query = $this->db->query($query);
-        if ($query->num_rows() > 0) {
-            return $query->row()->pending;
-        }
-        return false;
-    }
-
     public function get_user_clients($user_id)
     {
         return $this->db
@@ -177,26 +107,253 @@ class Dashboard_model extends BF_Model
 
     public function get_daily_data($client_id, $date_from, $date_to)
     {
-        return $this->db
-            ->select('DATE(create_date) as date, COUNT(*) as total')
-            ->from('helpdesk')
-            ->where('client_id', $client_id)
-            ->where('is_delete', 0)
-            ->where('DATE(create_date) >=', $date_from)
-            ->where('DATE(create_date) <=', $date_to)
-            ->group_by('DATE(create_date)')
+        // Get bugs & error data (total)
+        $bugs_data = $this->db
+            ->select('DATE(h.create_date) as date, COUNT(*) as total')
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by('DATE(h.create_date)')
             ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        // Get bugs & error data (open only - status = 0)
+        $bugs_open_data = $this->db
+            ->select('DATE(h.create_date) as date, COUNT(*) as total')
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('h.status', 0)
+            ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by('DATE(h.create_date)')
+            ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        // Get issues data (total)
+        $issues_data = $this->db
+            ->select('DATE(h.create_date) as date, COUNT(*) as total')
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('hsc.sub_name', 'user issue')
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by('DATE(h.create_date)')
+            ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        // Get issues data (open only - status = 0)
+        $issues_open_data = $this->db
+            ->select('DATE(h.create_date) as date, COUNT(*) as total')
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('h.status', 0)
+            ->where('hsc.sub_name', 'user issue')
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by('DATE(h.create_date)')
+            ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        return [
+            'bugs' => $bugs_data,
+            'bugs_open' => $bugs_open_data,
+            'issues' => $issues_data,
+            'issues_open' => $issues_open_data
+        ];
+    }
+    
+    public function get_total_tickets($client_id, $date_from, $date_to)
+    {
+        // Total bugs & error
+        $total_bugs = $this->db
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->count_all_results();
+
+        // Total bugs & error yang open
+        $open_bugs = $this->db
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('h.status', 0) // status open
+            ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->count_all_results();
+
+        // Total user issues
+        $total_issues = $this->db
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('hsc.sub_name', 'user issue')
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->count_all_results();
+
+        // Total user issues yang open
+        $open_issues = $this->db
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('h.status', 0) // status open
+            ->where('hsc.sub_name', 'user issue')
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->count_all_results();
+
+        return [
+            'total' => $total_bugs + $total_issues,
+            'bugs' => $total_bugs,
+            'issues' => $total_issues,
+            'open_bugs' => $open_bugs,
+            'open_issues' => $open_issues,
+            'total_open' => $open_bugs + $open_issues
+        ];
+    }
+
+    public function get_daily_data_with_status($client_id, $date_from, $date_to)
+    {
+        // Get bugs & error data (total)
+        $bugs_data = $this->db
+            ->select('DATE(h.create_date) as date, COUNT(*) as total')
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by('DATE(h.create_date)')
+            ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        // Get bugs & error data (open only - status = 0)
+        $bugs_open_data = $this->db
+            ->select('DATE(h.create_date) as date, COUNT(*) as total')
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('h.status', 0)
+            ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by('DATE(h.create_date)')
+            ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        // Get issues data (total)
+        $issues_data = $this->db
+            ->select('DATE(h.create_date) as date, COUNT(*) as total')
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('hsc.sub_name', 'user issue')
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by('DATE(h.create_date)')
+            ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        // Get issues data (open only - status = 0)
+        $issues_open_data = $this->db
+            ->select('DATE(h.create_date) as date, COUNT(*) as total')
+            ->from('helpdesk h')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('h.status', 0)
+            ->where('hsc.sub_name', 'user issue')
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by('DATE(h.create_date)')
+            ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        return [
+            'bugs' => $bugs_data,
+            'bugs_open' => $bugs_open_data,
+            'issues' => $issues_data,
+            'issues_open' => $issues_open_data
+        ];
+    }
+
+    public function get_tickets_by_date($client_id, $date, $category = 'all')
+    {
+        $this->db
+            ->select('h.*, hc.category_name, hsc.sub_name as sub_category_name')
+            ->from('helpdesk h')
+            ->join('helpdesk_category hc', 'hc.id = h.category_id', 'left')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('DATE(h.create_date)', $date);
+
+        // Filter by category if specified
+        if ($category === 'bugs') {
+            $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep']);
+        } else if ($category === 'issues') {
+            $this->db->where('hsc.sub_name', 'user issue');
+        }
+
+        return $this->db
+            ->order_by('h.create_date', 'DESC')
             ->get()
             ->result();
     }
 
-    public function get_total_tickets($client_id, $date_from, $date_to)
+    public function get_tickets_by_date_range($client_id, $date_from, $date_to)
     {
         return $this->db
-            ->where('client_id', $client_id)
-            ->where('is_delete', 0)
-            ->where('DATE(create_date) >=', $date_from)
-            ->where('DATE(create_date) <=', $date_to)
-            ->count_all_results('helpdesk');
+            ->select('h.*, hc.category_name, hsc.sub_name as sub_category_name')
+            ->from('helpdesk h')
+            ->join('helpdesk_category hc', 'hc.id = h.category_id', 'left')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->order_by('h.create_date', 'ASC')
+            ->get()
+            ->result();
+    }
+
+    public function get_client_info($client_id)
+    {
+        return $this->db
+            ->select('*')
+            ->from('helpdesk_client')
+            ->where('id', $client_id)
+            ->get()
+            ->row();
     }
 }

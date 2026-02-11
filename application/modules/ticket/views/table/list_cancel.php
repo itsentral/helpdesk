@@ -27,6 +27,29 @@ $ENABLE_VIEW = has_permission('Ticket.View');
                             <span class="badge bg-danger">
                                 <i class="fa-solid fa-ban"></i> Cancel
                             </span>
+                            <?php if (!empty($row['sub_category_name'])): ?>
+                                <div class="mt-1">
+                                    <?php
+                                    $subName = strtolower($row['sub_category_name']);
+                                    $badgeClass = 'bg-secondary'; // default
+
+                                    // Tentukan warna badge berdasarkan sub category
+                                    if (strpos($subName, 'bugs konsep') !== false) {
+                                        $badgeClass = 'bg-danger';
+                                    } elseif (strpos($subName, 'bugs program') !== false) {
+                                        $badgeClass = 'bg-warning text-dark';
+                                    } elseif (strpos($subName, 'development') !== false) {
+                                        $badgeClass = 'bg-primary';
+                                    } elseif (strpos($subName, 'maintenance') !== false) {
+                                        $badgeClass = 'bg-info';
+                                    }
+                                    ?>
+                                    <span class="badge <?= $badgeClass ?>">
+                                        <i class="fa-solid fa-tag"></i>
+                                        <?= htmlspecialchars($row['sub_category_name']) ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <div class="text-truncate" style="max-width: 200px;"
@@ -95,85 +118,6 @@ $ENABLE_VIEW = has_permission('Ticket.View');
                                 </button>
                             </td>
                         <?php endif; ?>
-
-
-
-                        <!-- <td class="text-center">
-                            <div class="d-inline-flex gap-1">
-                                <?php if ($ENABLE_MANAGE): ?>
-                                    <button type="button"
-                                        class="btn btn-primary btn-sm px-2 py-1 process-status"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="process Ticket">
-                                        <i class="fa-solid fa-angles-right"></i>
-                                    </button>
-                                <?php endif; ?>
-
-                                <?php if ($ENABLE_MANAGE): ?>
-                                    <button type="button"
-                                        class="btn btn-secondary btn-sm px-2 py-1 pending-status"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="pending Ticket">
-                                        <i class="fa-solid fa-hourglass-half"></i>
-                                    </button>
-                                <?php endif; ?>
-
-                                <?php if ($ENABLE_MANAGE): ?>
-                                    <button type="button"
-                                        class="btn btn-danger btn-sm px-2 py-1 cancel-status"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="cancel Ticket">
-                                        <i class="fa-solid fa-ban"></i>
-                                    </button>
-                                <?php endif; ?>
-
-                                <?php if ($ENABLE_MANAGE): ?>
-                                    <button type="button"
-                                        class="btn btn-success btn-sm px-2 py-1 done-status"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="done Ticket">
-                                        <i class="fa-solid fa-clipboard-check"></i>
-                                    </button>
-                                <?php endif; ?>
-
-                                <?php if ($ENABLE_VIEW): ?>
-                                    <button type="button"
-                                        class="btn btn-info btn-sm px-2 py-1 view-ticket"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="View Details">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
-                                <?php endif; ?>
-
-                                <?php if ($ENABLE_MANAGE): ?>
-                                    <button type="button"
-                                        class="btn btn-warning btn-sm px-2 py-1 edit-ticket"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="Edit Ticket">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
-                                <?php endif; ?>
-
-                                <?php if ($ENABLE_MANAGE): ?>
-                                    <button type="button"
-                                        class="btn btn-danger btn-sm px-2 py-1 reject-status"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="reject Ticket">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                <?php endif; ?>
-
-                                <?php if ($ENABLE_MANAGE): ?>
-                                    <button type="button"
-                                        class="btn btn-success btn-sm px-2 py-1 approve-status"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="approve Ticket">
-                                        <i class="fa-solid fa-check-double"></i>
-                                    </button>
-                                <?php endif; ?>
-                            </div>
-                        </td> -->
-
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
