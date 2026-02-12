@@ -163,9 +163,8 @@ $loginUserId = $this->auth->user_id();
                                 <div class="mt-1">
                                     <?php
                                     $subName = strtolower($row['sub_name']);
-                                    $badgeClass = 'bg-secondary'; // default
+                                    $badgeClass = 'bg-secondary';
 
-                                    // Tentukan warna badge berdasarkan sub category
                                     if (strpos($subName, 'bugs konsep') !== false) {
                                         $badgeClass = 'bg-danger';
                                     } elseif (strpos($subName, 'bugs program') !== false) {

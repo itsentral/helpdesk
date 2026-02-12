@@ -14,6 +14,8 @@
         (<?= $formattedFrom ?> - <?= $formattedTo ?>)
     </title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -391,14 +393,49 @@
                 ?>
                     <tr>
                         <td class="text-center"><?= $no++ ?></td>
-                        <td class="text-center"><?= date('d/m/Y H:i', strtotime($ticket->create_date)) ?></td>
+                        <td class="text-center"><?= date('d/m/Y H:i', strtotime($ticket->create_date)) ?>
+                            <div class="mt-1">
+                                <?php
+                                $subName = strtolower($ticket->sub_category_name ?? '');
+                                $badgeClass = 'bg-secondary';
+
+                                if (strpos($subName, 'bugs konsep') !== false) {
+                                    $badgeClass = 'bg-danger';
+                                } elseif (strpos($subName, 'bugs program') !== false) {
+                                    $badgeClass = 'bg-warning text-dark';
+                                } elseif (strpos($subName, 'development') !== false) {
+                                    $badgeClass = 'bg-primary';
+                                } elseif (strpos($subName, 'maintenance') !== false) {
+                                    $badgeClass = 'bg-info';
+                                }
+                                ?>
+
+                                <span class="badge <?= $badgeClass ?>">
+                                    <i class="fa-solid fa-tag"></i>
+                                    <?= htmlspecialchars($ticket->sub_category_name) ?>
+                                </span>
+                            </div>
+                        </td>
                         <td><?= $ticket->create_by ?></td>
                         <td><?= $ticket->report ?></td>
                         <td><?= $ticket->causes ?: '-' ?></td>
                         <td><?= $ticket->action_plan ?: '-' ?></td>
-                        <td><?= $ticket->approval_by ?: '-' ?></td>
+                        <td><?=
+                            $ticket->approval_level == 1
+                                ? ($ticket->approval_by ?: '-')
+                                : ($ticket->approval_level == 2
+                                    ? ($ticket->create_by ?: '-')
+                                    : '-')
+                            ?>
+                        </td>
                         <td class="text-center">
-                            <?= $ticket->approval_date ? date('d/m/Y', strtotime($ticket->approval_date)) : '-' ?>
+                            <?= (
+                                isset($ticket->current_approval_level, $ticket->approval_level) &&
+                                $ticket->current_approval_level == $ticket->approval_level &&
+                                !empty($ticket->approval_date)
+                            )
+                                ? date('d/m/Y', strtotime($ticket->approval_date))
+                                : '-' ?>
                         </td>
                         <td class="text-center">
                             <span class="status-badge <?= $status_info['class'] ?>">
