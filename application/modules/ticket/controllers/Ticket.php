@@ -200,6 +200,17 @@ class Ticket extends Admin_Controller
 
   public function save_ticket()
   {
+    $session_data = $this->session->userdata('app_session');
+
+    if (!$session_data || !isset($session_data['id_user'])) {
+      echo json_encode([
+        'status'   => 0,
+        'message'  => 'Session expired. Please login again.',
+        'redirect' => base_url('auth')
+      ]);
+      return;
+    }
+
     $id = $this->input->post('id');
 
     // PERMISSION & OLD DATA

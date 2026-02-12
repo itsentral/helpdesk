@@ -21,9 +21,12 @@ class Dashboard extends Admin_Controller
     {
         $user_id = $this->auth->user_id();
         $clients = $this->dashboard_model->get_user_clients($user_id);
+        $user_info = $this->db->get_where('users', ['id_user' => $user_id])->row();
+        $can_export = ($user_info->is_ba == 1 || $user_id == 7) ? 1 : 0;
         $data = [
             'clients'       => $clients,
-            'client_count'  => count($clients)
+            'client_count'  => count($clients),
+            'can_export'    => $can_export
         ];
 
         $this->template->title('Dashboard');
@@ -85,7 +88,7 @@ class Dashboard extends Admin_Controller
                 }
             }
         }
-        
+
         $data = [
             'client_info' => $client_info,
             'date_from' => $date_from,

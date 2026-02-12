@@ -4,10 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Report - <?= $client_info->name_app ?></title>
+    <?php
+    $formattedFrom = date('d M Y', strtotime($date_from));
+    $formattedTo   = date('d M Y', strtotime($date_to));
+    ?>
+
+    <title>
+        Weekly Report - <?= $client_info->name_app ?>
+        (<?= $formattedFrom ?> - <?= $formattedTo ?>)
+    </title>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
     <style>
         * {
@@ -45,22 +54,23 @@
 
         .chart-container {
             width: 100%;
+            max-width: 100%;
             margin-bottom: 30px;
         }
 
         .chart-row {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
             margin-bottom: 20px;
-            gap: 20px;
         }
 
         .chart-box {
-            flex: 1;
             padding: 15px;
             border: 2px solid #ddd;
             border-radius: 8px;
             background: #f8f9fa;
+            min-width: 0;
         }
 
         .chart-box h3 {
@@ -75,6 +85,12 @@
             position: relative;
             height: 250px;
             width: 100%;
+            max-width: 100%;
+        }
+
+        .chart-wrapper canvas {
+            max-width: 100% !important;
+            height: auto !important;
         }
 
         .chart-box.bugs {
@@ -225,7 +241,6 @@
             background-color: #545b62;
         }
 
-        /* Print styles */
         @media print {
             body {
                 padding: 10px;
@@ -238,10 +253,24 @@
             .chart-box {
                 break-inside: avoid;
                 page-break-inside: avoid;
+                padding: 10px;
+                overflow: hidden;
             }
 
             .chart-row {
                 page-break-inside: avoid;
+                gap: 10px;
+            }
+
+            .chart-wrapper {
+                height: 200px;
+                width: 100%;
+                overflow: hidden;
+            }
+
+            .chart-wrapper canvas {
+                max-width: 100% !important;
+                max-height: 200px !important;
             }
 
             table {
@@ -264,7 +293,7 @@
 
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 10mm;
         }
     </style>
 </head>
@@ -287,7 +316,7 @@
         <p>Periode: <?= date('d F Y', strtotime($date_from)) ?> - <?= date('d F Y', strtotime($date_to)) ?></p>
     </div>
 
-    <!-- Chart Summary (2x2 Grid) -->
+    <!-- Chart Summary -->
     <div class="chart-container">
         <!-- Row 1 -->
         <div class="chart-row">
@@ -328,9 +357,9 @@
         <thead>
             <tr>
                 <th class="text-center" style="width: 3%;">No</th>
-                <th class="text-center" style="width: 9%;">Create Date</th>
-                <th style="width: 10%;">Create By</th>
-                <th style="width: 20%;">Report</th>
+                <th class="text-center" style="width: 9%;">Report Date</th>
+                <th style="width: 10%;">Report By</th>
+                <th style="width: 17%;">Report</th>
                 <th style="width: 17%;">Causes</th>
                 <th style="width: 17%;">Action Plan</th>
                 <th style="width: 10%;">Approval By</th>
@@ -391,6 +420,8 @@
     <script>
         // Prepare data from PHP
         const dailyData = <?= json_encode($daily_data) ?>;
+        const dateFrom = '<?= $date_from ?>';
+        const dateTo = '<?= $date_to ?>';
 
         // Helper function to format date with month name
         function formatDateWithMonthName(dateString) {
@@ -398,7 +429,28 @@
             const date = new Date(dateString);
             const day = date.getDate();
             const month = months[date.getMonth()];
-            return `${day} ${month}`;
+            const year = date.getFullYear();
+            return `${day} ${month} ${year}`;
+        }
+
+        // Function to generate all dates between dateFrom and dateTo
+        function generateDateRange(startDate, endDate) {
+            const dates = [];
+            const currentDate = new Date(startDate);
+            const lastDate = new Date(endDate);
+
+            while (currentDate <= lastDate) {
+                // Format: YYYY-MM-DD
+                const year = currentDate.getFullYear();
+                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                const day = String(currentDate.getDate()).padStart(2, '0');
+                dates.push(`${year}-${month}-${day}`);
+
+                // Next day
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            return dates;
         }
 
         // Create date maps
@@ -406,6 +458,7 @@
         const bugsOpenMap = {};
         const issuesMap = {};
         const issuesOpenMap = {};
+        const chartInstances = [];
 
         dailyData.bugs.forEach(item => {
             bugsMap[item.date] = parseInt(item.total);
@@ -423,6 +476,7 @@
             issuesOpenMap[item.date] = parseInt(item.total);
         });
 
+
         // Get all unique dates
         const allDates = new Set([
             ...dailyData.bugs.map(item => item.date),
@@ -430,7 +484,8 @@
             ...dailyData.issues.map(item => item.date),
             ...dailyData.issues_open.map(item => item.date)
         ]);
-        const labels = Array.from(allDates).sort();
+
+        const labels = generateDateRange(dateFrom, dateTo);
         const formattedLabels = labels.map(date => formatDateWithMonthName(date));
 
         // Chart configuration
@@ -440,7 +495,12 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                    duration: 0 // Disable animation for faster print
+                    duration: 0
+                },
+                layout: {
+                    padding: {
+                        top: 5
+                    }
                 },
                 plugins: {
                     legend: {
@@ -448,6 +508,22 @@
                     },
                     tooltip: {
                         enabled: true
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 4,
+                        clip: false,
+                        color: function(context) {
+                            return context.dataset.borderColor;
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 10
+                        },
+                        formatter: function(value) {
+                            return value > 0 ? value : '';
+                        }
                     }
                 },
                 scales: {
@@ -458,11 +534,14 @@
                         ticks: {
                             font: {
                                 size: 10
-                            }
+                            },
+                            maxRotation: 0,
+                            autoSkip: false
                         }
                     },
                     y: {
                         beginAtZero: true,
+                        grace: '20%',
                         ticks: {
                             stepSize: 1,
                             font: {
@@ -479,11 +558,12 @@
                         }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels]
         };
 
         // Chart 1: Total Bugs & Error
-        new Chart(document.getElementById('chartBugs'), {
+        const chartBugs = new Chart(document.getElementById('chartBugs'), {
             ...chartConfig,
             data: {
                 labels: formattedLabels,
@@ -501,9 +581,10 @@
                 }]
             }
         });
+        chartInstances.push(chartBugs);
 
         // Chart 2: Total User Issues
-        new Chart(document.getElementById('chartIssues'), {
+        const chartIssues = new Chart(document.getElementById('chartIssues'), {
             ...chartConfig,
             data: {
                 labels: formattedLabels,
@@ -521,9 +602,10 @@
                 }]
             }
         });
+        chartInstances.push(chartIssues);
 
         // Chart 3: Bugs & Error (Open)
-        new Chart(document.getElementById('chartBugsOpen'), {
+        const chartBugsOpen = new Chart(document.getElementById('chartBugsOpen'), {
             ...chartConfig,
             data: {
                 labels: formattedLabels,
@@ -541,9 +623,10 @@
                 }]
             }
         });
+        chartInstances.push(chartBugsOpen);
 
         // Chart 4: User Issues (Open)
-        new Chart(document.getElementById('chartIssuesOpen'), {
+        const chartIssuesOpen = new Chart(document.getElementById('chartIssuesOpen'), {
             ...chartConfig,
             data: {
                 labels: formattedLabels,
@@ -561,6 +644,7 @@
                 }]
             }
         });
+        chartInstances.push(chartIssuesOpen);
 
         window.addEventListener('load', function() {
             setTimeout(() => window.print(), 500);

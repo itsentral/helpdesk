@@ -177,9 +177,11 @@
                 <button type="button" class="btn btn-primary" id="btn_filter">
                     <i class="ti ti-filter"></i> Filter Data
                 </button>
-                <!-- <button type="button" class="btn btn-success" id="btn_export_pdf" style="display: none;">
-                    <i class="ti ti-file-export"></i> Export PDF
-                </button> -->
+                <?php if ($can_export == 1): ?>
+                    <button type="button" class="btn btn-success" id="btn_export_pdf" style="display: none;">
+                        <i class="ti ti-file-export"></i> Export PDF
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -240,7 +242,7 @@
                         <div class="stats-icon icon-primary">
                             <i class="fas fa-ticket-alt"></i>
                         </div>
-                        <div class="stats-title">Total Tickets</div>
+                        <div class="stats-title">Total Tickets Bugs & User Issue</div>
                         <h2 class="stats-number" id="total_tickets">0</h2>
                         <div class="stats-subtitle">
                             <i class="fas fa-folder-open"></i>
@@ -530,7 +532,7 @@
                 if (!$.fn.DataTable.isDataTable('#ticket_table')) {
                     $('#ticket_table').DataTable({
                         "pageLength": 10,
-                        "order": [], 
+                        "order": [],
                     });
                 }
             },
@@ -706,7 +708,6 @@
         const date_from = formatDate(selectedDates[0]);
         const date_to = formatDate(selectedDates[1]);
 
-        // Open print page in new window
         const url = siteurl + 'dashboard/print_weekly_report?client_id=' + client_id +
             '&date_from=' + date_from + '&date_to=' + date_to;
 
@@ -739,13 +740,51 @@
             issuesOpenMap[item.date] = parseInt(item.total);
         });
 
-        const allDates = new Set([
-            ...chartData.bugs.map(item => item.date),
-            ...chartData.bugs_open.map(item => item.date),
-            ...chartData.issues.map(item => item.date),
-            ...chartData.issues_open.map(item => item.date)
-        ]);
-        const labels = Array.from(allDates).sort();
+        // Function to generate all dates between start and end
+        function generateDateRange(startDate, endDate) {
+            const dates = [];
+            const currentDate = new Date(startDate);
+            const lastDate = new Date(endDate);
+
+            while (currentDate <= lastDate) {
+                const year = currentDate.getFullYear();
+                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                const day = String(currentDate.getDate()).padStart(2, '0');
+                dates.push(`${year}-${month}-${day}`);
+
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            return dates;
+        }
+
+        // Get date range from weekly picker or determine from data
+        let labels;
+
+        if (currentReportType === 'weekly' && weeklyPicker.selectedDates.length === 2) {
+            // For weekly report, use the selected date range
+            const dateFrom = formatDate(weeklyPicker.selectedDates[0]);
+            const dateTo = formatDate(weeklyPicker.selectedDates[1]);
+            labels = generateDateRange(dateFrom, dateTo);
+        } else if (currentReportType === 'monthly' && monthlyPicker.selectedDates.length > 0) {
+            // For monthly report, generate full month range
+            const selectedDate = monthlyPicker.selectedDates[0];
+            const year = selectedDate.getFullYear();
+            const month = selectedDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            labels = generateDateRange(formatDate(firstDay), formatDate(lastDay));
+        } else {
+            // Fallback: use existing dates from data
+            const allDates = new Set([
+                ...chartData.bugs.map(item => item.date),
+                ...chartData.bugs_open.map(item => item.date),
+                ...chartData.issues.map(item => item.date),
+                ...chartData.issues_open.map(item => item.date)
+            ]);
+            labels = Array.from(allDates).sort();
+        }
+
         const formattedLabels = labels.map(date => formatDateWithMonthName(date));
         let datasets = [];
 
@@ -887,6 +926,11 @@
                         },
                         grid: {
                             display: false
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 0
                         }
                     },
                     y: {
@@ -899,6 +943,7 @@
                             }
                         },
                         beginAtZero: true,
+                        grace: '20%',
                         ticks: {
                             stepSize: 1,
                             callback: function(value) {
