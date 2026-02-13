@@ -35,12 +35,23 @@ class Ticket extends Admin_Controller
     $this->template->render('index');
   }
 
+  public function get_client_list()
+  {
+    $user_id = $this->auth->user_id();
+    $clients = $this->Ticket_model->get_user_clients($user_id);
+    echo json_encode([
+      'status' => 1,
+      'data' => $clients
+    ]);
+  }
+
   public function get_list_ticket()
   {
     $this->auth->restrict($this->viewPermission);
 
     $user_id = $this->auth->user_id();
-    $helpdesk = $this->Ticket_model->get_all_ticket();
+    $client_id = $this->input->get('client_id');
+    $helpdesk = $this->Ticket_model->get_all_ticket($client_id);
     $unread_counts = $this->Ticket_model->get_all_unread_counts($user_id);
 
     $data['helpdesk'] = $helpdesk;
@@ -52,16 +63,32 @@ class Ticket extends Admin_Controller
   public function get_list_approved()
   {
     $this->auth->restrict($this->viewPermission);
-    $helpdesk = $this->Ticket_model->get_approved_ticket();
+
+    $user_id = $this->auth->user_id();
+    $client_id = $this->input->get('client_id');
+
+    $helpdesk = $this->Ticket_model->get_approved_ticket($client_id);
+    $unread_counts = $this->Ticket_model->get_all_unread_counts($user_id);
+
     $data['helpdesk'] = $helpdesk;
+    $data['unread_counts'] = $unread_counts;
+
     $this->template->render('table/list_approved', $data);
   }
 
   public function get_list_cancel()
   {
     $this->auth->restrict($this->viewPermission);
-    $helpdesk = $this->Ticket_model->get_cancel_ticket();
+
+    $user_id = $this->auth->user_id();
+    $client_id = $this->input->get('client_id');
+
+    $helpdesk = $this->Ticket_model->get_cancel_ticket($client_id);
+    $unread_counts = $this->Ticket_model->get_all_unread_counts($user_id);
+
     $data['helpdesk'] = $helpdesk;
+    $data['unread_counts'] = $unread_counts;
+
     $this->template->render('table/list_cancel', $data);
   }
 

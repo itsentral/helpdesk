@@ -14,7 +14,7 @@ $loginUserId = $this->auth->user_id();
                 <th style="min-width: 200px;">Report</th>
                 <th style="min-width: 150px;">Create By</th>
                 <th style="min-width: 110px;">Due Date</th>
-                <th style="min-width: 100px;" class="text-center">Action</th>
+                <th style="min-width: 100px; max-width: 260px;" class="text-center">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -184,12 +184,12 @@ $loginUserId = $this->auth->user_id();
                         </td>
 
                         <?php
-                        $status                = (int) $row['status'];
-                        $approvalLevel          = (int) $row['approval_level'];
-                        $currentApprovalLevel   = (int) $row['current_approval_level'];
-                        $approvalById           = $row['approval_by_id'];
-                        $createById             = $row['create_by_id'];
-                        $unread_count           = isset($unread_counts[$row['id']]) ? $unread_counts[$row['id']] : 0;
+                            $status                = (int) $row['status'];
+                            $approvalLevel          = (int) $row['approval_level'];
+                            $currentApprovalLevel   = (int) $row['current_approval_level'];
+                            $approvalById           = $row['approval_by_id'];
+                            $createById             = $row['create_by_id'];
+                            $unread_count           = isset($unread_counts[$row['id']]) ? $unread_counts[$row['id']] : 0;
                         ?>
 
                         <?php
@@ -199,17 +199,16 @@ $loginUserId = $this->auth->user_id();
                         $status      = isset($row['status']) ? (int)$row['status'] : 0;
                         ?>
 
-
-                        <td class="text-center">
-                            <div class="d-inline-flex gap-1">
-
+                        <td class="text-center" style="max-width: 260px;">
+                            <div class="d-inline-flex gap-1 flex-wrap justify-content-center align-items-center" style="max-width: 260px;">
                                 <!-- CHAT -->
                                 <button type="button"
                                     class="btn btn-primary btn-sm px-2 py-1 open-chat position-relative"
+                                    style="width: 120px"
                                     data-id="<?= $row['id'] ?>"
                                     data-ticket="<?= $row['no_ticket'] ?>"
                                     title="Chat Room">
-                                    <i class="fa-solid fa-comments"></i>
+                                    <i class="fa-solid fa-comments"></i> Chat Room
                                     <span class="chat-unread-badge-<?= $row['id'] ?> position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                         style="<?= $unread_count > 0 ? '' : 'display:none;' ?> font-size:9px;padding:2px 5px;">
                                         <?= $unread_count > 99 ? '99+' : $unread_count ?>
@@ -219,23 +218,24 @@ $loginUserId = $this->auth->user_id();
                                 <!-- HISTORY -->
                                 <button type="button"
                                     class="btn btn-secondary btn-sm px-2 py-1 view-history"
+                                    style="width: 120px"
                                     data-id="<?= $row['id'] ?>"
                                     data-ticket="<?= $row['no_ticket'] ?>"
                                     title="View History">
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                    <i class="fa-solid fa-clock-rotate-left"></i> History
                                 </button>
 
                                 <?php if ($ENABLE_MANAGE): ?>
-
                                     <!-- PROCESS -->
                                     <?php if ($picById == $loginUserId && in_array($status, [0, 2, 6])): ?>
                                         <button type="button"
                                             class="btn btn-primary btn-sm px-2 py-1 process-status"
+                                            style="width: 120px"
                                             data-id="<?= $row['id'] ?>"
                                             data-current-status="<?= $status ?>"
                                             data-man-hour-plan="<?= $row['man_hour_plan'] ?? 0 ?>"
                                             title="Process Ticket">
-                                            <i class="fa-solid fa-angles-right"></i>
+                                            <i class="fa-solid fa-angles-right"></i> Process
                                         </button>
                                     <?php endif; ?>
 
@@ -243,9 +243,10 @@ $loginUserId = $this->auth->user_id();
                                     <?php if ($status === 1 && $picById == $loginUserId): ?>
                                         <button type="button"
                                             class="btn btn-secondary btn-sm px-2 py-1 pending-status"
+                                            style="width: 120px"
                                             data-id="<?= $row['id'] ?>"
                                             title="Pending Ticket">
-                                            <i class="fa-solid fa-hourglass-half"></i>
+                                            <i class="fa-solid fa-hourglass-half"></i> Pending
                                         </button>
                                     <?php endif; ?>
 
@@ -253,9 +254,10 @@ $loginUserId = $this->auth->user_id();
                                     <?php if ($status === 0 && $createById == $loginUserId): ?>
                                         <button type="button"
                                             class="btn btn-danger btn-sm px-2 py-1 cancel-status"
+                                            style="width: 120px"
                                             data-id="<?= $row['id'] ?>"
                                             title="Cancel Ticket">
-                                            <i class="fa-solid fa-ban"></i>
+                                            <i class="fa-solid fa-ban"></i> Cancel
                                         </button>
                                     <?php endif; ?>
 
@@ -263,22 +265,23 @@ $loginUserId = $this->auth->user_id();
                                     <?php if ($status === 1 && $picById == $loginUserId): ?>
                                         <button type="button"
                                             class="btn btn-success btn-sm px-2 py-1 done-status"
+                                            style="width: 120px"
                                             data-id="<?= $row['id'] ?>"
                                             data-current-status="<?= $status ?>"
                                             title="Done Ticket">
-                                            <i class="fa-solid fa-clipboard-check"></i>
+                                            <i class="fa-solid fa-clipboard-check"></i> Done
                                         </button>
                                     <?php endif; ?>
-
                                 <?php endif; ?>
 
                                 <!-- VIEW -->
                                 <?php if ($ENABLE_VIEW): ?>
                                     <button type="button"
                                         class="btn btn-info btn-sm px-2 py-1 view-ticket"
+                                        style="width: 120px"
                                         data-id="<?= $row['id'] ?>"
                                         title="View Details">
-                                        <i class="fa-solid fa-eye"></i>
+                                        <i class="fa-solid fa-eye"></i> View
                                     </button>
                                 <?php endif; ?>
 
@@ -286,9 +289,10 @@ $loginUserId = $this->auth->user_id();
                                 <?php if ($ENABLE_MANAGE && $status === 0): ?>
                                     <button type="button"
                                         class="btn btn-warning btn-sm px-2 py-1 edit-ticket"
+                                        style="width: 120px"
                                         data-id="<?= $row['id'] ?>"
                                         title="Edit Ticket">
-                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <i class="fa-solid fa-pen-to-square"></i> Edit
                                     </button>
                                 <?php endif; ?>
 
@@ -304,9 +308,10 @@ $loginUserId = $this->auth->user_id();
                                 ): ?>
                                     <button type="button"
                                         class="btn btn-danger btn-sm px-2 py-1 reject-status"
+                                        style="width: 120px"
                                         data-id="<?= $row['id'] ?>"
                                         title="Reject Ticket">
-                                        <i class="fa-solid fa-xmark"></i>
+                                        <i class="fa-solid fa-xmark"></i> Reject
                                     </button>
                                 <?php endif; ?>
 
@@ -320,10 +325,11 @@ $loginUserId = $this->auth->user_id();
                                 ): ?>
                                     <button type="button"
                                         class="btn btn-success btn-sm px-2 py-1 approve-status"
+                                        style="width: 120px"
                                         data-id="<?= $row['id'] ?>"
                                         data-level="1"
                                         title="Approve Level 1">
-                                        <i class="fa-solid fa-check"></i>
+                                        <i class="fa-solid fa-check"></i> Approve
                                     </button>
                                 <?php endif; ?>
 
@@ -337,10 +343,11 @@ $loginUserId = $this->auth->user_id();
                                 ): ?>
                                     <button type="button"
                                         class="btn btn-success btn-sm px-2 py-1 approve-status"
+                                        style="width: 120px"
                                         data-id="<?= $row['id'] ?>"
                                         data-level="2"
                                         title="Approve Level 2">
-                                        <i class="fa-solid fa-check-double"></i>
+                                        <i class="fa-solid fa-check-double"></i> Approve
                                     </button>
                                 <?php endif; ?>
 

@@ -17,22 +17,19 @@ class Ticket_model extends BF_Model
         $this->ENABLE_DELETE  = has_permission('Ticket.Delete');
     }
 
-    public function get_all_ticket()
+    public function get_all_ticket($client_id = null)
     {
         $user_id = $this->auth->user_id();
 
         $this->db->select('helpdesk.*, hsc.sub_name');
         $this->db->from('helpdesk');
         $this->db->join('helpdesk_sub_category hsc', 'hsc.id = helpdesk.sub_category_id', 'left');
-        // user
         $this->db->join('users u', 'u.id_user = ' . (int)$user_id, 'left');
-
-        // client user
         $this->db->join(
             'helpdesk_user_client huc',
             'huc.client_id = helpdesk.client_id 
-            AND huc.id_user = ' . (int)$user_id . '
-            AND huc.is_active = 1',
+        AND huc.id_user = ' . (int)$user_id . '
+        AND huc.is_active = 1',
             'left'
         );
 
@@ -47,60 +44,101 @@ class Ticket_model extends BF_Model
         $this->db->where('helpdesk.status !=', 3);
         $this->db->where('helpdesk.is_approve !=', 1);
 
+        if (!empty($client_id)) {
+            $this->db->where('helpdesk.client_id', $client_id);
+        }
+
         if ($user_id != 7) { // admin
             $this->db->group_start()
                 ->where('helpdesk.create_by_id', $user_id)
                 ->or_where('helpdesk.pic_id', $user_id)
                 ->or_where('helpdesk.approval_by_id', $user_id)
-
-                // khusus BA + client sama
                 ->or_group_start()
                 ->where('u.is_ba', 1)
                 ->where('huc.client_id IS NOT NULL', null, false)
                 ->group_end()
-
                 ->group_end();
         }
 
         return $this->db->get()->result_array();
     }
 
-    public function get_approved_ticket()
+    public function get_approved_ticket($client_id = null)
     {
         $user_id = $this->auth->user_id();
 
-        $this->db->order_by('id', 'DESC');
-        $this->db->where('is_delete', 0);
-        $this->db->where('is_approve', 1);
+        $this->db->select('helpdesk.*, hsc.sub_name');
+        $this->db->from('helpdesk');
+        $this->db->join('helpdesk_sub_category hsc', 'hsc.id = helpdesk.sub_category_id', 'left');
+        $this->db->join('users u', 'u.id_user = ' . (int)$user_id, 'left');
+        $this->db->join(
+            'helpdesk_user_client huc',
+            'huc.client_id = helpdesk.client_id 
+            AND huc.id_user = ' . (int)$user_id . '
+            AND huc.is_active = 1',
+            'left'
+        );
+
+        $this->db->order_by('helpdesk.id', 'DESC');
+        $this->db->where('helpdesk.is_delete', 0);
+        $this->db->where('helpdesk.is_approve', 1);
+
+        if (!empty($client_id)) {
+            $this->db->where('helpdesk.client_id', $client_id);
+        }
 
         if ($user_id != 7) { // 7 = admin
             $this->db->group_start()
-                ->where('create_by_id', $user_id)
-                ->or_where('pic_id', $user_id)
-                ->or_where('approval_by_id', $user_id)
+                ->where('helpdesk.create_by_id', $user_id)
+                ->or_where('helpdesk.pic_id', $user_id)
+                ->or_where('helpdesk.approval_by_id', $user_id)
+                ->or_group_start()
+                ->where('u.is_ba', 1)
+                ->where('huc.client_id IS NOT NULL', null, false)
+                ->group_end()
                 ->group_end();
         }
 
-        return $this->db->get('helpdesk')->result_array();
+        return $this->db->get()->result_array();
     }
 
-    public function get_cancel_ticket()
+    public function get_cancel_ticket($client_id = null)
     {
         $user_id = $this->auth->user_id();
 
-        $this->db->order_by('id', 'DESC');
-        $this->db->where('is_delete', 0);
-        $this->db->where('status', 3);
+        $this->db->select('helpdesk.*, hsc.sub_name');
+        $this->db->from('helpdesk');
+        $this->db->join('helpdesk_sub_category hsc', 'hsc.id = helpdesk.sub_category_id', 'left');
+        $this->db->join('users u', 'u.id_user = ' . (int)$user_id, 'left');
+        $this->db->join(
+            'helpdesk_user_client huc',
+            'huc.client_id = helpdesk.client_id 
+            AND huc.id_user = ' . (int)$user_id . '
+            AND huc.is_active = 1',
+            'left'
+        );
+
+        $this->db->order_by('helpdesk.id', 'DESC');
+        $this->db->where('helpdesk.is_delete', 0);
+        $this->db->where('helpdesk.status', 3);
+
+        if (!empty($client_id)) {
+            $this->db->where('helpdesk.client_id', $client_id);
+        }
 
         if ($user_id != 7) { // 7 = admin
             $this->db->group_start()
-                ->where('create_by_id', $user_id)
-                ->or_where('pic_id', $user_id)
-                ->or_where('approval_by_id', $user_id)
+                ->where('helpdesk.create_by_id', $user_id)
+                ->or_where('helpdesk.pic_id', $user_id)
+                ->or_where('helpdesk.approval_by_id', $user_id)
+                ->or_group_start()
+                ->where('u.is_ba', 1)
+                ->where('huc.client_id IS NOT NULL', null, false)
+                ->group_end()
                 ->group_end();
         }
 
-        return $this->db->get('helpdesk')->result_array();
+        return $this->db->get()->result_array();
     }
 
     // ADD TICKET FUNCTION

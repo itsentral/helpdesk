@@ -294,9 +294,9 @@
         }
 
         @page {
-            size: A4;
-            margin: 10mm;
-        }
+    size: A4 landscape;
+    margin: 10mm;
+}
     </style>
 </head>
 

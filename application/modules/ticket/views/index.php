@@ -407,6 +407,11 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			<div class="tab-pane fade show active" id="tab-open" role="tabpanel">
 				<div class="mb-3">
 					<div class="d-flex justify-content-end gap-2">
+						<select class="form-select form-select-sm" id="filterClient" style="width: 200px;">
+							<option value="">All Client</option>
+							<!-- Options via AJAX -->
+						</select>
+
 						<button class="btn btn-primary btn-sm refresh-list-helpdesk">
 							<i class="fa-solid fa-arrows-rotate"></i> Refresh
 						</button>
@@ -427,7 +432,11 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 			<!-- APPROVED TAB -->
 			<div class="tab-pane fade" id="tab-approved" role="tabpanel">
-				<div class="d-flex justify-content-end">
+				<div class="d-flex justify-content-end gap-2">
+					<select class="form-select form-select-sm" id="filterClientApproved" style="width: 200px;">
+						<option value="">All Client</option>
+						<!-- Options via AJAX -->
+					</select>
 					<button class="btn btn-primary btn-sm refresh-list-approve">
 						<i class="fa-solid fa-arrows-rotate"></i> Refresh
 					</button>
@@ -438,7 +447,11 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 			<!-- CANCEL TAB -->
 			<div class="tab-pane fade" id="tab-cancel" role="tabpanel">
-				<div class="d-flex justify-content-end">
+				<div class="d-flex justify-content-end gap-2">
+					<select class="form-select form-select-sm" id="filterClientCancel" style="width: 200px;">
+						<option value="">All Client</option>
+						<!-- Options via AJAX -->
+					</select>
 					<button class="btn btn-primary btn-sm refresh-list-cancel">
 						<i class="fa-solid fa-arrows-rotate"></i> Refresh
 					</button>
@@ -457,7 +470,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	<div class="modal-dialog modal-dialog-scrollable">
 		<div class="modal-content">
 			<div class="modal-header bg-primary text-white">
-				<h5 class="modal-title" id="modalHistoryLabel">
+				<h5 class="modal-title text-white" id="modalHistoryLabel">
 					<i class="fa-solid fa-clock-rotate-left"></i> History Ticket: <span id="historyTicketNo"></span>
 				</h5>
 				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -563,6 +576,32 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	let userHasScrolledUp = false;
 	let lastRenderedMessages = [];
 	let viewerInstance = null;
+	let selectedClientId = '';
+	let selectedClientIdApproved = '';
+	let selectedClientIdCancel = '';
+
+
+	function loadClientList() {
+		$.ajax({
+			url: siteurl + active_controller + 'get_client_list',
+			type: 'GET',
+			dataType: 'json',
+			success: function(response) {
+				console.log(response)
+				if (response.status == 1) {
+					let options = '<option value="">All Client</option>';
+
+					response.data.forEach(function(client) {
+						options += `<option value="${client.id}">${client.name_app}</option>`;
+					});
+
+					$('#filterClient').html(options);
+					$('#filterClientApproved').html(options);
+					$('#filterClientCancel').html(options);
+				}
+			}
+		});
+	}
 
 	function checkIfUserScrolledUp() {
 		const chatMessages = $('#chatMessages')[0];
@@ -619,10 +658,13 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		$('#chatMessages').off('scroll');
 	});
 
-	function loadHelpdeskList() {
+	function loadHelpdeskList(clientId = '') {
 		$.ajax({
 			url: siteurl + active_controller + 'get_list_ticket',
 			type: 'GET',
+			data: {
+				client_id: clientId
+			},
 			beforeSend: function() {
 				$('#skeleton-loading-open').html(getSkeletonHTML()).show();
 				$('#helpdesk-content-open').hide();
@@ -654,10 +696,16 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		});
 	}
 
-	function loadApprovedList() {
+
+
+	// Update function loadApprovedList
+	function loadApprovedList(clientId = '') {
 		$.ajax({
 			url: siteurl + active_controller + 'get_list_approved',
 			type: 'GET',
+			data: {
+				client_id: clientId
+			}, // TAMBAHAN
 			beforeSend: function() {
 				$('#skeleton-loading-approved').html(getSkeletonHTML()).show();
 				$('#helpdesk-content-approved').hide();
@@ -687,10 +735,14 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		});
 	}
 
-	function loadCancelList() {
+	// Update function loadCancelList
+	function loadCancelList(clientId = '') {
 		$.ajax({
 			url: siteurl + active_controller + 'get_list_cancel',
 			type: 'GET',
+			data: {
+				client_id: clientId
+			}, // TAMBAHAN
 			beforeSend: function() {
 				$('#skeleton-loading-cancel').html(getSkeletonHTML()).show();
 				$('#helpdesk-content-cancel').hide();
@@ -1662,34 +1714,50 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	}
 
 	$(document).ready(function() {
+		loadClientList();
 		loadHelpdeskList();
 		startUnreadCountPolling();
+
+		$('#filterClient').on('change', function() {
+			selectedClientId = $(this).val();
+			loadHelpdeskList(selectedClientId);
+		});
+
+		$('#filterClientApproved').on('change', function() {
+			selectedClientIdApproved = $(this).val();
+			loadApprovedList(selectedClientIdApproved);
+		});
+
+		$('#filterClientCancel').on('change', function() {
+			selectedClientIdCancel = $(this).val();
+			loadCancelList(selectedClientIdCancel);
+		});
 
 		$('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
 			var target = $(e.target).data('bs-target');
 
 			if (target === '#tab-open') {
-				loadHelpdeskList();
+				loadHelpdeskList(selectedClientId);
 			} else if (target === '#tab-approved') {
-				loadApprovedList();
+				loadApprovedList(selectedClientIdApproved);
 			} else if (target === '#tab-cancel') {
-				loadCancelList();
+				loadCancelList(selectedClientIdCancel);
 			}
 		});
 
 		$(document).on('click', '.refresh-list-helpdesk', function(e) {
 			e.preventDefault();
-			loadHelpdeskList();
+			loadHelpdeskList(selectedClientId);
 		});
 
 		$(document).on('click', '.refresh-list-approve', function(e) {
 			e.preventDefault();
-			loadApprovedList();
+			loadApprovedList(selectedClientIdApproved);
 		});
 
 		$(document).on('click', '.refresh-list-cancel', function(e) {
 			e.preventDefault();
-			loadCancelList();
+			loadCancelList(selectedClientIdCancel);
 		});
 
 		// Event untuk view detail ticket
