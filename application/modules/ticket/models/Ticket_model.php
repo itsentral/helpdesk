@@ -17,7 +17,53 @@ class Ticket_model extends BF_Model
         $this->ENABLE_DELETE  = has_permission('Ticket.Delete');
     }
 
-    public function get_all_ticket($client_id = null)
+    // public function get_all_ticket($client_id = null)
+    // {
+    //     $user_id = $this->auth->user_id();
+
+    //     $this->db->select('helpdesk.*, hsc.sub_name');
+    //     $this->db->from('helpdesk');
+    //     $this->db->join('helpdesk_sub_category hsc', 'hsc.id = helpdesk.sub_category_id', 'left');
+    //     $this->db->join('users u', 'u.id_user = ' . (int)$user_id, 'left');
+    //     $this->db->join(
+    //         'helpdesk_user_client huc',
+    //         'huc.client_id = helpdesk.client_id 
+    //     AND huc.id_user = ' . (int)$user_id . '
+    //     AND huc.is_active = 1',
+    //         'left'
+    //     );
+
+    //     $this->db->order_by("CASE 
+    //         WHEN LOWER(hsc.sub_name) LIKE '%bugs konsep%' THEN 1
+    //         WHEN LOWER(hsc.sub_name) LIKE '%bugs program%' THEN 2
+    //         ELSE 3
+    //     END", '', FALSE);
+
+    //     $this->db->order_by('helpdesk.id', 'DESC');
+    //     $this->db->where('helpdesk.is_delete', 0);
+    //     $this->db->where('helpdesk.status !=', 3);
+    //     $this->db->where('helpdesk.is_approve !=', 1);
+
+    //     if (!empty($client_id)) {
+    //         $this->db->where('helpdesk.client_id', $client_id);
+    //     }
+
+    //     if ($user_id != 7) { // admin
+    //         $this->db->group_start()
+    //             ->where('helpdesk.create_by_id', $user_id)
+    //             ->or_where('helpdesk.pic_id', $user_id)
+    //             ->or_where('helpdesk.approval_by_id', $user_id)
+    //             ->or_group_start()
+    //             ->where('u.is_ba', 1)
+    //             ->where('huc.client_id IS NOT NULL', null, false)
+    //             ->group_end()
+    //             ->group_end();
+    //     }
+
+    //     return $this->db->get()->result_array();
+    // }
+
+    public function get_all_ticket($client_id = null, $status_filter = null)
     {
         $user_id = $this->auth->user_id();
 
@@ -28,15 +74,15 @@ class Ticket_model extends BF_Model
         $this->db->join(
             'helpdesk_user_client huc',
             'huc.client_id = helpdesk.client_id 
-        AND huc.id_user = ' . (int)$user_id . '
-        AND huc.is_active = 1',
+            AND huc.id_user = ' . (int)$user_id . '
+            AND huc.is_active = 1',
             'left'
         );
 
         $this->db->order_by("CASE 
-            WHEN LOWER(hsc.sub_name) LIKE '%bugs konsep%' THEN 1
-            WHEN LOWER(hsc.sub_name) LIKE '%bugs program%' THEN 2
-            ELSE 3
+        WHEN LOWER(hsc.sub_name) LIKE '%bugs konsep%' THEN 1
+        WHEN LOWER(hsc.sub_name) LIKE '%bugs program%' THEN 2
+        ELSE 3
         END", '', FALSE);
 
         $this->db->order_by('helpdesk.id', 'DESC');
@@ -46,6 +92,40 @@ class Ticket_model extends BF_Model
 
         if (!empty($client_id)) {
             $this->db->where('helpdesk.client_id', $client_id);
+        }
+
+        // ===== Filter Status =====
+        if ($status_filter !== null && $status_filter !== '') {
+            switch ($status_filter) {
+                case 'waiting_approval':
+                    $this->db->where('helpdesk.status', 4);
+                    $this->db->where('helpdesk.is_approve', 0);
+                    $this->db->group_start()
+                        ->where('helpdesk.current_approval_level', 0)
+                        ->or_where('helpdesk.current_approval_level IS NULL', null, false)
+                        ->group_end();
+                    break;
+
+                case 'waiting_creator':
+                    $this->db->where('helpdesk.status', 4);
+                    $this->db->where('helpdesk.is_approve', 0);
+                    $this->db->where('helpdesk.current_approval_level', 1);
+                    $this->db->where('helpdesk.approval_level >=', 2);
+                    break;
+
+                case 'no_pic':
+                    // PIC belum ditunjuk, bukan status cancel
+                    $this->db->where('(helpdesk.pic_id IS NULL OR helpdesk.pic_id = "")', null, false);
+                    $this->db->where('helpdesk.status !=', 3);
+                    break;
+
+                default:
+                    // Filter by status biasa (0,1,2,4,6)
+                    if (is_numeric($status_filter)) {
+                        $this->db->where('helpdesk.status', (int)$status_filter);
+                    }
+                    break;
+            }
         }
 
         if ($user_id != 7) { // admin

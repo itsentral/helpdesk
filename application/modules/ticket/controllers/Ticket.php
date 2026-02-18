@@ -51,9 +51,10 @@ class Ticket extends Admin_Controller
 
     $user_id = $this->auth->user_id();
     $client_id = $this->input->get('client_id');
-    $helpdesk = $this->Ticket_model->get_all_ticket($client_id);
-    $unread_counts = $this->Ticket_model->get_all_unread_counts($user_id);
+    $status_filter = $this->input->get('status_filter');
 
+    $helpdesk = $this->Ticket_model->get_all_ticket($client_id, $status_filter);
+    $unread_counts = $this->Ticket_model->get_all_unread_counts($user_id);
     $data['helpdesk'] = $helpdesk;
     $data['unread_counts'] = $unread_counts;
 
@@ -233,7 +234,7 @@ class Ticket extends Admin_Controller
       echo json_encode([
         'status'   => 0,
         'message'  => 'Session expired. Please login again.',
-        'redirect' => base_url('auth')
+        'redirect' => base_url('login')
       ]);
       return;
     }

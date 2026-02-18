@@ -1044,6 +1044,19 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                 $('#btn-save').prop('disabled', false);
                                 $('#btn-save').html('<i class="fa-solid fa-floppy-disk"></i> Save');
 
+                                if (response.redirect) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Session Expired',
+                                        text: response.message,
+                                        showConfirmButton: true,
+                                        confirmButtonText: 'OK'
+                                    }).then(() => {
+                                        window.location.href = response.redirect;
+                                    });
+                                    return;
+                                }
+
                                 if (response.status == 1) {
                                     Swal.fire({
                                         icon: 'success',

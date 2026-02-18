@@ -412,6 +412,18 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 							<!-- Options via AJAX -->
 						</select>
 
+						<select class="form-select form-select-sm" id="filterStatus" style="width: 220px;">
+							<option value="">Filter By Status</option>
+							<option value="0">Open</option>
+							<option value="1">Process</option>
+							<option value="2">Pending</option>
+							<option value="6">Revisi</option>
+							<option value="4">Done</option>
+							<option value="waiting_approval">Menunggu Approval</option>
+							<option value="waiting_creator">Menunggu Konfirmasi Pembuat</option>
+							<option value="no_pic">PIC Belum Ditunjuk</option>
+						</select>
+
 						<button class="btn btn-primary btn-sm refresh-list-helpdesk">
 							<i class="fa-solid fa-arrows-rotate"></i> Refresh
 						</button>
@@ -579,6 +591,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	let selectedClientId = '';
 	let selectedClientIdApproved = '';
 	let selectedClientIdCancel = '';
+	let selectedStatusId = '';
 
 
 	function loadClientList() {
@@ -658,12 +671,13 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		$('#chatMessages').off('scroll');
 	});
 
-	function loadHelpdeskList(clientId = '') {
+	function loadHelpdeskList(clientId = '', statusFilter = '') {
 		$.ajax({
 			url: siteurl + active_controller + 'get_list_ticket',
 			type: 'GET',
 			data: {
-				client_id: clientId
+				client_id: clientId,
+				status_filter: statusFilter
 			},
 			beforeSend: function() {
 				$('#skeleton-loading-open').html(getSkeletonHTML()).show();
@@ -695,8 +709,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			}
 		});
 	}
-
-
 
 	// Update function loadApprovedList
 	function loadApprovedList(clientId = '') {
@@ -1718,9 +1730,14 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		loadHelpdeskList();
 		startUnreadCountPolling();
 
+		$('#filterStatus').on('change', function() {
+			selectedStatusId = $(this).val();
+			loadHelpdeskList(selectedClientId, selectedStatusId);
+		});
+
 		$('#filterClient').on('change', function() {
 			selectedClientId = $(this).val();
-			loadHelpdeskList(selectedClientId);
+			loadHelpdeskList(selectedClientId, selectedStatusId);
 		});
 
 		$('#filterClientApproved').on('change', function() {
@@ -1735,9 +1752,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 		$('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
 			var target = $(e.target).data('bs-target');
-
 			if (target === '#tab-open') {
-				loadHelpdeskList(selectedClientId);
+				loadHelpdeskList(selectedClientId, selectedStatusId);
 			} else if (target === '#tab-approved') {
 				loadApprovedList(selectedClientIdApproved);
 			} else if (target === '#tab-cancel') {
@@ -1747,7 +1763,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 		$(document).on('click', '.refresh-list-helpdesk', function(e) {
 			e.preventDefault();
-			loadHelpdeskList(selectedClientId);
+			loadHelpdeskList(selectedClientId, selectedStatusId);
 		});
 
 		$(document).on('click', '.refresh-list-approve', function(e) {
