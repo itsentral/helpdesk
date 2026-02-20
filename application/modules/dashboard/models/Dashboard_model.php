@@ -235,30 +235,6 @@ class Dashboard_model extends BF_Model
         ];
     }
 
-    public function get_tickets_by_date($client_id, $date, $category = 'all')
-    {
-        $this->db
-            ->select('h.*, hc.category_name, hsc.sub_name as sub_category_name')
-            ->from('helpdesk h')
-            ->join('helpdesk_category hc', 'hc.id = h.category_id', 'left')
-            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
-            ->where('h.client_id', $client_id)
-            ->where('h.is_delete', 0)
-            ->where('DATE(h.create_date)', $date);
-
-        // Filter by category if specified
-        if ($category === 'bugs') {
-            $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep']);
-        } else if ($category === 'issues') {
-            $this->db->where('hsc.sub_name', 'user issue');
-        }
-
-        return $this->db
-            ->order_by('h.create_date', 'DESC')
-            ->get()
-            ->result();
-    }
-
     public function get_tickets_by_date_range($client_id, $date_from, $date_to)
     {
         return $this->db
@@ -268,6 +244,7 @@ class Dashboard_model extends BF_Model
             ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
             ->where('h.client_id', $client_id)
             ->where('h.is_delete', 0)
+            ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep', 'user issue'])
             ->where('DATE(h.create_date) >=', $date_from)
             ->where('DATE(h.create_date) <=', $date_to)
             ->order_by('h.create_date', 'ASC')
@@ -283,6 +260,33 @@ class Dashboard_model extends BF_Model
             ->where('id', $client_id)
             ->get()
             ->row();
+    }
+
+    public function get_tickets_by_date($client_id, $date, $category = 'all')
+    {
+        $this->db
+            ->select('h.*, hc.category_name, hsc.sub_name as sub_category_name')
+            ->from('helpdesk h')
+            ->join('helpdesk_category hc', 'hc.id = h.category_id', 'left')
+            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('DATE(h.create_date)', $date);
+
+        // Filter by sub category
+        if ($category === 'bugs') {
+            $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep']);
+        } else if ($category === 'issues') {
+            $this->db->where('hsc.sub_name', 'user issue');
+        } else {
+            // 'all' = tetap harus filter hanya bugs & user issue
+            $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep', 'user issue']);
+        }
+
+        return $this->db
+            ->order_by('h.create_date', 'DESC')
+            ->get()
+            ->result();
     }
 
     // public function get_daily_data_with_status($client_id, $date_from, $date_to)
