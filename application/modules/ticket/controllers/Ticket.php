@@ -313,11 +313,11 @@ class Ticket extends Admin_Controller
       if ($result) {
         $this->handle_file_upload($id);
       }
+
       if ($result && $old_ticket) {
-
         $new_status = $this->input->post('status');
-        if ($new_status !== null && $old_ticket->status != $new_status) {
 
+        if ($new_status !== null && $old_ticket->status != $new_status) {
           $this->Ticket_model->save_history([
             'helpdesk_id' => $id,
             'no_ticket'   => $old_ticket->no_ticket,
@@ -326,6 +326,7 @@ class Ticket extends Admin_Controller
             'new_status'  => $new_status,
             'description' => 'Status ticket diubah'
           ]);
+          $notif_type = 1;
         } else {
           $this->Ticket_model->save_history([
             'helpdesk_id' => $id,
@@ -333,6 +334,41 @@ class Ticket extends Admin_Controller
             'action_type' => 8, // update data
             'description' => 'Data ticket diperbarui'
           ]);
+          $notif_type = 5;
+        }
+
+        $current_user_id = $this->auth->user_id();
+        $old_pic_id = $old_ticket->pic_id;
+        $new_pic_id = $pic_id;
+        $is_pic_changed = !empty($new_pic_id) && ($old_pic_id != $new_pic_id);
+
+        $skip_notif = ($notif_type === 5
+          && !empty($old_ticket->approval_by_id)
+          && $current_user_id == $old_ticket->approval_by_id
+          && !$is_pic_changed
+        );
+
+        if (!$skip_notif) {
+          $extra_info = [
+            'old_pic_id'     => $old_ticket->pic_id,
+            'new_pic_id'     => $pic_id,
+            'update_by_id'   => $current_user_id,
+            'update_by_name' => $this->auth->user_name(),
+          ];
+
+          if ($notif_type === 5 && $is_pic_changed) {
+            // Kalau ada perubahan PIC, kirim notif ke PIC baru saja
+            $receivers = [$pic_id];
+          } else {
+            // Update biasa, kirim ke creator, pic, approval
+            $receivers = [
+              $old_ticket->create_by_id,
+              $pic_id,
+              $approval_id,
+            ];
+          }
+
+          $this->send_notif($id, $old_ticket->no_ticket, $notif_type, $receivers, $extra_info);
         }
       }
 
@@ -352,12 +388,18 @@ class Ticket extends Admin_Controller
 
       if ($insert_id) {
         $this->handle_file_upload($insert_id);
+
         // HISTORY CREATE
         $this->Ticket_model->save_history([
           'helpdesk_id' => $insert_id,
           'no_ticket'   => $data['no_ticket'],
-          'action_type' => 0, // create
+          'action_type' => 0,
           'description' => 'Ticket dibuat'
+        ]);
+
+        $this->send_notif($insert_id, $data['no_ticket'], 0, [
+          $approval_id,
+          $pic_id,
         ]);
       }
 
@@ -369,6 +411,116 @@ class Ticket extends Admin_Controller
       'status'  => $result ? 1 : 0,
       'message' => $result ? $message : 'Gagal menyimpan data'
     ]);
+  }
+
+  private function send_notif($ticket_id, $no_ticket, $type, $receivers = [], $extra = [])
+  {
+    $actor_id   = $this->auth->user_id();
+    $actor_name = $this->auth->user_name();
+
+    $messages = [
+      0 => "Ticket baru #{$no_ticket} telah dibuat oleh {$actor_name}.",
+      1 => "Status ticket #{$no_ticket} telah diubah oleh {$actor_name}.",
+      2 => "Anda ditunjuk sebagai PIC pada ticket #{$no_ticket} oleh {$actor_name}.",
+      3 => "Ticket #{$no_ticket} membutuhkan approval dari Anda.",
+      4 => "Ticket #{$no_ticket} telah di-approve atau di-reject oleh {$actor_name}.",
+      5 => "Ticket #{$no_ticket} telah diperbarui oleh {$actor_name}.",
+    ];
+
+    // ── Deteksi perubahan PIC  ──
+    $old_pic = null;
+    if (array_key_exists('old_pic_id', $extra)) {
+      $val = $extra['old_pic_id'];
+      if ($val !== '' && $val !== null && $val !== false) {
+        $old_pic = (int) $val;
+      }
+    }
+
+    $new_pic = null;
+    if (array_key_exists('new_pic_id', $extra)) {
+      $val = $extra['new_pic_id'];
+      if ($val !== '' && $val !== null && $val !== false) {
+        $new_pic = (int) $val;
+      }
+    }
+
+    // Perubahan PIC dianggap terjadi jika:
+    // - new_pic ada dan valid (> 0)
+    // - old_pic berbeda (atau old_pic null/kosong)
+    $is_pic_changed = ($new_pic !== null) && ($new_pic > 0) && ($old_pic !== $new_pic);
+
+    if ($type === 5 && $is_pic_changed) {
+      $messages[5] = "{$extra['update_by_name']} menunjuk Anda sebagai PIC untuk ticket #{$no_ticket}.";
+    }
+
+    $default_message = $messages[$type] ?? "Ada pembaruan pada ticket #{$no_ticket} oleh {$actor_name}.";
+
+    $bulk = [];
+
+    // ── CASE KHUSUS: Ticket baru (type 0) ──
+    if ($type === 0) {
+      $ticket = $this->db->select('client_id')->where('id', $ticket_id)->get('helpdesk')->row();
+      $client_id = $ticket ? $ticket->client_id : null;
+
+      if ($client_id) {
+        $this->db->select('u.id_user')
+          ->from('users u')
+          ->join('helpdesk_user_client uc', 'uc.id_user = u.id_user', 'inner')
+          ->where('u.is_ba', 1)
+          ->where('uc.client_id', $client_id)
+          ->where('uc.is_active', 1)
+          ->group_by('u.id_user');
+
+        $ba_users = $this->db->get()->result_array();
+        $ba_ids   = array_column($ba_users, 'id_user');
+
+        foreach ($ba_ids as $ba_id) {
+          if ($ba_id == $actor_id) continue;
+
+          $bulk[] = [
+            'user_id'       => (int)$ba_id,
+            'helpdesk_id'   => (int)$ticket_id,
+            'no_ticket'     => $no_ticket,
+            'type'          => (int)$type,
+            'message'       => $messages[0],
+            'is_read'       => 0,
+            'created_at'    => date('Y-m-d H:i:s'),
+            'created_by_id' => (int)$actor_id,
+            'created_by'    => $actor_name,
+          ];
+        }
+      }
+    }
+
+    // ── Penerima lain (PIC, Approval, Creator, dll) ──
+    $clean_receivers = array_unique(array_filter($receivers));
+
+    foreach ($clean_receivers as $user_id) {
+      if ($user_id == $actor_id) continue;
+
+      $custom_message = $default_message;
+
+      // Khusus PIC baru yang ditunjuk
+      if ($type === 5 && $is_pic_changed && $user_id == $extra['new_pic_id']) {
+        $custom_message = "{$extra['update_by_name']} menunjuk Anda sebagai PIC untuk ticket #{$no_ticket}.";
+      }
+
+      $bulk[] = [
+        'user_id'       => (int)$user_id,
+        'helpdesk_id'   => (int)$ticket_id,
+        'no_ticket'     => $no_ticket,
+        'type'          => (int)$type,
+        'message'       => $custom_message,
+        'is_read'       => 0,
+        'created_at'    => date('Y-m-d H:i:s'),
+        'created_by_id' => (int)$actor_id,
+        'created_by'    => $actor_name,
+      ];
+    }
+
+    if (!empty($bulk)) {
+      $this->db->insert_batch('helpdesk_notifications', $bulk);
+    }
   }
 
   private function handle_file_upload($helpdesk_id)
@@ -609,6 +761,12 @@ class Ticket extends Admin_Controller
         'action_date'  => date('Y-m-d H:i:s')
       ]);
 
+      if ((int)$status === 4 && !empty($old_ticket->approval_by_id)) {
+        $this->send_notif($id, $old_ticket->no_ticket, 3, [
+          $old_ticket->approval_by_id,
+        ]);
+      }
+
       echo json_encode([
         'status' => 1,
         'message' => "Status ticket berhasil diubah menjadi {$statusName}"
@@ -730,6 +888,12 @@ class Ticket extends Admin_Controller
         'action_date'  => $now
       ]);
 
+      if ((int)$ticket->approval_level === 2 && !empty($ticket->create_by_id)) {
+        $this->send_notif($id, $ticket->no_ticket, 3, [
+          $ticket->create_by_id,
+        ]);
+      }
+
       return $this->_json(
         1,
         ((int)$ticket->approval_level === 1)
@@ -767,8 +931,6 @@ class Ticket extends Admin_Controller
 
     return $this->_json(0, 'Approval tidak valid');
   }
-
-
 
   private function _json($status, $message)
   {

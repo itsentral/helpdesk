@@ -717,7 +717,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			type: 'GET',
 			data: {
 				client_id: clientId
-			}, // TAMBAHAN
+			},
 			beforeSend: function() {
 				$('#skeleton-loading-approved').html(getSkeletonHTML()).show();
 				$('#helpdesk-content-approved').hide();
@@ -754,7 +754,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			type: 'GET',
 			data: {
 				client_id: clientId
-			}, // TAMBAHAN
+			},
 			beforeSend: function() {
 				$('#skeleton-loading-cancel').html(getSkeletonHTML()).show();
 				$('#helpdesk-content-cancel').hide();
@@ -1166,7 +1166,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 			var description = item.description || '';
 
-
 			// STATUS CHANGE INFO
 			if (item.old_status !== null && item.new_status !== null && item.old_status != item.new_status) {
 				var oldStatusText = statusLabels[item.old_status] || item.old_status;
@@ -1180,7 +1179,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 					<strong>${newStatusText}</strong>
 				</small>`;
 			}
-
 
 			// APPROVAL LEVEL INFO
 			if (item.action_type == 4 && item.old_status == item.new_status) {
@@ -1201,7 +1199,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				</small>`;
 			}
 
-
 			// REJECT INFO
 			if (item.action_type == 5) {
 				description += `
@@ -1212,7 +1209,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				</small>`;
 			}
 
-
 			// REMARK / NOTE
 			if (item.cause_pic && item.cause_pic.trim() !== '') {
 				description += `
@@ -1222,7 +1218,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 					<strong>Remark:</strong> ${item.cause_pic}
 				</small>`;
 			}
-
 
 			// BUILD HTML
 			timeline += `
@@ -1316,7 +1311,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 		shouldAutoScroll = true;
 		userHasScrolledUp = false;
-		lastRenderedMessages = []; // Reset tracking
+		lastRenderedMessages = [];
 
 		markChatAsRead(helpdeskId);
 		$('.chat-unread-badge-' + helpdeskId).hide().text('0');
@@ -1461,8 +1456,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		});
 
 		$('#chatMessagesContent').html(html);
-
-		// HAPUS bagian initializeImageViewer()
 
 		$('.chat-read-status.has-readers').on('click', function(e) {
 			e.stopPropagation();
@@ -1627,43 +1620,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
         </div>
     `;
 	}
-
-	// function initializeImageViewer() {
-	// 	// Destroy viewer instance yang lama jika ada
-	// 	if (viewerInstance) {
-	// 		viewerInstance.destroy();
-	// 		viewerInstance = null;
-	// 	}
-
-	// 	// Ambil semua image di chat
-	// 	const images = document.querySelectorAll('.chat-image-preview');
-
-	// 	if (images.length > 0) {
-	// 		// Create viewer instance baru
-	// 		viewerInstance = new Viewer(document.getElementById('chatMessagesContent'), {
-	// 			filter: function(image) {
-	// 				return image.classList.contains('chat-image-preview');
-	// 			},
-	// 			navbar: false,
-	// 			title: true,
-	// 			toolbar: {
-	// 				zoomIn: true,
-	// 				zoomOut: true,
-	// 				oneToOne: true,
-	// 				reset: true,
-	// 				rotateLeft: true,
-	// 				rotateRight: true,
-	// 				flipHorizontal: true,
-	// 				flipVertical: true,
-	// 				download: true,
-	// 			},
-	// 			viewed() {
-	// 				// Callback ketika image ditampilkan
-	// 				console.log('Image viewed');
-	// 			}
-	// 		});
-	// 	}
-	// }
 
 	function getFileIcon(fileType) {
 		if (!fileType) return 'fa-file';
@@ -1895,13 +1851,13 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 			if (hasFile) {
 				const file = $('#chatFile')[0].files[0];
-				const maxSize = 2 * 1024 * 1024; // Ubah menjadi 2MB
+				const maxSize = 2 * 1024 * 1024;
 
 				if (file.size > maxSize) {
 					Swal.fire({
 						icon: 'error',
 						title: 'File terlalu besar',
-						text: 'Ukuran maksimal file adalah 2 MB', // Update pesan
+						text: 'Ukuran maksimal file adalah 2 MB', 
 						confirmButtonText: 'OK'
 					});
 					return;

@@ -78,6 +78,90 @@
 
   <script src="<?= base_url('assets/js/scripts.js'); ?>" type="text/javascript"></script>
 
+  <style>
+    .notif-item:hover {
+      background: #d0e8ff !important;
+      cursor: pointer;
+    }
+
+    /* Pulse ring effect */
+    @keyframes pulseRing {
+      0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.5);
+      }
+
+      70% {
+        box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+      }
+    }
+
+    @keyframes bellShake {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      15% {
+        transform: rotate(15deg);
+      }
+
+      30% {
+        transform: rotate(-13deg);
+      }
+
+      45% {
+        transform: rotate(10deg);
+      }
+
+      60% {
+        transform: rotate(-8deg);
+      }
+
+      75% {
+        transform: rotate(5deg);
+      }
+
+      90% {
+        transform: rotate(-3deg);
+      }
+
+      100% {
+        transform: rotate(0deg);
+      }
+    }
+
+    .bell-shake {
+      display: inline-block;
+      animation: bellShake 0.6s ease;
+      animation-iteration-count: 3;
+      transform-origin: top center;
+    }
+
+    .bell-pulse {
+      border-radius: 50%;
+      animation: pulseRing 1.2s ease-out infinite;
+    }
+
+    @keyframes badgeBounce {
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        transform: translateY(-3px) scale(1.15);
+      }
+    }
+
+    .badge-bounce {
+      animation: badgeBounce 0.8s ease infinite;
+    }
+  </style>
+
   <script type="text/javascript">
     var baseurl = "<?= base_url(); ?>";
     var siteurl = "<?= site_url(); ?>";
@@ -99,9 +183,165 @@
       if (loader) loader.remove();
     }, 6000);
   </script>
+
+
+  <script>
+    const notifTypeIcon = {
+      0: {
+        icon: 'ti-ticket',
+        color: 'text-primary',
+        label: 'Ticket Baru'
+      },
+      1: {
+        icon: 'ti-refresh',
+        color: 'text-info',
+        label: 'Status Update'
+      },
+      2: {
+        icon: 'ti-user-check',
+        color: 'text-success',
+        label: 'Assigned'
+      },
+      3: {
+        icon: 'ti-checkup-list',
+        color: 'text-warning',
+        label: 'Approval'
+      },
+      4: {
+        icon: 'ti-circle-check',
+        color: 'text-success',
+        label: 'Approved'
+      },
+      5: {
+        icon: 'ti-edit',
+        color: 'text-secondary',
+        label: 'Diupdate'
+      },
+    };
+
+    function timeAgo(dateStr) {
+      const now = new Date();
+      const past = new Date(dateStr);
+      const diff = Math.floor((now - past) / 1000);
+      if (diff < 60) return diff + ' detik lalu';
+      if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+      if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+      return Math.floor(diff / 86400) + ' hari lalu';
+    }
+
+    function loadNotifications() {
+      $.ajax({
+        url: siteurl + 'users/get_notifications',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (!res || res.status !== 1) return;
+
+          const count = res.unread_count;
+
+          // Update badge
+          if (count > 0) {
+            $('#notif_badge').text(count > 99 ? '99+' : count).show();
+            $('#notif_badge').addClass('badge-bounce');
+
+            // Bell shake
+            const $bell = $('#notif_bell i');
+            $bell.removeClass('bell-shake');
+            void $bell[0].offsetWidth;
+            $bell.addClass('bell-shake');
+            setTimeout(() => $bell.removeClass('bell-shake'), 1800);
+            $('#notif_bell').addClass('bell-pulse');
+          } else {
+            $('#notif_badge').hide().removeClass('badge-bounce');
+            $('#notif_bell i').removeClass('bell-shake');
+            $('#notif_bell').removeClass('bell-pulse');
+          }
+
+          $('#notif_count_label').text(count);
+
+          // Render list
+          const list = res.notifications;
+          if (!list || list.length === 0) {
+            $('#notif_list').html(`
+                    <div class="text-center py-4 text-muted">
+                        <i class="ti ti-bell-off" style="font-size:32px;"></i>
+                        <p class="mt-2 mb-0">Belum ada notifikasi</p>
+                    </div>
+                `);
+            return;
+          }
+
+          let html = '';
+          list.forEach(function(n) {
+            const meta = notifTypeIcon[n.type] || notifTypeIcon[5];
+            const bg = n.is_read == 0 ? 'style="background:#f0f7ff;"' : '';
+            const bold = n.is_read == 0 ? 'fw-semibold' : '';
+
+            html += `
+                    <div class="list-group-item list-group-item-action notif-item"
+                         data-id="${n.id}" data-ticket-id="${n.helpdesk_id}" ${bg}
+                         style="cursor:pointer;">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="flex-shrink-0 mt-1">
+                                <span class="avatar avatar-s rounded-circle bg-light-primary">
+                                    <i class="ti ${meta.icon} ${meta.color}"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="mb-0 ${bold}" style="font-size:13px;">${n.message}</p>
+                                <small class="text-muted">${timeAgo(n.created_at)}</small>
+                                ${n.is_read == 0 ? '<span class="badge bg-primary ms-1" style="font-size:9px;">Baru</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+          });
+
+          $('#notif_list').html(html);
+          $('#notif_loading').hide();
+        }
+      });
+    }
+
+    $(document).on('click', '.notif-item', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const id = $(this).data('id');
+      const ticketId = $(this).data('ticket-id');
+
+      $.post(siteurl + 'users/mark_notification_read', {
+        id: id
+      }, function() {
+        window.location.href = siteurl + 'ticket/view_ticket/' + ticketId;
+      });
+    });
+
+    // Mark all read
+    $(document).on('click', '#btn_mark_all_read', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $.post(siteurl + 'users/mark_notification_read', {
+        id: 'all'
+      }, function(res) {
+        // console.log(res); 
+        loadNotifications();
+      });
+    });
+
+    // Load saat dropdown dibuka
+    $('#notif_dropdown').on('show.bs.dropdown', function() {
+      loadNotifications();
+    });
+
+    // Auto-refresh setiap 60 detik
+    loadNotifications();
+    setInterval(loadNotifications, 60000);
+  </script>
 </head>
 
 <body>
+
   <!-- [ Pre-loader ] start -->
   <div id="app-loader" class="app-loader">
     <div class="app-loader__card">
@@ -167,51 +407,46 @@
       <div class="ms-auto">
         <ul class="list-unstyled">
 
-          <!-- NOTIFICATION (optional / dummy) -->
-          <!-- <li class="dropdown pc-h-item">
+          <!-- NOTIFICATION -->
+          <li class="dropdown pc-h-item" id="notif_dropdown">
             <a class="pc-head-link head-link-secondary dropdown-toggle arrow-none me-0"
-              data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+              data-bs-toggle="dropdown"
+              data-bs-auto-close="outside"
+              href="#" role="button"
+              aria-haspopup="false" aria-expanded="false"
+              id="notif_bell">
               <i class="ti ti-bell"></i>
+              <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                id="notif_badge"
+                style="display:none; font-size:10px; padding: 2px 5px;">0</span>
             </a>
 
-            <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown">
-              <div class="dropdown-header">
-                <a href="#!" class="link-primary float-end text-decoration-underline">Mark as all read</a>
-                <h5 class="mb-0">
-                  All Notification
-                  <span class="badge bg-warning rounded-pill ms-1">01</span>
+            <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown" style="width: 360px;">
+              <div class="dropdown-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Notifikasi
+                  <span class="badge bg-warning rounded-pill ms-1" id="notif_count_label">0</span>
                 </h5>
+                <a href="#!" class="link-primary text-decoration-underline small" id="btn_mark_all_read">
+                  Tandai semua dibaca
+                </a>
               </div>
 
-              <div class="dropdown-header px-0 text-wrap header-notification-scroll position-relative"
-                style="max-height: calc(100vh - 215px)" data-simplebar="init">
-                <div class="list-group list-group-flush w-100">
-
-                  <div class="list-group-item list-group-item-action">
-                    <div class="d-flex">
-                      <div class="flex-shrink-0">
-                        <div class="user-avtar bg-light-success">
-                          <i class="ti ti-building-store"></i>
-                        </div>
-                      </div>
-                      <div class="flex-grow-1 ms-2">
-                        <span class="float-end text-muted small">3 min ago</span>
-                        <h6 class="mb-1">System Info</h6>
-                        <p class="text-body fs-6 mb-1">Welcome back to dashboard.</p>
-                        <span class="badge rounded-pill bg-light-danger">Unread</span>
-                      </div>
-                    </div>
+              <div class="dropdown-header px-0 text-wrap position-relative"
+                style="max-height: 400px; overflow-y: auto;" id="notif_list_wrapper">
+                <div class="list-group list-group-flush w-100" id="notif_list">
+                  <div class="text-center py-4 text-muted" id="notif_loading">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    Loading...
                   </div>
-
                 </div>
               </div>
 
               <div class="dropdown-divider"></div>
               <div class="text-center py-2">
-                <a href="#!" class="link-primary">View all</a>
+                <a href="<?= site_url('ticket') ?>" class="link-primary small">Lihat semua ticket</a>
               </div>
             </div>
-          </li> -->
+          </li>
 
           <!-- USER PROFILE -->
           <li class="dropdown pc-h-item header-user-profile">

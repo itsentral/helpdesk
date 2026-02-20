@@ -181,6 +181,9 @@
                     <button type="button" class="btn btn-success" id="btn_export_pdf" style="display: none;">
                         <i class="ti ti-file-export"></i> Export PDF
                     </button>
+                    <button type="button" class="btn btn-warning" id="btn_export_monthly_pdf" style="display: none;">
+                        <i class="ti ti-file-export"></i> Export PDF
+                    </button>
                 <?php endif; ?>
             </div>
         </div>
@@ -319,7 +322,7 @@
                                 </thead>
                                 <tbody id="summary_tbody">
                                 </tbody>
-                                <tfoot class="table-secondary">
+                                <tfoot style="background-color: #C4C4C4;">
                                     <tr>
                                         <th>Total</th>
                                         <th class="text-center" id="total_bugs_summary">0</th>
@@ -327,6 +330,50 @@
                                         <th class="text-center" id="total_all_summary">0</th>
                                     </tr>
                                 </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Man Hour Chart (Monthly Only) -->
+        <div class="row mb-4" id="manhour_chart_section" style="display: none;">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Man Hour Plan vs Actual per Minggu</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="manhourChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Man Hour Table (Monthly Only) -->
+        <div class="row mb-4" id="manhour_table_section" style="display: none;">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Man Hour Plan vs Actual Per Minggu</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped" id="manhour_table">
+                                <thead class="table">
+                                    <tr>
+                                        <th>Minggu</th>
+                                        <th class="text-center">Man Hour Plan</th>
+                                        <th class="text-center">Man Hour Actual</th>
+                                        <th class="text-center">Selisih</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manhour_tbody"></tbody>
+                                <tfoot id="manhour_tfoot"></tfoot>
                             </table>
                         </div>
                     </div>
@@ -372,6 +419,8 @@
     let monthlyPicker;
     let weeklyPicker;
     let currentReportType = '';
+    let manhourChart;
+    let manhourData = {};
 
     // Initialize Flatpickr for Monthly (Month picker)
     monthlyPicker = flatpickr("#date_monthly", {
@@ -610,6 +659,237 @@
         }
     });
 
+    function renderManhourChart(data) {
+        if (!data || !data.plan || !data.actual) return;
+
+        const mhPlanMap = {};
+        const mhActualMap = {};
+
+        data.plan.forEach(i => {
+            mhPlanMap[i.date] = parseFloat(i.total);
+        });
+        data.actual.forEach(i => {
+            mhActualMap[i.date] = parseFloat(i.total);
+        });
+
+        // Bangun range tanggal full bulan
+        const selectedDate = monthlyPicker.selectedDates[0];
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth();
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+
+        const allDates = [];
+        for (let d = new Date(firstDayOfMonth); d <= lastDayOfMonth; d.setDate(d.getDate() + 1)) {
+            allDates.push(formatDate(new Date(d)));
+        }
+
+        // Kelompokkan per minggu
+        const weeks = [];
+        const weekLabels = [];
+
+        for (let i = 0; i < allDates.length; i += 7) {
+            const chunk = allDates.slice(i, i + 7);
+            const startLabel = formatDateWithMonthName(chunk[0]);
+            const endLabel = formatDateWithMonthName(chunk[chunk.length - 1]);
+            weekLabels.push(`Week ${weeks.length + 1} (${startLabel} - ${endLabel})`);
+            weeks.push(chunk);
+        }
+
+        function sumWeeksMH(map) {
+            return weeks.map(chunk =>
+                parseFloat(chunk.reduce((s, d) => s + (map[d] || 0), 0).toFixed(1))
+            );
+        }
+
+        if (manhourChart) manhourChart.destroy();
+
+        const ctx = document.getElementById('manhourChart').getContext('2d');
+        manhourChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: weekLabels,
+                datasets: [{
+                        label: 'Plan',
+                        data: sumWeeksMH(mhPlanMap),
+                        backgroundColor: 'rgba(111,66,193,0.6)',
+                        borderColor: '#6f42c1',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                    },
+                    {
+                        label: 'Actual',
+                        data: sumWeeksMH(mhActualMap),
+                        backgroundColor: 'rgba(32,201,151,0.6)',
+                        borderColor: '#20c997',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        enabled: true
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 2,
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        formatter: value => value > 0 ? value : ''
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Minggu',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 0
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Man Hour',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        beginAtZero: true,
+                        grace: '15%',
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+
+    function renderManhourTable(data) {
+        if (!data || !data.plan || !data.actual) return;
+
+        const mhPlanMap = {};
+        const mhActualMap = {};
+
+        data.plan.forEach(i => {
+            mhPlanMap[i.date] = parseFloat(i.total);
+        });
+        data.actual.forEach(i => {
+            mhActualMap[i.date] = parseFloat(i.total);
+        });
+
+        // Bangun range tanggal full bulan
+        const selectedDate = monthlyPicker.selectedDates[0];
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth();
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+
+        const allDates = [];
+        for (let d = new Date(firstDayOfMonth); d <= lastDayOfMonth; d.setDate(d.getDate() + 1)) {
+            allDates.push(formatDate(new Date(d)));
+        }
+
+        // Kelompokkan per minggu
+        const weeks = [];
+        for (let i = 0; i < allDates.length; i += 7) {
+            weeks.push(allDates.slice(i, i + 7));
+        }
+
+        let tbodyHtml = '';
+        let grandPlan = 0;
+        let grandActual = 0;
+
+        weeks.forEach((chunk, index) => {
+            const startLabel = formatDateWithMonthName(chunk[0]);
+            const endLabel = formatDateWithMonthName(chunk[chunk.length - 1]);
+
+            const plan = parseFloat(chunk.reduce((s, d) => s + (mhPlanMap[d] || 0), 0).toFixed(1));
+            const actual = parseFloat(chunk.reduce((s, d) => s + (mhActualMap[d] || 0), 0).toFixed(1));
+            const selisih = parseFloat((actual - plan).toFixed(1));
+
+            grandPlan += plan;
+            grandActual += actual;
+
+            const color = selisih > 0 ? 'color:#dc3545;' : (selisih < 0 ? 'color:#28a745;' : '');
+            // const label = selisih > 0 ? 'Over' : (selisih < 0 ? 'Under' : 'On Track');
+            const label = (plan === 0 && actual === 0) ? '-' : (selisih > 0 ? 'Over' : (selisih < 0 ? 'Under' : 'On Track'));
+            const sign = selisih >= 0 ? '+' : '';
+
+            tbodyHtml += `
+            <tr>
+                <td>Week ${index + 1} (${startLabel} - ${endLabel})</td>
+                <td class="text-center"><strong>${plan.toFixed(1)}</strong></td>
+                <td class="text-center"><strong>${actual.toFixed(1)}</strong></td>
+                <td class="text-center" style="${color}"><strong>${sign}${selisih.toFixed(1)}</strong></td>
+                <td class="text-center" style="${color}"><strong>${label}</strong></td>
+            </tr>
+        `;
+        });
+
+        $('#manhour_tbody').html(tbodyHtml);
+
+        // Average & Total di tfoot
+        const weekCount = weeks.length;
+        const avgPlan = parseFloat((grandPlan / weekCount).toFixed(1));
+        const avgActual = parseFloat((grandActual / weekCount).toFixed(1));
+        const avgSelisih = parseFloat((avgActual - avgPlan).toFixed(1));
+        const grandSelisih = parseFloat((grandActual - grandPlan).toFixed(1));
+
+        const avgColor = avgSelisih > 0 ? 'color:#dc3545;' : (avgSelisih < 0 ? 'color:#28a745;' : '');
+        const totalColor = grandSelisih > 0 ? 'color:#dc3545;' : (grandSelisih < 0 ? 'color:#28a745;' : '');
+
+        // const avgLabel = avgSelisih > 0 ? 'Over' : (avgSelisih < 0 ? 'Under' : 'On Track');
+        // const totalLabel = grandSelisih > 0 ? 'Over' : (grandSelisih < 0 ? 'Under' : 'On Track');
+        const avgLabel = (avgPlan === 0 && avgActual === 0) ? '-' : (avgSelisih > 0 ? 'Over' : (avgSelisih < 0 ? 'Under' : 'On Track'));
+        const totalLabel = (grandPlan === 0 && grandActual === 0) ? '-' : (grandSelisih > 0 ? 'Over' : (grandSelisih < 0 ? 'Under' : 'On Track'));
+
+        $('#manhour_tfoot').html(`
+            <tr style="background-color: #C4C4C4;">
+                <th>Average</th>
+                <th class="text-center">${avgPlan.toFixed(1)}</th>
+                <th class="text-center">${avgActual.toFixed(1)}</th>
+                <th class="text-center" style="${avgColor}">${(avgSelisih >= 0 ? '+' : '') + avgSelisih.toFixed(1)}</th>
+                <th class="text-center" style="${avgColor}">${avgLabel}</th>
+            </tr>
+            <tr style="background-color: #C4C4C4;">
+                <th>Total</th>
+                <th class="text-center">${grandPlan.toFixed(1)}</th>
+                <th class="text-center">${grandActual.toFixed(1)}</th>
+                <th class="text-center" style="${totalColor}">${(grandSelisih >= 0 ? '+' : '') + grandSelisih.toFixed(1)}</th>
+                <th class="text-center" style="${totalColor}">${totalLabel}</th>
+            </tr>
+        `);
+    }
+
     function loadDashboard(client_id, date_from, date_to) {
         $('#dashboard_content').show();
         $('#chart_category_filter').show();
@@ -670,11 +950,28 @@
                     renderWeeklyTable(response.daily_data, 'all');
                 }
 
+                // Simpan manhour data
+                manhourData = response.manhour_data;
+
+                // Tampil/sembunyikan manhour section
+                if (currentReportType === 'monthly') {
+                    $('#manhour_chart_section').show();
+                    $('#manhour_table_section').show();
+                    renderManhourChart(response.manhour_data);
+                    renderManhourTable(response.manhour_data);
+                } else {
+                    $('#manhour_chart_section').hide();
+                    $('#manhour_table_section').hide();
+                    if (manhourChart) manhourChart.destroy();
+                }
+
                 // Show export button only for weekly report
                 if (currentReportType === 'weekly') {
                     $('#btn_export_pdf').show();
+                    $('#btn_export_monthly_pdf').hide();
                 } else {
                     $('#btn_export_pdf').hide();
+                    $('#btn_export_monthly_pdf').show();
                 }
             },
             error: function(xhr, status, error) {
@@ -740,7 +1037,6 @@
             issuesOpenMap[item.date] = parseInt(item.total);
         });
 
-        // Function to generate all dates between start and end
         function generateDateRange(startDate, endDate) {
             const dates = [];
             const currentDate = new Date(startDate);
@@ -751,23 +1047,19 @@
                 const month = String(currentDate.getMonth() + 1).padStart(2, '0');
                 const day = String(currentDate.getDate()).padStart(2, '0');
                 dates.push(`${year}-${month}-${day}`);
-
                 currentDate.setDate(currentDate.getDate() + 1);
             }
 
             return dates;
         }
 
-        // Get date range from weekly picker or determine from data
         let labels;
 
         if (currentReportType === 'weekly' && weeklyPicker.selectedDates.length === 2) {
-            // For weekly report, use the selected date range
             const dateFrom = formatDate(weeklyPicker.selectedDates[0]);
             const dateTo = formatDate(weeklyPicker.selectedDates[1]);
             labels = generateDateRange(dateFrom, dateTo);
         } else if (currentReportType === 'monthly' && monthlyPicker.selectedDates.length > 0) {
-            // For monthly report, generate full month range
             const selectedDate = monthlyPicker.selectedDates[0];
             const year = selectedDate.getFullYear();
             const month = selectedDate.getMonth();
@@ -775,7 +1067,6 @@
             const lastDay = new Date(year, month + 1, 0);
             labels = generateDateRange(formatDate(firstDay), formatDate(lastDay));
         } else {
-            // Fallback: use existing dates from data
             const allDates = new Set([
                 ...chartData.bugs.map(item => item.date),
                 ...chartData.bugs_open.map(item => item.date),
@@ -785,6 +1076,205 @@
             labels = Array.from(allDates).sort();
         }
 
+        // ============================================================
+        // MODE MONTHLY: Render chart per minggu
+        // ============================================================
+        if (currentReportType === 'monthly') {
+            const weeks = [];
+            const weekLabels = [];
+
+            for (let i = 0; i < labels.length; i += 7) {
+                const weekDates = labels.slice(i, i + 7);
+                const startLabel = formatDateWithMonthName(weekDates[0]);
+                const endLabel = formatDateWithMonthName(weekDates[weekDates.length - 1]);
+                weekLabels.push(`Week ${weeks.length + 1} (${startLabel} - ${endLabel})`);
+                weeks.push(weekDates);
+            }
+
+            function sumWeeks(dataMap) {
+                return weeks.map(weekDates =>
+                    weekDates.reduce((sum, date) => sum + (dataMap[date] || 0), 0)
+                );
+            }
+
+            let weeklyDatasets = [];
+
+            if (category === 'all') {
+                weeklyDatasets = [{
+                        label: 'Bugs & Error',
+                        data: sumWeeks(bugsMap),
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#dc3545',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'User Issues',
+                        data: sumWeeks(issuesMap),
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#ffc107',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ];
+            } else if (category === 'bugs') {
+                weeklyDatasets = [{
+                        label: 'Bugs & Error - Total',
+                        data: sumWeeks(bugsMap),
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#dc3545',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Bugs & Error - Open',
+                        data: sumWeeks(bugsOpenMap),
+                        borderColor: '#fd7e14',
+                        backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#fd7e14',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        borderDash: [5, 5]
+                    }
+                ];
+            } else if (category === 'issues') {
+                weeklyDatasets = [{
+                        label: 'User Issues - Total',
+                        data: sumWeeks(issuesMap),
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#ffc107',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'User Issues - Open',
+                        data: sumWeeks(issuesOpenMap),
+                        borderColor: '#20c997',
+                        backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#20c997',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        borderDash: [5, 5]
+                    }
+                ];
+            }
+
+            if (dailyChart) dailyChart.destroy();
+
+            const ctx = document.getElementById('dailyChart').getContext('2d');
+            dailyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: weekLabels,
+                    datasets: weeklyDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            display: true,
+                            align: 'top',
+                            anchor: 'end',
+                            font: {
+                                weight: 'bold',
+                                size: 11
+                            },
+                            formatter: function(value) {
+                                return value > 0 ? value : '';
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Minggu',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 0
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Jumlah Tickets',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            beginAtZero: true,
+                            grace: '20%',
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    if (Number.isInteger(value)) return value;
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+
+            return; // stop, tidak perlu lanjut ke render harian
+        }
+
+        // ============================================================
+        // MODE WEEKLY: Render chart per hari (kode lama tidak berubah)
+        // ============================================================
         const formattedLabels = labels.map(date => formatDateWithMonthName(date));
         let datasets = [];
 
@@ -947,9 +1437,7 @@
                         ticks: {
                             stepSize: 1,
                             callback: function(value) {
-                                if (Number.isInteger(value)) {
-                                    return value;
-                                }
+                                if (Number.isInteger(value)) return value;
                             }
                         },
                         grid: {
@@ -1327,4 +1815,29 @@
         footerHtml += '</tr>';
         $('#summary_table tfoot').html(footerHtml);
     }
+
+    $('#btn_export_monthly_pdf').click(function() {
+        const client_id = $('#client_id').val();
+        const selectedDate = monthlyPicker.selectedDates[0];
+
+        if (!selectedDate) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian!',
+                text: 'Data belum tersedia.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth();
+        const date_from = formatDate(new Date(year, month, 1));
+        const date_to = formatDate(new Date(year, month + 1, 0));
+
+        const url = siteurl + 'dashboard/print_monthly_report?client_id=' + client_id +
+            '&date_from=' + date_from + '&date_to=' + date_to;
+
+        window.open(url, '_blank');
+    });
 </script>

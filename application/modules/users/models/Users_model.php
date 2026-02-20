@@ -114,4 +114,51 @@ class Users_model extends BF_Model
             ->get()
             ->result_array();
     }
+
+    public function create_notification($data)
+    {
+        return $this->db->insert('helpdesk_notifications', $data);
+    }
+
+    public function create_bulk_notification($data_array)
+    {
+        return $this->db->insert_batch('helpdesk_notifications', $data_array);
+    }
+
+    public function get_notifications($user_id, $limit = 20)
+    {
+        return $this->db
+            ->select('n.*, h.status as ticket_status')
+            ->from('helpdesk_notifications n')
+            ->join('helpdesk h', 'h.id = n.helpdesk_id', 'left')
+            ->where('n.user_id', $user_id)
+            ->order_by('n.created_at', 'DESC')
+            ->limit($limit)
+            ->get()
+            ->result();
+    }
+
+    public function get_unread_count($user_id)
+    {
+        return $this->db
+            ->where('user_id', $user_id)
+            ->where('is_read', 0)
+            ->count_all_results('helpdesk_notifications');
+    }
+
+    public function mark_as_read($id, $user_id)
+    {
+        return $this->db
+            ->where('id', $id)
+            ->where('user_id', $user_id)
+            ->update('helpdesk_notifications', ['is_read' => 1]);
+    }
+
+    public function mark_all_read($user_id)
+    {
+        return $this->db
+            ->where('user_id', $user_id)
+            ->where('is_read', 0)
+            ->update('helpdesk_notifications', ['is_read' => 1]);
+    }
 }

@@ -21,51 +21,51 @@ class Users extends Front_Controller
     }
 
     public function login()
-{
-    if ($this->auth->is_login()) {
-        history("Login");
-        redirect('/');
-    }
-
-    $identitas = $this->identitas_model->find_by(['ididentitas' => 1]);
-
-    if ($this->input->post('login')) {
-        $token = $this->input->post('g-recaptcha-response', true);
-        list($ok, $info) = $this->verify_recaptcha_v3($token, 'login', 0.5);
-        if (!$ok) {
-            $this->session->set_flashdata('error', 'Verifikasi reCAPTCHA gagal: ' . $info);
-            redirect('users/login');
-            return;
+    {
+        if ($this->auth->is_login()) {
+            history("Login");
+            redirect('/');
         }
-        
-        $username = $this->input->post('username', true);
-        $password = $this->input->post('password', true);
-        
-        // Coba login dan tangkap hasilnya
-        $login_result = $this->auth->login($username, $password);
-        
-        // Jika login gagal, set flashdata error
-        if (!$login_result) {
-            $this->session->set_flashdata('error', 'Username atau password salah!');
-            redirect('users/login');
-            return;
-        }
-        
-        // Jika berhasil, akan diarahkan ke halaman utama oleh auth library
-    }
 
-    $this->template->set('recaptcha_site_key', $this->site_key);
-    $this->template->set('idt', $identitas);
-    
-    // Tambahkan ini untuk meneruskan flashdata ke view
-    $error_message = $this->session->flashdata('error');
-    $this->template->set('login_error', $error_message);
-    
-    $this->template->set_theme('default');
-    $this->template->set_layout('login');
-    $this->template->title('Login');
-    $this->template->render('login_animate');
-}
+        $identitas = $this->identitas_model->find_by(['ididentitas' => 1]);
+
+        if ($this->input->post('login')) {
+            $token = $this->input->post('g-recaptcha-response', true);
+            list($ok, $info) = $this->verify_recaptcha_v3($token, 'login', 0.5);
+            if (!$ok) {
+                $this->session->set_flashdata('error', 'Verifikasi reCAPTCHA gagal: ' . $info);
+                redirect('users/login');
+                return;
+            }
+
+            $username = $this->input->post('username', true);
+            $password = $this->input->post('password', true);
+
+            // Coba login dan tangkap hasilnya
+            $login_result = $this->auth->login($username, $password);
+
+            // Jika login gagal, set flashdata error
+            if (!$login_result) {
+                $this->session->set_flashdata('error', 'Username atau password salah!');
+                redirect('users/login');
+                return;
+            }
+
+            // Jika berhasil, akan diarahkan ke halaman utama oleh auth library
+        }
+
+        $this->template->set('recaptcha_site_key', $this->site_key);
+        $this->template->set('idt', $identitas);
+
+        // Tambahkan ini untuk meneruskan flashdata ke view
+        $error_message = $this->session->flashdata('error');
+        $this->template->set('login_error', $error_message);
+
+        $this->template->set_theme('default');
+        $this->template->set_layout('login');
+        $this->template->title('Login');
+        $this->template->render('login_animate');
+    }
 
     public function logout()
     {
@@ -111,5 +111,35 @@ class Users extends Front_Controller
         if ($score < $threshold) return [false, 'Skor rendah (' . $score . ')'];
 
         return [true, $score];
+    }
+
+    public function get_notifications()
+    {
+        $this->load->model('Users_model');
+        $user_id = $this->auth->user_id();
+
+        $notifications = $this->Users_model->get_notifications($user_id);
+        $unread_count  = $this->Users_model->get_unread_count($user_id);
+
+        echo json_encode([
+            'status'        => 1,
+            'unread_count'  => $unread_count,
+            'notifications' => $notifications,
+        ]);
+    }
+
+    public function mark_notification_read()
+    {
+        $this->load->model('Users_model');
+        $id      = $this->input->post('id');
+        $user_id = $this->auth->user_id();
+
+        if ($id === 'all') {
+            $this->Users_model->mark_all_read($user_id);
+        } else {
+            $this->Users_model->mark_as_read($id, $user_id);
+        }
+
+        echo json_encode(['status' => 1]);
     }
 }
