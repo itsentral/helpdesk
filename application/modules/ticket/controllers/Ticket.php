@@ -67,8 +67,10 @@ class Ticket extends Admin_Controller
 
     $user_id = $this->auth->user_id();
     $client_id = $this->input->get('client_id');
+    $date_from = $this->input->get('date_from');
+    $date_to   = $this->input->get('date_to');
 
-    $helpdesk = $this->Ticket_model->get_approved_ticket($client_id);
+    $helpdesk = $this->Ticket_model->get_approved_ticket($client_id, $date_from, $date_to);
     $unread_counts = $this->Ticket_model->get_all_unread_counts($user_id);
 
     $data['helpdesk'] = $helpdesk;
@@ -166,15 +168,18 @@ class Ticket extends Admin_Controller
       redirect('ticket');
     }
 
+    $current_user_id = $this->auth->user_id();
 
     $data = [
-      'categories' => $this->Ticket_model->get_categories(),
+      'categories'     => $this->Ticket_model->get_categories(),
       'sub_categories' => [],
-      'users' => $this->Ticket_model->get_users(),
-      'clients' => [],
-      'helpdesk' => $helpdesk,
-      'attachments' => $attachments,
-      'view_mode' => true
+      'users'          => $this->Ticket_model->get_users(),
+      'clients'        => [],
+      'helpdesk'       => $helpdesk,
+      'attachments'    => $attachments,
+      'view_mode'      => true,
+      'login_user_id'  => $current_user_id,
+      'enable_manage'  => has_permission('Ticket.Manage'),
     ];
 
     $this->template->title('View Helpdesk Ticket');

@@ -439,6 +439,9 @@
         mode: "range",
         dateFormat: "Y-m-d",
         maxDate: "today",
+        locale: {
+            firstDayOfWeek: 1
+        },
         onClose: function(selectedDates, dateStr, instance) {
             if (selectedDates.length === 2) {
                 const start = selectedDates[0];

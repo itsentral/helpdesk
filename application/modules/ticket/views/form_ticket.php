@@ -712,7 +712,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 <?php endif; ?>
 </form>
 <div class="card-footer">
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
         <a href="<?= site_url('ticket') ?>" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> Back
         </a>
@@ -721,6 +721,86 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
             <button type="submit" form="form-helpdesk" class="btn btn-primary" id="btn-save">
                 <i class="fa-solid fa-floppy-disk"></i> Save
             </button>
+        <?php endif; ?>
+
+        <?php if ($is_readonly && isset($enable_manage) && $enable_manage && isset($helpdesk->id)):
+            $s              = (int) $helpdesk->status;
+            $picById        = trim((string)($helpdesk->pic_id ?? ''));
+            $createById     = trim((string)($helpdesk->create_by_id ?? ''));
+            $approvalById   = trim((string)($helpdesk->approval_by_id ?? ''));
+            $approvalLevel  = (int)($helpdesk->approval_level ?? 0);
+            $currLevel      = (int)($helpdesk->current_approval_level ?? 0);
+            $manHourPlan    = $helpdesk->man_hour_plan ?? 0;
+            $uid            = (string)($login_user_id ?? '');
+        ?>
+
+            <!-- PROCESS -->
+            <?php if ($picById === $uid && in_array($s, [0, 2, 6])): ?>
+                <button type="button" class="btn btn-primary process-status"
+                    data-id="<?= $helpdesk->id ?>"
+                    data-current-status="<?= $s ?>"
+                    data-man-hour-plan="<?= $manHourPlan ?>">
+                    <i class="fa-solid fa-angles-right"></i> Process
+                </button>
+            <?php endif; ?>
+
+            <!-- PENDING -->
+            <?php if ($s === 1 && $picById === $uid): ?>
+                <button type="button" class="btn btn-warning pending-status"
+                    data-id="<?= $helpdesk->id ?>">
+                    <i class="fa-solid fa-hourglass-half"></i> Pending
+                </button>
+            <?php endif; ?>
+
+            <!-- DONE -->
+            <?php if ($s === 1 && $picById === $uid): ?>
+                <button type="button" class="btn btn-success done-status"
+                    data-id="<?= $helpdesk->id ?>"
+                    data-current-status="<?= $s ?>">
+                    <i class="fa-solid fa-clipboard-check"></i> Done
+                </button>
+            <?php endif; ?>
+
+            <!-- CANCEL -->
+            <?php if ($s === 0 && $createById === $uid): ?>
+                <button type="button" class="btn btn-danger cancel-status"
+                    data-id="<?= $helpdesk->id ?>">
+                    <i class="fa-solid fa-ban"></i> Cancel
+                </button>
+            <?php endif; ?>
+
+            <!-- REJECT -->
+            <?php if (
+                $s === 4 && $currLevel < $approvalLevel &&
+                (
+                    ($currLevel === 0 && $approvalById === $uid) ||
+                    ($currLevel === 1 && $createById === $uid)
+                )
+            ): ?>
+                <button type="button" class="btn btn-danger reject-status"
+                    data-id="<?= $helpdesk->id ?>">
+                    <i class="fa-solid fa-xmark"></i> Reject
+                </button>
+            <?php endif; ?>
+
+            <!-- APPROVE LEVEL 1 -->
+            <?php if ($s === 4 && $approvalLevel >= 1 && $currLevel === 0 && $approvalById === $uid): ?>
+                <button type="button" class="btn btn-success approve-status"
+                    data-id="<?= $helpdesk->id ?>"
+                    data-level="1">
+                    <i class="fa-solid fa-check"></i> Approve
+                </button>
+            <?php endif; ?>
+
+            <!-- APPROVE LEVEL 2 -->
+            <?php if ($s === 4 && $approvalLevel >= 2 && $currLevel === 1 && $createById === $uid): ?>
+                <button type="button" class="btn btn-success approve-status"
+                    data-id="<?= $helpdesk->id ?>"
+                    data-level="2">
+                    <i class="fa-solid fa-check-double"></i> Approve
+                </button>
+            <?php endif; ?>
+
         <?php endif; ?>
     </div>
 </div>
@@ -732,8 +812,10 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-<!-- ✅ Viewer.js -->
+<!-- Viewer.js -->
 <script src="https://cdn.jsdelivr.net/npm/viewerjs@1.11.6/dist/viewer.min.js"></script>
+
+<script src="<?= base_url('assets/js/ticket_actions.js') ?>"></script>
 
 <script>
     function removeFilePreview(index) {
@@ -1285,3 +1367,44 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
         <?php endif; ?>
     });
 </script>
+
+<?php if ($is_readonly && isset($helpdesk->id)): ?>
+    <script>
+        // Override redirect setelah aksi berhasil
+        window.loadHelpdeskList = function() {
+            setTimeout(() => {
+                window.location.href = siteurl + active_controller;
+            }, 1500);
+        };
+
+        $(document).on('click', '.process-status', function(e) {
+            e.preventDefault();
+            changeTicketStatus($(this).data('id'), 1, 'Process', $(this).data('current-status'), $(this).data('man-hour-plan'));
+        });
+
+        $(document).on('click', '.pending-status', function(e) {
+            e.preventDefault();
+            changeTicketStatus($(this).data('id'), 2, 'Pending');
+        });
+
+        $(document).on('click', '.done-status', function(e) {
+            e.preventDefault();
+            changeTicketStatus($(this).data('id'), 4, 'Done', $(this).data('current-status'));
+        });
+
+        $(document).on('click', '.cancel-status', function(e) {
+            e.preventDefault();
+            changeTicketStatus($(this).data('id'), 3, 'Cancel');
+        });
+
+        $(document).on('click', '.approve-status', function(e) {
+            e.preventDefault();
+            updateTicketApproval($(this).data('id'), 'approve');
+        });
+
+        $(document).on('click', '.reject-status', function(e) {
+            e.preventDefault();
+            updateTicketApproval($(this).data('id'), 'reject');
+        });
+    </script>
+<?php endif; ?>

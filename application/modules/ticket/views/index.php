@@ -406,23 +406,37 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			<!-- OPEN TAB -->
 			<div class="tab-pane fade show active" id="tab-open" role="tabpanel">
 				<div class="mb-3">
-					<div class="d-flex justify-content-end gap-2">
-						<select class="form-select form-select-sm" id="filterClient" style="width: 200px;">
-							<option value="">All Client</option>
-							<!-- Options via AJAX -->
-						</select>
+					<div class="d-flex justify-content-end gap-2 align-items-center flex-wrap">
 
-						<select class="form-select form-select-sm" id="filterStatus" style="width: 220px;">
-							<option value="">Filter By Status</option>
-							<option value="0">Open</option>
-							<option value="1">Process</option>
-							<option value="2">Pending</option>
-							<option value="6">Revisi</option>
-							<option value="4">Done</option>
-							<option value="waiting_approval">Menunggu Approval</option>
-							<option value="waiting_creator">Menunggu Konfirmasi Pembuat</option>
-							<option value="no_pic">PIC Belum Ditunjuk</option>
-						</select>
+						<!-- Filter Client -->
+						<div class="d-flex align-items-center gap-1">
+							<select class="form-select form-select-sm" id="filterClient" style="width: 200px;">
+								<option value="">All Client</option>
+							</select>
+							<button type="button" id="clearFilterClient" class="btn btn-sm btn-outline-secondary"
+								style="display:none;" title="Reset filter client">
+								<i class="fa-solid fa-xmark"></i>
+							</button>
+						</div>
+
+						<!-- Filter Status -->
+						<div class="d-flex align-items-center gap-1">
+							<select class="form-select form-select-sm" id="filterStatus" style="width: 220px;">
+								<option value="">Filter By Status</option>
+								<option value="0">Open</option>
+								<option value="1">Process</option>
+								<option value="2">Pending</option>
+								<option value="6">Revisi</option>
+								<option value="4">Done</option>
+								<option value="waiting_approval">Menunggu Approval</option>
+								<option value="waiting_creator">Menunggu Konfirmasi Pembuat</option>
+								<option value="no_pic">PIC Belum Ditunjuk</option>
+							</select>
+							<button type="button" id="clearFilterStatus" class="btn btn-sm btn-outline-secondary"
+								style="display:none;" title="Reset filter status">
+								<i class="fa-solid fa-xmark"></i>
+							</button>
+						</div>
 
 						<button class="btn btn-primary btn-sm refresh-list-helpdesk">
 							<i class="fa-solid fa-arrows-rotate"></i> Refresh
@@ -444,14 +458,38 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 			<!-- APPROVED TAB -->
 			<div class="tab-pane fade" id="tab-approved" role="tabpanel">
-				<div class="d-flex justify-content-end gap-2">
-					<select class="form-select form-select-sm" id="filterClientApproved" style="width: 200px;">
-						<option value="">All Client</option>
-						<!-- Options via AJAX -->
-					</select>
-					<button class="btn btn-primary btn-sm refresh-list-approve">
-						<i class="fa-solid fa-arrows-rotate"></i> Refresh
-					</button>
+				<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+
+					<!-- KIRI: Date Range Filter -->
+					<div class="d-flex align-items-center gap-2">
+						<div class="input-group input-group-sm" style="width: auto;">
+							<span class="input-group-text bg-white">
+								<i class="fa-solid fa-calendar-days text-primary"></i>
+							</span>
+							<input type="text" class="form-control form-control-sm" id="filterDateFromApproved"
+								placeholder="Dari Tanggal" style="width: 130px;" readonly>
+							<span class="input-group-text bg-white text-muted">s/d</span>
+							<input type="text" class="form-control form-control-sm" id="filterDateToApproved"
+								placeholder="Sampai Tanggal" style="width: 130px;" readonly>
+						</div>
+						<button type="button" id="btnFilterApproved" class="btn btn-sm btn-primary">
+							<i class="fa-solid fa-magnifying-glass"></i> Filter
+						</button>
+						<button type="button" id="clearDateApproved" class="btn btn-sm btn-outline-secondary" title="Reset ke bulan ini">
+							<i class="fa-solid fa-rotate-left"></i>
+						</button>
+					</div>
+
+					<!-- KANAN: Client Filter + Refresh -->
+					<div class="d-flex align-items-center gap-2">
+						<select class="form-select form-select-sm" id="filterClientApproved" style="width: 200px;">
+							<option value="">All Client</option>
+						</select>
+						<button class="btn btn-primary btn-sm refresh-list-approve">
+							<i class="fa-solid fa-arrows-rotate"></i> Refresh
+						</button>
+					</div>
+
 				</div>
 				<div id="skeleton-loading-approved"></div>
 				<div id="helpdesk-content-approved" style="display:none;"></div>
@@ -574,11 +612,15 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 <!-- Viewer.js CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
 
 <!-- Viewer.js JavaScript -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+<script src="<?= base_url('assets/js/ticket_actions.js') ?>"></script>
 
 <script>
 	let currentHelpdeskId = null;
@@ -712,11 +754,23 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 	// Update function loadApprovedList
 	function loadApprovedList(clientId = '') {
+		const fpFromEl = document.querySelector('#filterDateFromApproved')._flatpickr;
+		const fpToEl = document.querySelector('#filterDateToApproved')._flatpickr;
+
+		const dateFrom = fpFromEl && fpFromEl.selectedDates[0] ?
+			fpFromEl.formatDate(fpFromEl.selectedDates[0], 'Y-m-d') :
+			'';
+		const dateTo = fpToEl && fpToEl.selectedDates[0] ?
+			fpToEl.formatDate(fpToEl.selectedDates[0], 'Y-m-d') :
+			'';
+
 		$.ajax({
 			url: siteurl + active_controller + 'get_list_approved',
 			type: 'GET',
 			data: {
-				client_id: clientId
+				client_id: clientId,
+				date_from: dateFrom,
+				date_to: dateTo
 			},
 			beforeSend: function() {
 				$('#skeleton-loading-approved').html(getSkeletonHTML()).show();
@@ -807,288 +861,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				</table>
 			</div>
    	 `;
-	}
-
-	function updateTicketApproval(ticketId, action) {
-
-		var actionUpper = action.charAt(0).toUpperCase() + action.slice(1);
-
-		var modalContent = `
-        <div class="mb-3">
-            <p>
-                ${action === 'approve'
-                    ? 'Approval akan diproses.'
-                    : 'Ticket akan dikembalikan ke revisi.'}
-            </p>
-            <div class="form-group mt-3">
-                <label>
-                    ${action === 'approve' ? 'Catatan Approval' : 'Alasan Penolakan'}
-                </label>
-                <textarea class="form-control" id="approvalReason" rows="3"></textarea>
-            </div>
-        </div>
-    	`;
-
-		Swal.fire({
-			title: 'Konfirmasi ' + actionUpper,
-			html: modalContent,
-			icon: action === 'approve' ? 'question' : 'warning',
-			showCancelButton: true,
-			confirmButtonText: 'Ya, ' + actionUpper,
-			preConfirm: () => {
-				let reason = $('#approvalReason').val();
-				if (!reason.trim()) {
-					Swal.showValidationMessage('Wajib diisi');
-					return false;
-				}
-				return {
-					reason: reason.trim()
-				};
-			}
-		}).then((result) => {
-			if (!result.isConfirmed) return;
-
-			$.ajax({
-				url: siteurl + active_controller + 'update_approval',
-				type: 'POST',
-				dataType: 'json',
-				data: {
-					id: ticketId,
-					action: action, // approve / reject
-					approval_reason: result.value.reason
-				},
-				success: function(res) {
-					Swal.fire({
-						icon: res.status ? 'success' : 'error',
-						title: res.status ? 'Berhasil' : 'Gagal',
-						text: res.message,
-						timer: 1500,
-						showConfirmButton: false
-					});
-					if (res.status) loadHelpdeskList();
-				}
-			});
-		});
-	}
-
-
-	function changeTicketStatus(ticketId, status, statusText, currentStatus = null, manHourPlan = null) {
-		var modalContent = '';
-		var showReasonInput = false;
-		var showManHourInput = false;
-		var showManHourPlanInput = false;
-
-		switch (status) {
-			case 1: // Process
-				// CEK apakah man_hour_plan sudah diisi
-				if (!manHourPlan || manHourPlan == 0 || manHourPlan == null) {
-					modalContent = `
-                    <div class="mb-3">
-                        <h2>Man Hour Plan belum diisi!</h2>
-                        <div class="form-group mt-3">
-                            <label for="manHourPlan" class="form-label">
-                                <i class="fa-solid fa-clock"></i> Man Hour Plan <small class="text-danger">*</small>
-                            </label>
-                            <div class="input-group">
-                                <input
-                                    type="number"
-                                    class="form-control"
-                                    id="manHourPlan"
-                                    placeholder="Contoh: 4"
-                                    min="0.5"
-                                    step="0.5"
-                                    required
-                                >
-                                <span class="input-group-text">jam</span>
-                            </div>
-                            <small class="text-muted d-block mt-1">
-                                <i class="fa-solid fa-info-circle"></i> Masukkan estimasi waktu yang dibutuhkan untuk menyelesaikan ticket ini
-                            </small>
-                        </div>
-                    </div>
-                `;
-					showManHourPlanInput = true;
-				} else {
-					modalContent = '<h2>Ubah status ticket menjadi Process?</h2>';
-				}
-				break;
-
-			case 2: // Pending
-				modalContent = '<h2>Ubah status ticket menjadi Pending?</h2>';
-				break;
-
-			case 3: // Cancel
-				modalContent = `
-                <div class="mb-3">
-                    <h2>Ubah status ticket menjadi Cancel?</h2>
-                    <div class="form-group mt-3">
-                        <label for="cancelReason" class="form-label">
-                            Alasan Pembatalan <small class="text-danger">*</small>
-                        </label>
-                        <textarea
-                            class="form-control"
-                            id="cancelReason"
-                            rows="3"
-                            placeholder="Masukkan alasan pembatalan..."
-                        ></textarea>
-                    </div>
-                </div>
-            `;
-				showReasonInput = true;
-				break;
-
-			case 4: // Done
-				// Cek apakah dari status Process (1)
-				if (currentStatus == 1) {
-					modalContent = `
-                    <div class="mb-3">
-                        <h2>Ubah status ticket menjadi Done?</h2>
-                        <div class="form-group mt-3">
-                            <label for="manHourActual" class="form-label">
-                                <i class="fa-solid fa-clock"></i> Man Hour Actual <small class="text-danger">*</small>
-                            </label>
-                            <div class="input-group">
-                                <input
-                                    type="number"
-                                    class="form-control"
-                                    id="manHourActual"
-                                    placeholder="Contoh: 2.5"
-                                    min="0"
-                                    step="0.5"
-                                    required
-                                >
-                                <span class="input-group-text">jam</span>
-                            </div>
-                            <small class="text-muted d-block mt-1">
-                                <i class="fa-solid fa-info-circle"></i> Masukkan waktu aktual yang dihabiskan untuk menyelesaikan ticket ini
-                            </small>
-                        </div>
-                    </div>
-                `;
-					showManHourInput = true;
-				} else {
-					modalContent = '<h2>Ubah status ticket menjadi Done?</h2>';
-				}
-				break;
-
-			default:
-				modalContent = '<h2>Konfirmasi perubahan status?</h2>';
-		}
-
-		Swal.fire({
-			html: modalContent,
-			icon: 'question',
-			showCancelButton: true,
-			confirmButtonText: '<i class="fa-solid fa-check"></i> Ya, Ubah Status',
-			cancelButtonText: '<i class="fa-solid fa-xmark"></i> Batal',
-			confirmButtonColor: '#3085d6',
-			cancelButtonColor: '#6c757d',
-			showLoaderOnConfirm: true,
-			preConfirm: () => {
-				var cancelReason = '';
-				var manHourActual = '';
-				var manHourPlanInput = '';
-
-				// Validasi Cancel Reason
-				if (showReasonInput) {
-					cancelReason = $('#cancelReason').val();
-					if (!cancelReason || !cancelReason.trim()) {
-						Swal.showValidationMessage('Alasan pembatalan wajib diisi');
-						return false;
-					}
-				}
-
-				// Validasi Man Hour Plan
-				if (showManHourPlanInput) {
-					manHourPlanInput = $('#manHourPlan').val();
-					if (!manHourPlanInput || manHourPlanInput <= 0) {
-						Swal.showValidationMessage('Man Hour Plan wajib diisi');
-						return false;
-					}
-				}
-
-				// Validasi Man Hour Actual
-				if (showManHourInput) {
-					manHourActual = $('#manHourActual').val();
-					if (!manHourActual || manHourActual <= 0) {
-						Swal.showValidationMessage('Man Hour Actual wajib diisi');
-						return false;
-					}
-				}
-
-				return new Promise((resolve, reject) => {
-					$.ajax({
-						url: siteurl + active_controller + 'update_status',
-						type: 'POST',
-						data: {
-							id: ticketId,
-							status: status,
-							current_status: currentStatus,
-							cancel_reason: cancelReason ? cancelReason.trim() : '',
-							man_hour_actual: manHourActual ? parseFloat(manHourActual) : '',
-							man_hour_plan: manHourPlanInput ? parseFloat(manHourPlanInput) : ''
-						},
-						dataType: 'json',
-						success: function(response) {
-							if (response.status == 1) {
-								resolve(response);
-							} else {
-								reject(new Error(response.message || 'Terjadi kesalahan'));
-							}
-						},
-						error: function(xhr, status, error) {
-							reject(new Error(
-								xhr.responseJSON?.message || error || 'Request gagal'
-							));
-						}
-					});
-				});
-			},
-			allowOutsideClick: () => !Swal.isLoading()
-		}).then((result) => {
-			if (result.isConfirmed && result.value) {
-				Swal.fire({
-					icon: 'success',
-					title: 'Berhasil!',
-					text: result.value.message,
-					timer: 2000,
-					showConfirmButton: false
-				});
-				loadHelpdeskList();
-			}
-		});
-	}
-
-	function viewTicketHistory(ticketId, ticketNo) {
-		$('#historyTicketNo').text(ticketNo);
-		$('#modalHistoryTicket').modal('show');
-		$('#historyLoading').show();
-		$('#historyEmpty').hide();
-		$('#historyTimeline').hide().html('');
-
-		$.ajax({
-			url: siteurl + active_controller + 'get_ticket_history/' + ticketId,
-			type: 'GET',
-			dataType: 'json',
-			success: function(response) {
-				$('#historyLoading').hide();
-
-				if (response.status == 1 && response.data.length > 0) {
-					var historyHTML = buildHistoryTimeline(response.data);
-					$('#historyTimeline').html(historyHTML).show();
-				} else {
-					$('#historyEmpty').show();
-				}
-			},
-			error: function() {
-				$('#historyLoading').hide();
-				$('#historyTimeline').html(
-					'<div class="alert alert-danger m-3">' +
-					'<i class="fa-solid fa-exclamation-triangle"></i> Gagal memuat history' +
-					'</div>'
-				).show();
-			}
-		});
 	}
 
 	function buildHistoryTimeline(historyData) {
@@ -1681,6 +1453,20 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		hideScrollToBottomButton();
 	}
 
+	function getDefaultDateApproved() {
+		const today = new Date();
+
+		const pad = n => String(n).padStart(2, '0');
+		const toYMD = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+		const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+		return {
+			from: toYMD(firstDay),
+			to: toYMD(today)
+		};
+	}
+
 	$(document).ready(function() {
 		loadClientList();
 		loadHelpdeskList();
@@ -1688,11 +1474,27 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 		$('#filterStatus').on('change', function() {
 			selectedStatusId = $(this).val();
+			$('#clearFilterStatus').toggle(selectedStatusId !== '');
+			loadHelpdeskList(selectedClientId, selectedStatusId);
+		});
+
+		$('#clearFilterStatus').on('click', function() {
+			$('#filterStatus').val('');
+			selectedStatusId = '';
+			$(this).hide();
 			loadHelpdeskList(selectedClientId, selectedStatusId);
 		});
 
 		$('#filterClient').on('change', function() {
 			selectedClientId = $(this).val();
+			$('#clearFilterClient').toggle(selectedClientId !== '');
+			loadHelpdeskList(selectedClientId, selectedStatusId);
+		});
+
+		$('#clearFilterClient').on('click', function() {
+			$('#filterClient').val('');
+			selectedClientId = '';
+			$(this).hide();
 			loadHelpdeskList(selectedClientId, selectedStatusId);
 		});
 
@@ -1857,7 +1659,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 					Swal.fire({
 						icon: 'error',
 						title: 'File terlalu besar',
-						text: 'Ukuran maksimal file adalah 2 MB', 
+						text: 'Ukuran maksimal file adalah 2 MB',
 						confirmButtonText: 'OK'
 					});
 					return;
@@ -2018,5 +1820,50 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			viewer.view(currentIndex);
 		});
 
+		// Init Flatpickr Approved
+		const defaultDate = getDefaultDateApproved();
+		const today = new Date();
+		const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+		const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+		const fpFrom = flatpickr('#filterDateFromApproved', {
+			locale: 'id',
+			dateFormat: 'd M Y',
+			defaultDate: firstDayOfMonth,
+			onChange: function(selectedDates) {
+				if (fpTo.selectedDates[0] && selectedDates[0] > fpTo.selectedDates[0]) {
+					fpTo.setDate(selectedDates[0]);
+				}
+				fpTo.set('minDate', selectedDates[0] || null);
+			}
+		});
+
+		const fpTo = flatpickr('#filterDateToApproved', {
+			locale: 'id',
+			dateFormat: 'd M Y',
+			defaultDate: todayDate,
+			minDate: firstDayOfMonth,
+			onChange: function(selectedDates) {
+				fpFrom.set('maxDate', selectedDates[0] || null);
+			}
+		});
+
+		// Tombol Filter
+		$('#btnFilterApproved').on('click', function() {
+			loadApprovedList(selectedClientIdApproved);
+		});
+
+		// Tombol Reset
+		$('#clearDateApproved').on('click', function() {
+			const now = new Date();
+			const resetFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+			const resetTo = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+			fpFrom.setDate(resetFrom);
+			fpTo.setDate(resetTo);
+			fpFrom.set('maxDate', null);
+			fpTo.set('minDate', resetFrom);
+			loadApprovedList(selectedClientIdApproved);
+		});
 	});
 </script>

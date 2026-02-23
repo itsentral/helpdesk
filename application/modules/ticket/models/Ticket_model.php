@@ -143,7 +143,7 @@ class Ticket_model extends BF_Model
         return $this->db->get()->result_array();
     }
 
-    public function get_approved_ticket($client_id = null)
+    public function get_approved_ticket($client_id = null, $date_from = null, $date_to = null)
     {
         $user_id = $this->auth->user_id();
 
@@ -154,8 +154,8 @@ class Ticket_model extends BF_Model
         $this->db->join(
             'helpdesk_user_client huc',
             'huc.client_id = helpdesk.client_id 
-            AND huc.id_user = ' . (int)$user_id . '
-            AND huc.is_active = 1',
+        AND huc.id_user = ' . (int)$user_id . '
+        AND huc.is_active = 1',
             'left'
         );
 
@@ -167,7 +167,14 @@ class Ticket_model extends BF_Model
             $this->db->where('helpdesk.client_id', $client_id);
         }
 
-        if ($user_id != 7) { // 7 = admin
+        if (!empty($date_from)) {
+            $this->db->where('DATE(helpdesk.create_date) >=', $date_from);
+        }
+        if (!empty($date_to)) {
+            $this->db->where('DATE(helpdesk.create_date) <=', $date_to);
+        }
+
+        if ($user_id != 7) {
             $this->db->group_start()
                 ->where('helpdesk.create_by_id', $user_id)
                 ->or_where('helpdesk.pic_id', $user_id)
