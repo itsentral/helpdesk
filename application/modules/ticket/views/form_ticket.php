@@ -431,6 +431,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                             <?php
                                             $file_ext = strtolower(pathinfo($file->file_name_original, PATHINFO_EXTENSION));
                                             $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                            $is_video = in_array($file_ext, ['mp4', 'avi', 'mov', 'mkv', 'webm', '3gp']);
                                             $file_url = site_url('ticket/download_attachment/' . $file->id);
                                             ?>
 
@@ -441,6 +442,14 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                                     style="height: 150px; width: 100%; object-fit: cover; cursor: pointer;"
                                                     alt="<?= htmlspecialchars($file->file_name_original) ?>"
                                                     data-original="<?= $file_url ?>">
+                                            <?php elseif ($is_video): ?>
+                                                <!-- Video Thumbnail -->
+                                                <div class="video-thumb text-center bg-dark rounded d-flex flex-column justify-content-center align-items-center"
+                                                    style="height: 150px; width: 100%; cursor: pointer;"
+                                                    onclick="openVideoModal('<?= $file_url ?>', '<?= htmlspecialchars($file->file_name_original) ?>')">
+                                                    <i class="fa-solid fa-circle-play fa-3x text-white"></i>
+                                                    <p class="mb-0 mt-2 small text-white"><?= strtoupper($file_ext) ?></p>
+                                                </div>
                                             <?php else: ?>
                                                 <!-- Non-image files -->
                                                 <div class="file-icon text-center p-3 bg-light border rounded d-flex flex-column justify-content-center align-items-center"
@@ -468,6 +477,12 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                                         data-image-url="<?= $file_url ?>"
                                                         data-image-name="<?= htmlspecialchars($file->file_name_original) ?>">
                                                         <i class="fa-solid fa-eye"></i> View
+                                                    </button>
+                                                <?php elseif ($is_video): ?>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-info flex-fill"
+                                                        onclick="openVideoModal('<?= $file_url ?>', '<?= htmlspecialchars($file->file_name_original) ?>')">
+                                                        <i class="fa-solid fa-play"></i> Play
                                                     </button>
                                                 <?php endif; ?>
                                                 <a href="<?= $file_url ?>"
@@ -499,10 +514,11 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                             name="attachments[]"
                             id="attachments"
                             multiple
-                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx">
                     </div>
                     <small class="text-muted">
-                        <i class="fa-solid fa-circle-info"></i> Maksimal 5 file, ukuran per file max 2MB. Format: JPG, PNG, PDF, DOC, XLS
+                        <i class="fa-solid fa-circle-info"></i> Maksimal 5 file. Ukuran: Gambar max 2MB, File max 10MB, Video max 100MB.
+                        Format: JPG, PNG, PDF, DOC, XLS, MP4, dll
                     </small>
 
                     <!-- Preview Container for New Files -->
@@ -523,6 +539,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                                 <?php
                                                 $file_ext = strtolower(pathinfo($file->file_name_original, PATHINFO_EXTENSION));
                                                 $is_image = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                                $is_video = in_array($file_ext, ['mp4', 'avi', 'mov', 'mkv', 'webm', '3gp']);
                                                 $file_url = site_url('ticket/download_attachment/' . $file->id);
                                                 ?>
 
@@ -533,6 +550,14 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                                         style="height: 150px; width: 100%; object-fit: cover; cursor: pointer;"
                                                         alt="<?= htmlspecialchars($file->file_name_original) ?>"
                                                         data-original="<?= $file_url ?>">
+                                                <?php elseif ($is_video): ?>
+                                                    <!-- Video Thumbnail -->
+                                                    <div class="video-thumb text-center bg-dark rounded d-flex flex-column justify-content-center align-items-center"
+                                                        style="height: 150px; width: 100%; cursor: pointer;"
+                                                        onclick="openVideoModal('<?= $file_url ?>', '<?= htmlspecialchars($file->file_name_original) ?>')">
+                                                        <i class="fa-solid fa-circle-play fa-3x text-white"></i>
+                                                        <p class="mb-0 mt-2 small text-white"><?= strtoupper($file_ext) ?></p>
+                                                    </div>
                                                 <?php else: ?>
                                                     <!-- Non-Image -->
                                                     <div class="text-center p-2 bg-light rounded mb-2 d-flex flex-column justify-content-center align-items-center"
@@ -806,6 +831,25 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 </div>
 </div>
 
+
+<!-- Modal Video Player -->
+<div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-0">
+                <h6 class="modal-title text-white" id="videoModalTitle"></h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <video id="videoPlayer" controls style="width: 100%; max-height: 70vh;">
+                    <source id="videoSource" src="" type="video/mp4">
+                    Browser Anda tidak mendukung pemutaran video.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -818,6 +862,30 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 <script src="<?= base_url('assets/js/ticket_actions.js') ?>"></script>
 
 <script>
+    function openVideoModal(url, name) {
+        const player = document.getElementById('videoPlayer');
+        const source = document.getElementById('videoSource');
+        const title = document.getElementById('videoModalTitle');
+        const ext = name.split('.').pop().toLowerCase();
+        const mimeMap = {
+            'mp4': 'video/mp4',
+            'webm': 'video/webm',
+            'mov': 'video/quicktime',
+            'avi': 'video/x-msvideo',
+            'mkv': 'video/x-matroska',
+            '3gp': 'video/3gpp',
+        };
+
+        source.src = url;
+        source.type = mimeMap[ext] || 'video/mp4';
+        title.textContent = name;
+
+        player.load(); // reload source baru
+
+        const modal = new bootstrap.Modal(document.getElementById('videoModal'));
+        modal.show();
+    }
+
     function removeFilePreview(index) {
         $(`.file-preview-item[data-index="${index}"]`).remove();
 
@@ -1190,18 +1258,34 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                 }
 
                 newFiles.forEach((file, index) => {
-                    if (file.size > 2048000) {
+                    const fileExt = file.name.split('.').pop().toLowerCase();
+                    const isImageFile = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExt);
+                    const isVideoFile = ['mp4', 'avi', 'mov', 'mkv', 'webm', '3gp'].includes(fileExt);
+
+                    let maxSize, maxLabel;
+                    if (isVideoFile) {
+                        maxSize = 100 * 1024 * 1024; // 100MB
+                        maxLabel = '100MB';
+                    } else if (isImageFile) {
+                        maxSize = 2 * 1024 * 1024; // 2MB
+                        maxLabel = '2MB';
+                    } else {
+                        maxSize = 10 * 1024 * 1024; // 10MB
+                        maxLabel = '10MB';
+                    }
+
+                    if (file.size > maxSize) {
                         Swal.fire({
                             icon: 'warning',
                             title: 'File Terlalu Besar',
-                            text: `${file.name} melebihi ukuran maksimal 2MB`
+                            text: `${file.name} melebihi ukuran maksimal ${maxLabel}`
                         });
                         return;
                     }
 
                     selectedFiles.push(file);
                     const reader = new FileReader();
-                    const fileExt = file.name.split('.').pop().toLowerCase();
+                    // const fileExt = file.name.split('.').pop().toLowerCase();
                     const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt);
                     const fileIndex = selectedFiles.length - 1;
 
@@ -1363,6 +1447,12 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     loadPicByClient(initialClientId);
                 <?php endif; ?>
             }
+
+            $('#videoModal').on('hidden.bs.modal', function(e) {
+                const player = document.getElementById('videoPlayer');
+                player.pause();
+                player.currentTime = 0;
+            });
 
         <?php endif; ?>
     });

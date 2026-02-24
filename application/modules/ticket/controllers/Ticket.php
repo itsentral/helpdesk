@@ -233,6 +233,9 @@ class Ticket extends Admin_Controller
 
   public function save_ticket()
   {
+    // echo 'post_max_size: ' . ini_get('post_max_size') . '<br>';
+    // echo 'upload_max_filesize: ' . ini_get('upload_max_filesize') . '<br>';
+    // echo 'PHP ini loaded: ' . php_ini_loaded_file() . '<br>';die;
     $session_data = $this->session->userdata('app_session');
 
     if (!$session_data || !isset($session_data['id_user'])) {
@@ -418,6 +421,60 @@ class Ticket extends Admin_Controller
     ]);
   }
 
+  private function handle_file_upload($helpdesk_id)
+  {
+    if (!empty($_FILES['attachments']['name'][0])) {
+      $upload_path = './uploads/helpdesk/' . date('Y/m') . '/';
+
+      if (!is_dir($upload_path)) {
+        mkdir($upload_path, 0755, true);
+      }
+
+      $files_count = count($_FILES['attachments']['name']);
+
+      for ($i = 0; $i < $files_count; $i++) {
+        if ($_FILES['attachments']['error'][$i] == 0) {
+          $file_name_original = $_FILES['attachments']['name'][$i];
+          $file_tmp  = $_FILES['attachments']['tmp_name'][$i];
+          $file_size = $_FILES['attachments']['size'][$i];
+          $file_type = $_FILES['attachments']['type'][$i];
+          $file_ext_lower = strtolower(pathinfo($file_name_original, PATHINFO_EXTENSION));
+          $image_types = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+          $video_types = ['mp4', 'avi', 'mov', 'mkv', 'webm', '3gp'];
+
+          if (in_array($file_ext_lower, $video_types)) {
+            $max_size = 100 * 1024 * 1024; // 100MB
+          } elseif (in_array($file_ext_lower, $image_types)) {
+            $max_size = 2 * 1024 * 1024;   // 2MB
+          } else {
+            $max_size = 10 * 1024 * 1024;  // 10MB
+          }
+
+          if ($file_size > $max_size) {
+            continue;
+          }
+
+          $file_ext = pathinfo($file_name_original, PATHINFO_EXTENSION);
+          $new_file_name = 'ticket_' . $helpdesk_id . '_' . time() . '_' . uniqid() . '.' . $file_ext;
+          $file_path = $upload_path . $new_file_name;
+
+          if (move_uploaded_file($file_tmp, $file_path)) {
+            $this->Ticket_model->insert_attachment([
+              'helpdesk_id'         => $helpdesk_id,
+              'file_name'           => $new_file_name,
+              'file_name_original'  => $file_name_original,
+              'file_type'           => $file_type,
+              'file_size'           => $file_size,
+              'uploaded_by'         => $this->auth->user_name(),
+              'uploaded_by_id'      => $this->auth->user_id(),
+              'uploaded_date'       => date('Y-m-d H:i:s')
+            ]);
+          }
+        }
+      }
+    }
+  }
+
   private function send_notif($ticket_id, $no_ticket, $type, $receivers = [], $extra = [])
   {
     $actor_id   = $this->auth->user_id();
@@ -525,49 +582,6 @@ class Ticket extends Admin_Controller
 
     if (!empty($bulk)) {
       $this->db->insert_batch('helpdesk_notifications', $bulk);
-    }
-  }
-
-  private function handle_file_upload($helpdesk_id)
-  {
-    if (!empty($_FILES['attachments']['name'][0])) {
-      $upload_path = './uploads/helpdesk/' . date('Y/m') . '/';
-
-      if (!is_dir($upload_path)) {
-        mkdir($upload_path, 0755, true);
-      }
-
-      $files_count = count($_FILES['attachments']['name']);
-
-      for ($i = 0; $i < $files_count; $i++) {
-        if ($_FILES['attachments']['error'][$i] == 0) {
-          $file_name_original = $_FILES['attachments']['name'][$i];
-          $file_tmp  = $_FILES['attachments']['tmp_name'][$i];
-          $file_size = $_FILES['attachments']['size'][$i];
-          $file_type = $_FILES['attachments']['type'][$i];
-
-          if ($file_size > 2048000) {
-            continue;
-          }
-
-          $file_ext = pathinfo($file_name_original, PATHINFO_EXTENSION);
-          $new_file_name = 'ticket_' . $helpdesk_id . '_' . time() . '_' . uniqid() . '.' . $file_ext;
-          $file_path = $upload_path . $new_file_name;
-
-          if (move_uploaded_file($file_tmp, $file_path)) {
-            $this->Ticket_model->insert_attachment([
-              'helpdesk_id'         => $helpdesk_id,
-              'file_name'           => $new_file_name,
-              'file_name_original'  => $file_name_original,
-              'file_type'           => $file_type,
-              'file_size'           => $file_size,
-              'uploaded_by'         => $this->auth->user_name(),
-              'uploaded_by_id'      => $this->auth->user_id(),
-              'uploaded_date'       => date('Y-m-d H:i:s')
-            ]);
-          }
-        }
-      }
     }
   }
 
