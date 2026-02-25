@@ -184,12 +184,12 @@ $loginUserId = $this->auth->user_id();
                         </td>
 
                         <?php
-                            $status                = (int) $row['status'];
-                            $approvalLevel          = (int) $row['approval_level'];
-                            $currentApprovalLevel   = (int) $row['current_approval_level'];
-                            $approvalById           = $row['approval_by_id'];
-                            $createById             = $row['create_by_id'];
-                            $unread_count           = isset($unread_counts[$row['id']]) ? $unread_counts[$row['id']] : 0;
+                        $status                = (int) $row['status'];
+                        $approvalLevel          = (int) $row['approval_level'];
+                        $currentApprovalLevel   = (int) $row['current_approval_level'];
+                        $approvalById           = $row['approval_by_id'];
+                        $createById             = $row['create_by_id'];
+                        $unread_count           = isset($unread_counts[$row['id']]) ? $unread_counts[$row['id']] : 0;
                         ?>
 
                         <?php
@@ -234,6 +234,8 @@ $loginUserId = $this->auth->user_id();
                                             data-id="<?= $row['id'] ?>"
                                             data-current-status="<?= $status ?>"
                                             data-man-hour-plan="<?= $row['man_hour_plan'] ?? 0 ?>"
+                                            data-causes="<?= htmlspecialchars($row['causes'] ?? '') ?>"
+                                            data-action-plan="<?= htmlspecialchars($row['action_plan'] ?? '') ?>"
                                             title="Process Ticket">
                                             <i class="fa-solid fa-angles-right"></i> Process
                                         </button>

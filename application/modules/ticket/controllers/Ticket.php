@@ -112,7 +112,13 @@ class Ticket extends Admin_Controller
       'helpdesk' => null,
       'attachments' => [],
       'is_external' => ($current_user && $current_user->status == 1),
-      'view_mode' => false
+      'view_mode' => false,
+      'back_params' => $this->input->get('client_id') || $this->input->get('status_id')
+        ? '?' . http_build_query([
+          'client_id' => $this->input->get('client_id') ?? '',
+          'status_id' => $this->input->get('status_id') ?? '',
+        ])
+        : '',
     ];
 
     $this->template->title('Add Helpdesk Ticket');
@@ -148,7 +154,13 @@ class Ticket extends Admin_Controller
       'helpdesk' => $helpdesk,
       'attachments' => $attachments,
       'is_external' => ($current_user && $current_user->status == 1),
-      'view_mode' => false
+      'view_mode' => false,
+      'back_params' => $this->input->get('client_id') || $this->input->get('status_id')
+        ? '?' . http_build_query([
+          'client_id' => $this->input->get('client_id') ?? '',
+          'status_id' => $this->input->get('status_id') ?? '',
+        ])
+        : '',
     ];
 
     $this->template->title('Edit Helpdesk Ticket');
@@ -180,6 +192,12 @@ class Ticket extends Admin_Controller
       'view_mode'      => true,
       'login_user_id'  => $current_user_id,
       'enable_manage'  => has_permission('Ticket.Manage'),
+      'back_params' => $this->input->get('client_id') || $this->input->get('status_id')
+        ? '?' . http_build_query([
+          'client_id' => $this->input->get('client_id') ?? '',
+          'status_id' => $this->input->get('status_id') ?? '',
+        ])
+        : '',
     ];
 
     $this->template->title('View Helpdesk Ticket');
@@ -312,7 +330,7 @@ class Ticket extends Admin_Controller
       'approval_by'       => $approval_name,
       'approval_level'    => $approval_level,
       'update_date'       => date('Y-m-d H:i:s'),
-      'update_by'         => $this->auth->user_id()
+      'update_by'         => $this->auth->nama()
     ];
 
     // UPDATE
@@ -388,7 +406,7 @@ class Ticket extends Admin_Controller
       $data['no_ticket']    = $this->generate_ticket_number();
       $data['status']       = 0;
       $data['create_by_id'] = $this->auth->user_id();
-      $data['create_by']    = $this->auth->user_name();
+      $data['create_by']    = $this->auth->nama();
       $data['create_date']  = date('Y-m-d H:i:s');
       $data['is_delete']    = 0;
 
@@ -692,11 +710,32 @@ class Ticket extends Admin_Controller
       $man_hour_plan = $this->input->post('man_hour_plan');
       $existing_plan = $old_ticket->man_hour_plan ?? 0;
 
-      // Jika existing plan kosong DAN input juga kosong
       if ((!$existing_plan || $existing_plan == 0) && (!$man_hour_plan || $man_hour_plan <= 0)) {
         echo json_encode([
-          'status' => 0,
+          'status'  => 0,
           'message' => 'Man Hour Plan wajib diisi sebelum memproses ticket'
+        ]);
+        return;
+      }
+
+      // Validasi Causes
+      $causes_input    = $this->input->post('causes');
+      $existing_causes = $old_ticket->causes ?? '';
+      if (empty($existing_causes) && empty($causes_input)) {
+        echo json_encode([
+          'status'  => 0,
+          'message' => 'Causes wajib diisi sebelum memproses ticket'
+        ]);
+        return;
+      }
+
+      // Validasi Action Plan
+      $action_plan_input    = $this->input->post('action_plan');
+      $existing_action_plan = $old_ticket->action_plan ?? '';
+      if (empty($existing_action_plan) && empty($action_plan_input)) {
+        echo json_encode([
+          'status'  => 0,
+          'message' => 'Action Plan wajib diisi sebelum memproses ticket'
         ]);
         return;
       }
@@ -730,7 +769,7 @@ class Ticket extends Admin_Controller
     $data = [
       'status'       => $status,
       'update_date'  => date('Y-m-d H:i:s'),
-      'update_by'    => $this->auth->user_id(),
+      'update_by'    => $this->auth->nama(),
       'update_by_id' => $this->auth->user_id()
     ];
 
@@ -742,6 +781,15 @@ class Ticket extends Admin_Controller
     // Handle Man Hour Plan jika diisi (saat process)
     if ((int)$status === 1 && $this->input->post('man_hour_plan')) {
       $data['man_hour_plan'] = (float)$this->input->post('man_hour_plan');
+    }
+
+    if ((int)$status === 1 && $this->input->post('causes')) {
+      $data['causes'] = $this->input->post('causes');
+    }
+
+    // Handle Action Plan jika diisi dari modal
+    if ((int)$status === 1 && $this->input->post('action_plan')) {
+      $data['action_plan'] = $this->input->post('action_plan');
     }
 
     // Handle Man Hour Actual - Tambahkan jika ada nilai sebelumnya (untuk kasus revisi)

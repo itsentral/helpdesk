@@ -642,7 +642,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			type: 'GET',
 			dataType: 'json',
 			success: function(response) {
-				console.log(response)
+				// console.log(response)
 				if (response.status == 1) {
 					let options = '<option value="">All Client</option>';
 
@@ -653,6 +653,11 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 					$('#filterClient').html(options);
 					$('#filterClientApproved').html(options);
 					$('#filterClientCancel').html(options);
+
+					if (selectedClientId) {
+						$('#filterClient').val(selectedClientId);
+						$('#clearFilterClient').show();
+					}
 				}
 			}
 		});
@@ -752,7 +757,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		});
 	}
 
-	// Update function loadApprovedList
+	// function loadApprovedList
 	function loadApprovedList(clientId = '') {
 		const fpFromEl = document.querySelector('#filterDateFromApproved')._flatpickr;
 		const fpToEl = document.querySelector('#filterDateToApproved')._flatpickr;
@@ -801,7 +806,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		});
 	}
 
-	// Update function loadCancelList
+	// function loadCancelList
 	function loadCancelList(clientId = '') {
 		$.ajax({
 			url: siteurl + active_controller + 'get_list_cancel',
@@ -1467,14 +1472,38 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		};
 	}
 
+	function updateUrlParams() {
+		const params = new URLSearchParams();
+		if (selectedClientId) params.set('client_id', selectedClientId);
+		if (selectedStatusId) params.set('status_id', selectedStatusId);
+
+		const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+		history.replaceState(null, '', newUrl);
+	}
+
 	$(document).ready(function() {
+		const urlParams = new URLSearchParams(window.location.search);
+		const urlClientId = urlParams.get('client_id') || '';
+		const urlStatusId = urlParams.get('status_id') || '';
+
+		if (urlClientId) {
+			selectedClientId = urlClientId;
+			$('#clearFilterClient').show();
+		}
+		if (urlStatusId) {
+			selectedStatusId = urlStatusId;
+			$('#filterStatus').val(urlStatusId);
+			$('#clearFilterStatus').show();
+		}
+
 		loadClientList();
-		loadHelpdeskList();
+		loadHelpdeskList(selectedClientId, selectedStatusId);
 		startUnreadCountPolling();
 
 		$('#filterStatus').on('change', function() {
 			selectedStatusId = $(this).val();
 			$('#clearFilterStatus').toggle(selectedStatusId !== '');
+			updateUrlParams();
 			loadHelpdeskList(selectedClientId, selectedStatusId);
 		});
 
@@ -1482,12 +1511,14 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			$('#filterStatus').val('');
 			selectedStatusId = '';
 			$(this).hide();
+			updateUrlParams();
 			loadHelpdeskList(selectedClientId, selectedStatusId);
 		});
 
 		$('#filterClient').on('change', function() {
 			selectedClientId = $(this).val();
 			$('#clearFilterClient').toggle(selectedClientId !== '');
+			updateUrlParams();
 			loadHelpdeskList(selectedClientId, selectedStatusId);
 		});
 
@@ -1495,6 +1526,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			$('#filterClient').val('');
 			selectedClientId = '';
 			$(this).hide();
+			updateUrlParams();
 			loadHelpdeskList(selectedClientId, selectedStatusId);
 		});
 
@@ -1534,27 +1566,34 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			loadCancelList(selectedClientIdCancel);
 		});
 
-		// Event untuk view detail ticket
 		$(document).on('click', '.view-ticket', function(e) {
 			e.preventDefault();
 			var ticketId = $(this).data('id');
-			window.location.href = siteurl + active_controller + 'view_ticket/' + ticketId;
+			var params = new URLSearchParams();
+			if (selectedClientId) params.set('client_id', selectedClientId);
+			if (selectedStatusId) params.set('status_id', selectedStatusId);
+			var query = params.toString() ? '?' + params.toString() : '';
+			window.location.href = siteurl + active_controller + 'view_ticket/' + ticketId + query;
 		});
 
-		// Event untuk edit ticket
 		$(document).on('click', '.edit-ticket', function(e) {
 			e.preventDefault();
 			var ticketId = $(this).data('id');
-			window.location.href = siteurl + active_controller + 'edit_ticket/' + ticketId;
+			var params = new URLSearchParams();
+			if (selectedClientId) params.set('client_id', selectedClientId);
+			if (selectedStatusId) params.set('status_id', selectedStatusId);
+			var query = params.toString() ? '?' + params.toString() : '';
+			window.location.href = siteurl + active_controller + 'edit_ticket/' + ticketId + query;
 		});
 
-		// Event handlers untuk button status
 		$(document).on('click', '.process-status', function(e) {
 			e.preventDefault();
 			var ticketId = $(this).data('id');
 			var currentStatus = $(this).data('current-status');
 			var manHourPlan = $(this).data('man-hour-plan');
-			changeTicketStatus(ticketId, 1, 'Process', currentStatus, manHourPlan);
+			var causes = $(this).data('causes');
+			var actionPlan = $(this).data('action-plan');
+			changeTicketStatus(ticketId, 1, 'Process', currentStatus, manHourPlan, causes, actionPlan);
 		});
 
 		$(document).on('click', '.pending-status', function(e) {

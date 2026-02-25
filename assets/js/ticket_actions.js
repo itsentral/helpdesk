@@ -1,7 +1,6 @@
 
 
-
-function changeTicketStatus(ticketId, status, statusText, currentStatus = null, manHourPlan = null) {
+function changeTicketStatus(ticketId, status, statusText, currentStatus = null, manHourPlan = null, causes = null, actionPlan = null) {
     var modalContent = '';
     var showReasonInput = false;
     var showManHourInput = false;
@@ -9,51 +8,87 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
 
     switch (status) {
         case 1: // Process
-            // CEK apakah man_hour_plan sudah diisi
+            var missingFields = [];
+
+            if (!causes || causes.toString().trim() === '') {
+                missingFields.push('Causes');
+            }
+            if (!actionPlan || actionPlan.toString().trim() === '') {
+                missingFields.push('Action Plan');
+            }
+
             if (!manHourPlan || manHourPlan == 0 || manHourPlan == null) {
-                modalContent = `
-                    <div class="mb-3">
-                        <h2>Man Hour Plan belum diisi!</h2>
-                        <div class="form-group mt-3">
-                            <label for="manHourPlan" class="form-label">
-                                <i class="fa-solid fa-clock"></i> Man Hour Plan <small class="text-danger">*</small>
-                            </label>
-                            <div class="input-group">
-                                <input
-                                    type="number"
-                                    class="form-control"
-                                    id="manHourPlan"
-                                    placeholder="Contoh: 4"
-                                    min="0.5"
-                                    step="0.5"
-                                    required
-                                >
-                                <span class="input-group-text">jam</span>
-                            </div>
-                            <small class="text-muted d-block mt-1">
-                                <i class="fa-solid fa-info-circle"></i> Masukkan estimasi waktu yang dibutuhkan untuk menyelesaikan ticket ini
-                            </small>
-                        </div>
-                    </div>
-                `;
                 showManHourPlanInput = true;
+            }
+
+            if (missingFields.length > 0 || showManHourPlanInput) {
+                modalContent = `<div class="mb-3">`;
+
+                if (missingFields.length > 0) {
+                    modalContent += `
+                <h2>Field berikut belum diisi!</h2>
+                <div class="alert alert-warning mt-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <strong>${missingFields.join(', ')}</strong> wajib diisi sebelum ticket diproses.
+                </div>
+            `;
+                }
+
+                if (missingFields.includes('Causes')) {
+                    modalContent += `
+                <div class="form-group mt-3">
+                    <label for="causesInput" class="form-label">
+                        <i class="fa-solid fa-magnifying-glass"></i> Causes <small class="text-danger">*</small>
+                    </label>
+                    <textarea class="form-control" id="causesInput" rows="3" placeholder="Masukkan penyebab masalah..."></textarea>
+                </div>
+            `;
+                }
+
+                if (missingFields.includes('Action Plan')) {
+                    modalContent += `
+                <div class="form-group mt-3">
+                    <label for="actionPlanInput" class="form-label">
+                        <i class="fa-solid fa-list-check"></i> Action Plan <small class="text-danger">*</small>
+                    </label>
+                    <textarea class="form-control" id="actionPlanInput" rows="3" placeholder="Masukkan rencana penanganan..."></textarea>
+                </div>
+            `;
+                }
+
+                if (showManHourPlanInput) {
+                    modalContent += `
+                <div class="form-group mt-3">
+                    <label for="manHourPlan" class="form-label">
+                        <i class="fa-solid fa-clock"></i> Man Hour Plan <small class="text-danger">*</small>
+                    </label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="manHourPlan"
+                            placeholder="Contoh: 4" min="0.5" step="0.5" required>
+                        <span class="input-group-text">jam</span>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        <i class="fa-solid fa-info-circle"></i> Masukkan estimasi waktu yang dibutuhkan
+                    </small>
+                </div>
+            `;
+                }
+
+                modalContent += `</div>`;
             } else {
-                modalContent = '<h2>Ubah status ticket menjadi Process?</h2>';
+                modalContent = '<h2>Ticket ini akan diproses. Lanjutkan?</h2>';
             }
             break;
 
         case 2: // Pending
-            modalContent = '<h2>Ubah status ticket menjadi Pending?</h2>';
+            modalContent = '<h2>Tunda pengerjaan ticket ini?</h2>';
             break;
 
         case 3: // Cancel
             modalContent = `
                 <div class="mb-3">
-                    <h2>Ubah status ticket menjadi Cancel?</h2>
+                    <h2>Ticket ini akan dibatalkan. Mohon konfirmasi.</h2>
                     <div class="form-group mt-3">
-                        <label for="cancelReason" class="form-label">
-                            Alasan Pembatalan <small class="text-danger">*</small>
-                        </label>
                         <textarea
                             class="form-control"
                             id="cancelReason"
@@ -71,7 +106,7 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
             if (currentStatus == 1) {
                 modalContent = `
                     <div class="mb-3">
-                        <h2>Ubah status ticket menjadi Done?</h2>
+                        <h2>Tandai ticket ini sudah selesai?</h2>
                         <div class="form-group mt-3">
                             <label for="manHourActual" class="form-label">
                                 <i class="fa-solid fa-clock"></i> Man Hour Actual <small class="text-danger">*</small>
@@ -96,20 +131,25 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
                 `;
                 showManHourInput = true;
             } else {
-                modalContent = '<h2>Ubah status ticket menjadi Done?</h2>';
+                modalContent = '<h2>Tandai ticket ini sudah selesai?</h2>';
             }
             break;
 
         default:
-            modalContent = '<h2>Konfirmasi perubahan status?</h2>';
+            modalContent = '<h2>Yakin ingin melanjutkan perubahan ini?</h2>';
     }
 
     Swal.fire({
         html: modalContent,
         icon: 'question',
+        didOpen: () => {
+            const container = Swal.getHtmlContainer();
+            container.style.maxHeight = "400px";
+            container.style.overflowY = "auto";
+        },
         showCancelButton: true,
-        confirmButtonText: '<i class="fa-solid fa-check"></i> Ya, Ubah Status',
-        cancelButtonText: '<i class="fa-solid fa-xmark"></i> Batal',
+        confirmButtonText: '<i class="fa-solid fa-check"></i> Lanjutkan',
+        cancelButtonText: '<i class="fa-solid fa-xmark"></i> Kembali',
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#6c757d',
         showLoaderOnConfirm: true,
@@ -117,6 +157,8 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
             var cancelReason = '';
             var manHourActual = '';
             var manHourPlanInput = '';
+            var causesInput = '';
+            var actionPlanInput = '';
 
             // Validasi Cancel Reason
             if (showReasonInput) {
@@ -132,6 +174,23 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
                 manHourPlanInput = $('#manHourPlan').val();
                 if (!manHourPlanInput || manHourPlanInput <= 0) {
                     Swal.showValidationMessage('Man Hour Plan wajib diisi');
+                    return false;
+                }
+            }
+
+            if ($('#causesInput').length) {
+                causesInput = $('#causesInput').val();
+                if (!causesInput || !causesInput.trim()) {
+                    Swal.showValidationMessage('Causes wajib diisi');
+                    return false;
+                }
+            }
+
+            // Validasi Action Plan
+            if ($('#actionPlanInput').length) {
+                actionPlanInput = $('#actionPlanInput').val();
+                if (!actionPlanInput || !actionPlanInput.trim()) {
+                    Swal.showValidationMessage('Action Plan wajib diisi');
                     return false;
                 }
             }
@@ -155,7 +214,9 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
                         current_status: currentStatus,
                         cancel_reason: cancelReason ? cancelReason.trim() : '',
                         man_hour_actual: manHourActual ? parseFloat(manHourActual) : '',
-                        man_hour_plan: manHourPlanInput ? parseFloat(manHourPlanInput) : ''
+                        man_hour_plan: manHourPlanInput ? parseFloat(manHourPlanInput) : '',
+                        causes: causesInput ? causesInput.trim() : '',
+                        action_plan: actionPlanInput ? actionPlanInput.trim() : ''
                     },
                     dataType: 'json',
                     success: function (response) {
@@ -192,8 +253,6 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
         }
     });
 }
-
-
 
 function updateTicketApproval(ticketId, action) {
 
@@ -261,8 +320,6 @@ function updateTicketApproval(ticketId, action) {
         });
     });
 }
-
-
 
 function viewTicketHistory(ticketId, ticketNo) {
     $('#historyTicketNo').text(ticketNo);

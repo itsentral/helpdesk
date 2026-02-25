@@ -738,7 +738,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 </form>
 <div class="card-footer">
     <div class="d-flex gap-2 flex-wrap align-items-center">
-        <a href="<?= site_url('ticket') ?>" class="btn btn-secondary">
+        <a href="<?= site_url('ticket') . $back_params ?>" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> Back
         </a>
 
@@ -962,6 +962,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
         var isReadonly = <?= $is_readonly ? 'true' : 'false' ?>;
         var mode = '<?= $mode ?>';
         let selectedFiles = [];
+        var backParams = '<?= $back_params ?? '' ?>';
 
         // Initialize Viewer.js untuk View Mode
         <?php if ($is_readonly && !empty($attachments)): ?>
@@ -1215,7 +1216,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                         showConfirmButton: false,
                                         timer: 1500
                                     }).then(() => {
-                                        window.location.href = siteurl + active_controller;
+                                        window.location.href = siteurl + active_controller + backParams;
                                     });
                                 } else {
                                     Swal.fire({
