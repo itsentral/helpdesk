@@ -97,10 +97,7 @@ $ENABLE_VIEW = has_permission('Ticket.View');
                             <?php endif; ?>
                         </td>
                         <td>
-                            <div class="text-truncate" style="max-width: 200px;"
-                                title="<?= htmlspecialchars($row['report']) ?>">
-                                <?= htmlspecialchars($row['report']) ?>
-                            </div>
+                            <?= htmlspecialchars($row['report']) ?>
                         </td>
                         <td>
                             <div>

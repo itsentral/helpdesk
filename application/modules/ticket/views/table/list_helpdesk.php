@@ -125,10 +125,7 @@ $loginUserId = $this->auth->user_id();
                         </td>
 
                         <td>
-                            <div class="text-truncate" style="max-width: 200px;"
-                                title="<?= htmlspecialchars($row['report']) ?>">
-                                <?= htmlspecialchars($row['report']) ?>
-                            </div>
+                            <?= htmlspecialchars($row['report']) ?>
                         </td>
                         <td>
                             <div>
