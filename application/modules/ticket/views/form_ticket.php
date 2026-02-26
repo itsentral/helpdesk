@@ -764,6 +764,8 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                 <button type="button" class="btn btn-primary process-status"
                     data-id="<?= $helpdesk->id ?>"
                     data-current-status="<?= $s ?>"
+                    data-causes="<?= htmlspecialchars($helpdesk->causes ?? '') ?>"
+                    data-action-plan="<?= htmlspecialchars($helpdesk->action_plan ?? '') ?>"
                     data-man-hour-plan="<?= $manHourPlan ?>">
                     <i class="fa-solid fa-angles-right"></i> Process
                 </button>
@@ -1461,7 +1463,6 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 
 <?php if ($is_readonly && isset($helpdesk->id)): ?>
     <script>
-        // Override redirect setelah aksi berhasil
         window.loadHelpdeskList = function() {
             setTimeout(() => {
                 window.location.href = siteurl + active_controller;
@@ -1470,7 +1471,15 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 
         $(document).on('click', '.process-status', function(e) {
             e.preventDefault();
-            changeTicketStatus($(this).data('id'), 1, 'Process', $(this).data('current-status'), $(this).data('man-hour-plan'));
+            changeTicketStatus(
+                $(this).data('id'),
+                1,
+                'Process',
+                $(this).data('current-status'),
+                $(this).data('man-hour-plan'),
+                $(this).data('causes'),
+                $(this).data('action-plan')
+            );
         });
 
         $(document).on('click', '.pending-status', function(e) {
