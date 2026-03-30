@@ -294,13 +294,17 @@
         }
 
         @page {
-    size: A4 landscape;
-    margin: 10mm;
-}
+            size: A4 landscape;
+            margin: 10mm;
+        }
     </style>
 </head>
 
 <body>
+    <?php
+    $open_extended_js = json_encode($open_extended);
+    ?>
+
     <!-- Print/Close Buttons -->
     <div class="no-print">
         <button onclick="window.print()" class="btn-print">
@@ -355,79 +359,119 @@
 
     <!-- Detail Table -->
     <h2 class="table-title">Detail Tickets</h2>
+
+    <?php
+    // Tandai tiket carry over
+    $carry_over_ids = [];
+    foreach ($open_carry_over as $t) {
+        $carry_over_ids[$t->id] = true;
+    }
+
+    // Gabungkan dan sort by create_date ASC
+    $merged_tickets = array_merge((array)$open_carry_over, (array)$all_tickets);
+    usort($merged_tickets, function ($a, $b) {
+        return strtotime($a->create_date) - strtotime($b->create_date);
+    });
+    ?>
+
     <table>
         <thead>
             <tr>
                 <th class="text-center" style="width: 3%;">No</th>
+                <th class="text-center" style="width: 5%;">No Ticket</th>
                 <th class="text-center" style="width: 9%;">Report Date</th>
                 <th style="width: 10%;">Report By</th>
-                <th style="width: 17%;">Report</th>
-                <th style="width: 17%;">Causes</th>
-                <th style="width: 17%;">Action Plan</th>
-                <th style="width: 10%;">Approval By</th>
-                <th class="text-center" style="width: 9%;">Approval Date</th>
+                <th style="width: 15%;">Report</th>
+                <th style="width: 15%;">Causes</th>
+                <th style="width: 13%;">Action Plan</th>
+                <th style="width: 9%;">PIC</th>
+                <th style="width: 9%;">Approval By</th>
+                <th class="text-center" style="width: 8%;">Approval Date</th>
+                <th class="text-center" style="width: 7%;">Over Due</th>
                 <th class="text-center" style="width: 5%;">Status</th>
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($all_tickets)): ?>
+            <?php if (empty($merged_tickets)): ?>
                 <tr>
-                    <td colspan="9" class="text-center">No data available</td>
+                    <td colspan="10" class="text-center">No data available</td>
                 </tr>
             <?php else: ?>
                 <?php
                 $no = 1;
-                foreach ($all_tickets as $ticket):
-                    // Status mapping
+                foreach ($merged_tickets as $ticket):
+                    $is_carry_over = isset($carry_over_ids[$ticket->id]);
+                    $days_open = (int) floor((time() - strtotime($ticket->create_date)) / 86400);
+
+                    // Row style
+                    if ($is_carry_over) {
+                        if ($days_open >= 14) {
+                            $row_style = 'background-color: #ffe0e0;'; // merah - kritis
+                        } elseif ($days_open >= 7) {
+                            $row_style = 'background-color: #fff3cd;'; // kuning - perhatian
+                        } else {
+                            $row_style = 'background-color: #fff0e6;'; // oranye muda
+                        }
+                    } else {
+                        $row_style = '';
+                    }
+
                     $status_map = [
-                        0 => ['label' => 'Open', 'class' => 'status-open'],
-                        1 => ['label' => 'Process', 'class' => 'status-process'],
-                        2 => ['label' => 'Pending', 'class' => 'status-pending'],
-                        3 => ['label' => 'Cancel', 'class' => 'status-cancel'],
-                        4 => ['label' => 'Done', 'class' => 'status-done'],
-                        5 => ['label' => 'Close', 'class' => 'status-close'],
-                        6 => ['label' => 'Revisi', 'class' => 'status-revisi']
+                        0 => ['label' => 'Open',    'class' => 'status-open'],
+                        1 => ['label' => 'Process',  'class' => 'status-process'],
+                        2 => ['label' => 'Pending',  'class' => 'status-pending'],
+                        3 => ['label' => 'Cancel',   'class' => 'status-cancel'],
+                        4 => ['label' => 'Done',     'class' => 'status-done'],
+                        5 => ['label' => 'Close',    'class' => 'status-close'],
+                        6 => ['label' => 'Revisi',   'class' => 'status-revisi'],
                     ];
-
                     $status_info = $status_map[$ticket->status] ?? ['label' => 'Unknown', 'class' => ''];
+
+                    $subName = strtolower($ticket->sub_category_name ?? '');
+                    $badgeClass = 'bg-secondary';
+                    if (strpos($subName, 'bugs konsep') !== false) {
+                        $badgeClass = 'bg-danger';
+                    } elseif (strpos($subName, 'bugs program') !== false) {
+                        $badgeClass = 'bg-warning text-dark';
+                    } elseif (strpos($subName, 'user issue') !== false) {
+                        $badgeClass = 'bg-info text-dark';
+                    }
+
+                    // Warna label hari open
+                    if ($days_open >= 14) {
+                        $days_color = '#dc3545';
+                    } elseif ($days_open >= 7) {
+                        $days_color = '#fd7e14';
+                    } else {
+                        $days_color = '#6c757d';
+                    }
                 ?>
-                    <tr>
+                    <tr style="<?= $row_style ?>">
                         <td class="text-center"><?= $no++ ?></td>
-                        <td class="text-center"><?= date('d/m/Y H:i', strtotime($ticket->create_date)) ?>
-                            <div class="mt-1">
-                                <?php
-                                $subName = strtolower($ticket->sub_category_name ?? '');
-                                $badgeClass = 'bg-secondary';
-
-                                if (strpos($subName, 'bugs konsep') !== false) {
-                                    $badgeClass = 'bg-danger';
-                                } elseif (strpos($subName, 'bugs program') !== false) {
-                                    $badgeClass = 'bg-warning text-dark';
-                                } elseif (strpos($subName, 'development') !== false) {
-                                    $badgeClass = 'bg-primary';
-                                } elseif (strpos($subName, 'maintenance') !== false) {
-                                    $badgeClass = 'bg-info';
-                                }
-                                ?>
-
+                        <td><strong><?= $ticket->no_ticket ?></strong></td>
+                        <td class="text-center">
+                            <?= date('d/m/Y H:i', strtotime($ticket->create_date)) ?>
+                            <div style="margin-top:4px; display:flex; flex-direction:column; gap:3px; align-items:center;">
                                 <span class="badge <?= $badgeClass ?>">
-                                    <i class="fa-solid fa-tag"></i>
                                     <?= htmlspecialchars($ticket->sub_category_name) ?>
                                 </span>
+                                <?php if ($is_carry_over): ?>
+                                    <span class="badge bg-dark" style="font-size:9px;">⏳ Carry Over</span>
+                                <?php endif; ?>
                             </div>
                         </td>
                         <td><?= $ticket->create_by ?></td>
                         <td><?= $ticket->report ?></td>
                         <td><?= $ticket->causes ?: '-' ?></td>
                         <td><?= $ticket->action_plan ?: '-' ?></td>
+                        <td><?= $ticket->pic ?: '-' ?></td>
                         <td><?=
                             $ticket->approval_level == 1
                                 ? ($ticket->approval_by ?: '-')
                                 : ($ticket->approval_level == 2
                                     ? ($ticket->create_by ?: '-')
                                     : '-')
-                            ?>
-                        </td>
+                            ?></td>
                         <td class="text-center">
                             <?= (
                                 isset($ticket->current_approval_level, $ticket->approval_level) &&
@@ -436,6 +480,15 @@
                             )
                                 ? date('d/m/Y', strtotime($ticket->approval_date))
                                 : '-' ?>
+                        </td>
+                        <td class="text-center">
+                            <?php if ($is_carry_over): ?>
+                                <strong style="color: <?= $days_color ?>;">
+                                    <?= $days_open ?> hari
+                                </strong>
+                            <?php else: ?>
+                                <span style="color:#ccc;">—</span>
+                            <?php endif; ?>
                         </td>
                         <td class="text-center">
                             <span class="status-badge <?= $status_info['class'] ?>">
@@ -448,6 +501,14 @@
         </tbody>
     </table>
 
+    <!-- Legend -->
+    <div style="font-size:11px; color:#555; margin-top:-10px; margin-bottom:20px; display:flex; gap:20px;">
+        <span>⏳ <strong>Carry Over</strong> = tiket open dari sebelum periode ini</span>
+        <span style="color:#dc3545;">■</span> ≥ 14 hari (Kritis)
+        <span style="color:#fd7e14;">■</span> 7–13 hari (Perhatian)
+        <!-- <span style="color:#6c757d;">■</span> &lt; 2 hari (Normal) -->
+    </div>
+
     <!-- Footer -->
     <div class="footer">
         <p>Generated on <?= date('d F Y H:i:s') ?></p>
@@ -456,9 +517,34 @@
 
     <script>
         // Prepare data from PHP
+        const openExtended = <?= $open_extended_js ?>;
+        const extendedFrom = openExtended.extended_from;
+        const bugsOpenExtMap = {};
+        const issuesOpenExtMap = {};
+
         const dailyData = <?= json_encode($daily_data) ?>;
         const dateFrom = '<?= $date_from ?>';
         const dateTo = '<?= $date_to ?>';
+
+        openExtended.bugs_open.forEach(item => {
+            bugsOpenExtMap[item.date] = parseInt(item.total);
+        });
+        openExtended.issues_open.forEach(item => {
+            issuesOpenExtMap[item.date] = parseInt(item.total);
+        });
+
+        function buildCumulative(map, fullRange) {
+            let cumulative = 0;
+            const result = {};
+            fullRange.forEach(date => {
+                cumulative += (map[date] || 0);
+                result[date] = cumulative;
+            });
+            return result;
+        }
+
+        // Generate full range: extended_from sampai date_to
+        const fullRange = generateDateRange(extendedFrom, dateTo);
 
         // Helper function to format date with month name
         function formatDateWithMonthName(dateString) {
@@ -524,6 +610,8 @@
 
         const labels = generateDateRange(dateFrom, dateTo);
         const formattedLabels = labels.map(date => formatDateWithMonthName(date));
+        const bugsCumulative = buildCumulative(bugsOpenExtMap, fullRange);
+        const issuesCumulative = buildCumulative(issuesOpenExtMap, fullRange);
 
         // Chart configuration
         const chartConfig = {
@@ -648,7 +736,7 @@
                 labels: formattedLabels,
                 datasets: [{
                     label: 'Open',
-                    data: labels.map(date => bugsOpenMap[date] || 0),
+                    data: labels.map(date => bugsCumulative[date] || 0),
                     borderColor: '#fd7e14',
                     backgroundColor: 'rgba(253, 126, 20, 0.1)',
                     tension: 0.4,
@@ -669,7 +757,7 @@
                 labels: formattedLabels,
                 datasets: [{
                     label: 'Open',
-                    data: labels.map(date => issuesOpenMap[date] || 0),
+                    data: labels.map(date => issuesCumulative[date] || 0),
                     borderColor: '#20c997',
                     backgroundColor: 'rgba(32, 201, 151, 0.1)',
                     tension: 0.4,

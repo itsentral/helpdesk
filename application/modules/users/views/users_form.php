@@ -213,23 +213,44 @@
 				<small class="text-muted d-block mt-1">Internal: User dari organisasi. External: User dari client.</small>
 			</div>
 
+			<!-- Role User -->
 			<div class="col-md-3">
 				<label class="form-label fw-semibold">
-					<i class="ti ti-briefcase"></i> <?= lang('users_is_ba') ?? 'Business Analyst' ?> Pilih Status User
+					<i class="ti ti-user-check"></i> Pilih Role User
 				</label>
-				<select name="is_ba" id="is_ba" class="form-select <?= form_error('is_ba') ? 'is-invalid' : ''; ?>">
-					<option value="">-- Pilih Status BA --</option>
-					<option value="0" <?= set_select('is_ba', '0', (isset($data->is_ba) && $data->is_ba == 0) ? TRUE : FALSE); ?>>
-						Tidak
+				<select name="role_user" id="role_user" class="form-select <?= form_error('role_user') ? 'is-invalid' : ''; ?>">
+					<option value="">-- Pilih Role --</option>
+					<option value="ba" <?= set_select(
+											'role_user',
+											'ba',
+											(isset($data->is_ba) && $data->is_ba == 1) ? TRUE : FALSE
+										); ?>>
+						Business Analyst
 					</option>
-					<option value="1" <?= set_select('is_ba', '1', (isset($data->is_ba) && $data->is_ba == 1) ? TRUE : FALSE); ?>>
-						Ya
+					<option value="programmer" <?= set_select(
+													'role_user',
+													'programmer',
+													(isset($data->is_programmer) && $data->is_programmer == 1) ? TRUE : FALSE
+												); ?>>
+						Programmer
+					</option>
+					<option value="user" <?= set_select(
+												'role_user',
+												'user',
+												(isset($data->is_ba) && $data->is_ba == 0 && isset($data->is_programmer) && $data->is_programmer == 0) ? TRUE : FALSE
+											); ?>>
+						User
 					</option>
 				</select>
-				<?= form_error('is_ba', '<div class="invalid-feedback d-block">', '</div>'); ?>
-				<small class="text-muted d-block mt-1">Apakah user ini seorang Business Analyst?</small>
+				<?= form_error('role_user', '<div class="invalid-feedback d-block">', '</div>'); ?>
+				<small class="text-muted d-block mt-1">Pilih role untuk user ini.</small>
 			</div>
-			
+
+			<!-- Hidden fields -->
+			<input type="hidden" name="status" value="0">
+			<input type="hidden" name="is_ba" id="is_ba" value="0">
+			<input type="hidden" name="is_programmer" id="is_programmer" value="0">
+
 			<!-- client app  -->
 			<div class="col-5">
 				<label class="form-label fw-semibold">
@@ -279,12 +300,21 @@
 
 <script>
 	$(document).ready(function() {
+		$('#role_user').on('change', function() {
+			const role = $(this).val();
+			$('#is_ba').val(role === 'ba' ? 1 : 0);
+			$('#is_programmer').val(role === 'programmer' ? 1 : 0);
+		});
+
+		$('#role_user').trigger('change');
+
+		// Select2
 		$('#client_ids').select2({
 			width: '100%',
 			placeholder: 'Pilih client...',
 			allowClear: true,
 			closeOnSelect: false,
-			dropdownParent: $('#client_ids').closest('.col-12'),
+			dropdownParent: $('#client_ids').closest('.col-5'),
 			containerCssClass: 'select2-container--modern',
 			dropdownCssClass: 'select2-dropdown--modern'
 		});

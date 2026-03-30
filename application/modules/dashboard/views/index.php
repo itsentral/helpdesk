@@ -120,7 +120,292 @@
     .card-warning .stats-subtitle {
         border-top-color: rgba(0, 0, 0, 0.1) !important;
     }
+
+    .prio-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .prio-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #EEEDFE;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .prio-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .prio-subtitle {
+        font-size: 12px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .prio-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 14px 16px;
+        position: relative;
+        overflow: hidden;
+        transition: box-shadow 0.2s;
+        height: 100%;
+    }
+
+    .prio-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .prio-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+
+    .prio-card.rank-1::before {
+        background: #E24B4A;
+    }
+
+    .prio-card.rank-2::before {
+        background: #EF9F27;
+    }
+
+    .prio-card.rank-3::before {
+        background: #378ADD;
+    }
+
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .rank-1 .rank-badge {
+        background: #FCEBEB;
+        color: #A32D2D;
+    }
+
+    .rank-2 .rank-badge {
+        background: #FAEEDA;
+        color: #854F0B;
+    }
+
+    .rank-3 .rank-badge {
+        background: #E6F1FB;
+        color: #185FA5;
+    }
+
+    .prio-ticket-no {
+        font-size: 11px;
+        color: #6c757d;
+        margin: 0 0 4px;
+    }
+
+    .prio-report {
+        font-size: 13px;
+        font-weight: 600;
+        color: #212529;
+        margin: 0 0 10px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .prio-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+
+    .prio-meta-row i {
+        font-size: 11px;
+        width: 12px;
+    }
+
+    .prio-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 8px;
+    }
+
+    .prio-client-pill {
+        font-size: 11px;
+        color: #495057;
+        background: #f1f3f5;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    .prio-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .s-open {
+        background: #FCEBEB;
+        color: #A32D2D;
+    }
+
+    .s-process {
+        background: #E6F1FB;
+        color: #185FA5;
+    }
+
+    .s-pending {
+        background: #FAEEDA;
+        color: #854F0B;
+    }
+
+    .s-revisi {
+        background: #F4C0D1;
+        color: #72243E;
+    }
+
+    .prio-empty {
+        text-align: center;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 1px dashed #dee2e6;
+    }
+
+    .prio-empty i {
+        font-size: 32px;
+        color: #adb5bd;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .prio-empty p {
+        font-size: 13px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .prio-skeleton {
+        height: 160px;
+        border-radius: 12px;
+        animation: skeleton-loading 1s linear infinite alternate;
+    }
+
+    @keyframes skeleton-loading {
+        0% {
+            background-color: hsl(200, 20%, 80%);
+        }
+
+        100% {
+            background-color: hsl(200, 20%, 95%);
+        }
+    }
+
+    .prio-toggle-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--color-text-secondary, #6c757d);
+        font-size: 12px;
+    }
+
+    .prio-toggle-btn:hover {
+        color: #534AB7;
+    }
+
+    .prio-chevron {
+        transition: transform 0.25s ease;
+        display: inline-block;
+        font-size: 12px;
+    }
+
+    .prio-chevron.collapsed {
+        transform: rotate(-90deg);
+    }
+
+    .prio-body {
+        overflow: hidden;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+        max-height: 600px;
+        opacity: 1;
+    }
+
+    .prio-body.collapsed {
+        max-height: 0;
+        opacity: 0;
+    }
 </style>
+
+<!-- ===== MY PRIORITY TICKETS ===== -->
+<?php if ($is_programmer == 1 || $is_ba == 1): ?>
+    <div id="priority_section" style="margin-bottom: 1.5rem;">
+
+        <div class="prio-header" style="justify-content: space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div class="prio-header-icon">
+                    <i class="ti ti-star" style="font-size:18px; color:#534AB7;"></i>
+                </div>
+                <div>
+                    <p class="prio-title">My Top Priority Tickets</p>
+                    <p class="prio-subtitle" id="prio_subtitle">3 tiket teratas yang harus segera dikerjakan</p>
+                </div>
+            </div>
+            <button class="prio-toggle-btn" id="prio_toggle_btn" title="Collapse/Expand">
+                <span id="prio_toggle_label">Sembunyikan</span>
+                <i class="ti ti-chevron-down prio-chevron" id="prio_chevron"></i>
+            </button>
+        </div>
+
+        <!-- Body yang bisa di-collapse -->
+        <div class="prio-body" id="prio_body">
+            <div id="prio_loading" class="row">
+                <div class="col-md-4">
+                    <div class="prio-skeleton"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="prio-skeleton"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="prio-skeleton"></div>
+                </div>
+            </div>
+            <div id="prio_content" style="display:none;">
+                <div class="row" id="prio_cards_row"></div>
+            </div>
+        </div>
+
+    </div>
+<?php endif; ?>
+<!-- ===== END MY PRIORITY TICKETS ===== -->
 
 <div class="card">
     <div class="card-body">
@@ -421,6 +706,7 @@
     let currentReportType = '';
     let manhourChart;
     let manhourData = {};
+    let carryOverData = null;
 
     // Initialize Flatpickr for Monthly (Month picker)
     monthlyPicker = flatpickr("#date_monthly", {
@@ -555,21 +841,22 @@
         const clientId = $(this).data('client-id');
         const date = $(this).data('date');
         const category = $(this).data('category');
+        const dateFrom = $(this).data('date-from') || ''; // ← tambah ini
 
-        // Show modal
+        const isCarryOver = (date === 'carry_over');
+        const titleLabel = isCarryOver ?
+            'Carry Over Tickets (' + category.toUpperCase() + ')' :
+            'Detail Tickets - ' + date + ' (' + category.toUpperCase() + ')';
+
         $('#modalTicketDetail').modal('show');
-
-        // Update modal title
-        $('#modalTicketDetailLabel').text('Detail Tickets - ' + date + ' (' + category.toUpperCase() + ')');
-
-        // Show loading
+        $('#modalTicketDetailLabel').text(titleLabel);
         $('#modalTicketDetailBody').html(`
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
-        `);
+        </div>
+    `);
 
         $.ajax({
             url: siteurl + 'dashboard/get_ticket_detail',
@@ -577,14 +864,15 @@
             data: {
                 client_id: clientId,
                 date: date,
-                category: category
+                category: category,
+                date_from: dateFrom // ← tambah ini
             },
             success: function(response) {
                 $('#modalTicketDetailBody').html(response);
                 if (!$.fn.DataTable.isDataTable('#ticket_table')) {
                     $('#ticket_table').DataTable({
-                        "pageLength": 10,
-                        "order": [],
+                        pageLength: 10,
+                        order: []
                     });
                 }
             },
@@ -632,7 +920,64 @@
         if (currentReportType === 'monthly') {
             renderMonthlyTable(chartData, category);
         } else {
-            renderWeeklyTable(chartData, category);
+            const data = chartData;
+            const bugsMap = {};
+            const bugsOpenMap = {};
+            const issuesMap = {};
+            const issuesOpenMap = {};
+
+            (data.bugs || []).forEach(i => {
+                bugsMap[i.date] = parseInt(i.total);
+            });
+            (data.bugs_open || []).forEach(i => {
+                bugsOpenMap[i.date] = parseInt(i.total);
+            });
+            (data.issues || []).forEach(i => {
+                issuesMap[i.date] = parseInt(i.total);
+            });
+            (data.issues_open || []).forEach(i => {
+                issuesOpenMap[i.date] = parseInt(i.total);
+            });
+
+            const allDates = new Set([
+                ...(data.bugs || []).map(i => i.date),
+                ...(data.bugs_open || []).map(i => i.date),
+                ...(data.issues || []).map(i => i.date),
+                ...(data.issues_open || []).map(i => i.date),
+            ]);
+            const sortedDates = Array.from(allDates).sort();
+
+            // Update header sesuai category
+            let headerHtml = '<tr><th>Tanggal</th>';
+            if (category === 'all') {
+                headerHtml += `
+                <th class="text-center">Bugs & Error</th>
+                <th class="text-center">User Issues</th>
+                <th class="text-center">Total</th>
+                <th class="text-center">Action</th>`;
+            } else if (category === 'bugs') {
+                headerHtml += `
+                <th class="text-center">Total</th>
+                <th class="text-center">Open</th>
+                <th class="text-center">Action</th>`;
+            } else if (category === 'issues') {
+                headerHtml += `
+                <th class="text-center">Total</th>
+                <th class="text-center">Open</th>
+                <th class="text-center">Action</th>`;
+            }
+            headerHtml += '</tr>';
+            $('#summary_thead').html(headerHtml);
+
+            const currentClientId = $('#client_id').val();
+            const selectedDates = weeklyPicker.selectedDates;
+            const dateFrom = selectedDates.length === 2 ? formatDate(selectedDates[0]) : null;
+
+            // Pakai carryOverData yang sudah di-cache, tidak fetch ulang
+            _buildWeeklyTableBody(
+                sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
+                category, currentClientId, dateFrom, carryOverData
+            );
         }
     }
 
@@ -894,6 +1239,7 @@
     }
 
     function loadDashboard(client_id, date_from, date_to) {
+        carryOverData = null; // ← reset setiap filter baru
         $('#dashboard_content').show();
         $('#chart_category_filter').show();
         showLoadingSkeleton();
@@ -910,12 +1256,9 @@
             success: function(response) {
                 hideLoadingSkeleton();
 
-                // Update summary cards
                 $('#total_tickets').text(response.total_tickets.total);
                 $('#bugs_tickets').text(response.total_tickets.bugs);
                 $('#issues_tickets').text(response.total_tickets.issues);
-
-                // Update open tickets count
                 $('#total_open').text(response.total_tickets.total_open);
                 $('#open_bugs').text(response.total_tickets.open_bugs);
                 $('#open_issues').text(response.total_tickets.open_issues);
@@ -929,34 +1272,27 @@
                     5: 'close',
                     6: 'revisi'
                 };
-
                 let statusCounts = {
-                    open: 0,
+                    open: 0
                 };
-
                 response.status_data.forEach(item => {
                     const statusName = statusMap[item.status];
                     if (statusName === 'open') statusCounts.open = item.total;
                 });
 
-                // Store data and render chart
                 chartData = response.daily_data;
 
-                // Reset chart category to 'all' when loading new data
                 $('#chart_category').val('all');
                 renderDailyChart('all');
 
-                // Render summary table based on report type
                 if (currentReportType === 'monthly') {
                     renderMonthlyTable(response.daily_data, 'all');
                 } else {
                     renderWeeklyTable(response.daily_data, 'all');
                 }
 
-                // Simpan manhour data
                 manhourData = response.manhour_data;
 
-                // Tampil/sembunyikan manhour section
                 if (currentReportType === 'monthly') {
                     $('#manhour_chart_section').show();
                     $('#manhour_table_section').show();
@@ -968,7 +1304,6 @@
                     if (manhourChart) manhourChart.destroy();
                 }
 
-                // Show export button only for weekly report
                 if (currentReportType === 'weekly') {
                     $('#btn_export_pdf').show();
                     $('#btn_export_monthly_pdf').hide();
@@ -1462,85 +1797,158 @@
         if (!data.issues) data.issues = [];
         if (!data.issues_open) data.issues_open = [];
 
-        // Update table header
+        // Update header
         let headerHtml = '<tr><th>Tanggal</th>';
-
         if (category === 'all') {
             headerHtml += `
             <th class="text-center">Bugs & Error</th>
             <th class="text-center">User Issues</th>
             <th class="text-center">Total</th>
-            <th class="text-center">Action</th>
-        `;
+            <th class="text-center">Action</th>`;
         } else if (category === 'bugs') {
             headerHtml += `
             <th class="text-center">Total</th>
             <th class="text-center">Open</th>
-            <th class="text-center">Action</th>
-        `;
+            <th class="text-center">Action</th>`;
         } else if (category === 'issues') {
             headerHtml += `
             <th class="text-center">Total</th>
             <th class="text-center">Open</th>
-            <th class="text-center">Action</th>
-        `;
+            <th class="text-center">Action</th>`;
         }
-
         headerHtml += '</tr>';
         $('#summary_thead').html(headerHtml);
 
-        // Create date map
+        // Build maps
         const bugsMap = {};
         const bugsOpenMap = {};
         const issuesMap = {};
         const issuesOpenMap = {};
 
-        data.bugs.forEach(item => {
-            bugsMap[item.date] = parseInt(item.total);
+        data.bugs.forEach(i => {
+            bugsMap[i.date] = parseInt(i.total);
         });
-
-        data.bugs_open.forEach(item => {
-            bugsOpenMap[item.date] = parseInt(item.total);
+        data.bugs_open.forEach(i => {
+            bugsOpenMap[i.date] = parseInt(i.total);
         });
-
-        data.issues.forEach(item => {
-            issuesMap[item.date] = parseInt(item.total);
+        data.issues.forEach(i => {
+            issuesMap[i.date] = parseInt(i.total);
         });
-
-        data.issues_open.forEach(item => {
-            issuesOpenMap[item.date] = parseInt(item.total);
+        data.issues_open.forEach(i => {
+            issuesOpenMap[i.date] = parseInt(i.total);
         });
 
         const allDates = new Set([
-            ...data.bugs.map(item => item.date),
-            ...data.bugs_open.map(item => item.date),
-            ...data.issues.map(item => item.date),
-            ...data.issues_open.map(item => item.date)
+            ...data.bugs.map(i => i.date),
+            ...data.bugs_open.map(i => i.date),
+            ...data.issues.map(i => i.date),
+            ...data.issues_open.map(i => i.date),
         ]);
         const sortedDates = Array.from(allDates).sort();
 
-        if (sortedDates.length === 0) {
-            let noDataColspan = category === 'all' ? 5 : 4;
-            $('#summary_tbody').html(`<tr><td colspan="${noDataColspan}" class="text-center">Tidak ada data</td></tr>`);
+        const currentClientId = $('#client_id').val();
+        const selectedDates = weeklyPicker.selectedDates;
+        const dateFrom = selectedDates.length === 2 ? formatDate(selectedDates[0]) : null;
 
-            let footerHtml = '<tr><th>Total</th>';
+        if (dateFrom && currentClientId) {
+            $.ajax({
+                url: siteurl + 'dashboard/get_carry_over_count',
+                type: 'GET',
+                data: {
+                    client_id: currentClientId,
+                    date_from: dateFrom
+                },
+                dataType: 'json',
+                success: function(carry) {
+                    carryOverData = carry; // ← simpan ke cache
+                    _buildWeeklyTableBody(
+                        sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
+                        category, currentClientId, dateFrom, carry
+                    );
+                },
+                error: function() {
+                    carryOverData = null;
+                    _buildWeeklyTableBody(
+                        sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
+                        category, currentClientId, dateFrom, null
+                    );
+                }
+            });
+        } else {
+            carryOverData = null;
+            _buildWeeklyTableBody(
+                sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
+                category, currentClientId, dateFrom, null
+            );
+        }
+    }
+
+    function _buildWeeklyTableBody(
+        sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
+        category, currentClientId, dateFrom, carry
+    ) {
+        let tableHtml = '';
+
+        const carryBugs = (carry && carry.bugs) ? parseInt(carry.bugs) : 0;
+        const carryIssues = (carry && carry.issues) ? parseInt(carry.issues) : 0;
+        const carryTotal = carryBugs + carryIssues;
+
+        // ── Baris Carry Over ──
+        if (carry && carry.total > 0) {
+            const viewCarryBtn = (cat) => `
+            <button type="button" class="btn btn-sm btn-warning btn-view-detail"
+                    data-client-id="${currentClientId}"
+                    data-date="carry_over"
+                    data-category="${cat}"
+                    data-date-from="${dateFrom}">
+                <i class="ti ti-eye"></i> View
+            </button>`;
+
+            let carryRowHtml = `<tr style="background-color:#fff0e6; font-weight:600;">
+            <td>
+                ⏳ <strong>Carry Over</strong>
+                <div style="font-size:10px; color:#888; font-weight:normal;">
+                    Open ticket dari sebelum periode ini
+                </div>
+            </td>`;
+
             if (category === 'all') {
-                footerHtml += '<th class="text-center">0</th><th class="text-center">0</th><th class="text-center">0</th><th></th>';
-            } else {
-                footerHtml += '<th class="text-center">0</th><th class="text-center">0</th><th></th>';
+                carryRowHtml += `
+                <td class="text-center">${carryBugs}</td>
+                <td class="text-center">${carryIssues}</td>
+                <td class="text-center"><strong>${carryTotal}</strong></td>
+                <td class="text-center">${viewCarryBtn('all')}</td>`;
+            } else if (category === 'bugs') {
+                carryRowHtml += `
+                <td class="text-center"><strong>${carryBugs}</strong></td>
+                <td class="text-center">${carryBugs}</td>
+                <td class="text-center">${viewCarryBtn('bugs')}</td>`;
+            } else if (category === 'issues') {
+                carryRowHtml += `
+                <td class="text-center"><strong>${carryIssues}</strong></td>
+                <td class="text-center">${carryIssues}</td>
+                <td class="text-center">${viewCarryBtn('issues')}</td>`;
             }
-            footerHtml += '</tr>';
-            $('#summary_table tfoot').html(footerHtml);
+
+            carryRowHtml += '</tr>';
+            tableHtml += carryRowHtml;
+        }
+
+        // ── Tidak ada data sama sekali ──
+        if (sortedDates.length === 0 && carryTotal === 0) {
+            let noDataColspan = category === 'all' ? 5 : 4;
+            $('#summary_tbody').html(
+                `<tr><td colspan="${noDataColspan}" class="text-center">Tidak ada data</td></tr>`
+            );
+            _renderWeeklyFooter(category, 0, 0, 0, 0, 0, 0);
             return;
         }
 
-        let tableHtml = '';
-        let totalBugs = 0;
-        let totalBugsOpen = 0;
-        let totalIssues = 0;
-        let totalIssuesOpen = 0;
-
-        const currentClientId = $('#client_id').val();
+        // ── Baris per hari ──
+        let totalBugs = 0,
+            totalBugsOpen = 0,
+            totalIssues = 0,
+            totalIssuesOpen = 0;
 
         sortedDates.forEach(date => {
             const bugs = bugsMap[date] || 0;
@@ -1562,40 +1970,40 @@
                 <td class="text-center">${issues}</td>
                 <td class="text-center"><strong>${total}</strong></td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-info btn-view-detail" 
-                            data-client-id="${currentClientId}" 
-                            data-date="${date}" 
-                            data-category="${category}">
+                    <button type="button" class="btn btn-sm btn-info btn-view-detail"
+                            data-client-id="${currentClientId}"
+                            data-date="${date}"
+                            data-category="${category}"
+                            data-date-from="${dateFrom}">
                         <i class="ti ti-eye"></i> View
                     </button>
-                </td>
-            `;
+                </td>`;
             } else if (category === 'bugs') {
                 rowHtml += `
                 <td class="text-center"><strong>${bugs}</strong></td>
                 <td class="text-center">${bugsOpen}</td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-info btn-view-detail" 
-                            data-client-id="${currentClientId}" 
-                            data-date="${date}" 
-                            data-category="${category}">
+                    <button type="button" class="btn btn-sm btn-info btn-view-detail"
+                            data-client-id="${currentClientId}"
+                            data-date="${date}"
+                            data-category="${category}"
+                            data-date-from="${dateFrom}">
                         <i class="ti ti-eye"></i> View
                     </button>
-                </td>
-            `;
+                </td>`;
             } else if (category === 'issues') {
                 rowHtml += `
                 <td class="text-center"><strong>${issues}</strong></td>
                 <td class="text-center">${issuesOpen}</td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-info btn-view-detail" 
-                            data-client-id="${currentClientId}" 
-                            data-date="${date}" 
-                            data-category="${category}">
+                    <button type="button" class="btn btn-sm btn-info btn-view-detail"
+                            data-client-id="${currentClientId}"
+                            data-date="${date}"
+                            data-category="${category}"
+                            data-date-from="${dateFrom}">
                         <i class="ti ti-eye"></i> View
                     </button>
-                </td>
-            `;
+                </td>`;
             }
 
             rowHtml += '</tr>';
@@ -1604,28 +2012,43 @@
 
         $('#summary_tbody').html(tableHtml);
 
-        // Update footer
+        _renderWeeklyFooter(
+            category,
+            totalBugs, totalBugsOpen,
+            totalIssues, totalIssuesOpen,
+            carryBugs, carryIssues
+        );
+    }
+
+    function _renderWeeklyFooter(
+        category,
+        totalBugs, totalBugsOpen,
+        totalIssues, totalIssuesOpen,
+        carryBugs = 0, carryIssues = 0
+    ) {
+        const grandBugs = totalBugs + carryBugs;
+        const grandIssues = totalIssues + carryIssues;
+        const grandBugsOpen = totalBugsOpen + carryBugs;
+        const grandIssuesOpen = totalIssuesOpen + carryIssues;
+
         let footerHtml = '<tr><th>Total</th>';
 
         if (category === 'all') {
             footerHtml += `
-            <th class="text-center">${totalBugs}</th>
-            <th class="text-center">${totalIssues}</th>
-            <th class="text-center">${totalBugs + totalIssues}</th>
-            <th></th>
-        `;
+            <th class="text-center">${grandBugs}</th>
+            <th class="text-center">${grandIssues}</th>
+            <th class="text-center">${grandBugs + grandIssues}</th>
+            <th></th>`;
         } else if (category === 'bugs') {
             footerHtml += `
-            <th class="text-center">${totalBugs}</th>
-            <th class="text-center">${totalBugsOpen}</th>
-            <th></th>
-        `;
+            <th class="text-center">${grandBugs}</th>
+            <th class="text-center">${grandBugsOpen}</th>
+            <th></th>`;
         } else if (category === 'issues') {
             footerHtml += `
-            <th class="text-center">${totalIssues}</th>
-            <th class="text-center">${totalIssuesOpen}</th>
-            <th></th>
-        `;
+            <th class="text-center">${grandIssues}</th>
+            <th class="text-center">${grandIssuesOpen}</th>
+            <th></th>`;
         }
 
         footerHtml += '</tr>';
@@ -1843,4 +2266,109 @@
 
         window.open(url, '_blank');
     });
+
+    // ===== PRIORITY TICKETS =====
+    (function() {
+        var statusLabel = {
+            0: ['Open', 's-open'],
+            1: ['Process', 's-process'],
+            2: ['Pending', 's-pending'],
+            6: ['Revisi', 's-revisi']
+        };
+
+        // Toggle accordion
+        $('#prio_toggle_btn').on('click', function() {
+            var body = $('#prio_body');
+            var chevron = $('#prio_chevron');
+            var label = $('#prio_toggle_label');
+
+            if (body.hasClass('collapsed')) {
+                body.removeClass('collapsed');
+                chevron.removeClass('collapsed');
+                label.text('Sembunyikan');
+            } else {
+                body.addClass('collapsed');
+                chevron.addClass('collapsed');
+                label.text('Tampilkan');
+            }
+        });
+
+        function renderPriorityCards(tickets) {
+            var rankClass = ['rank-1', 'rank-2', 'rank-3'];
+            var html = '';
+
+            if (!tickets || tickets.length === 0) {
+                // Tidak ada tiket → auto collapse
+                $('#prio_body').addClass('collapsed');
+                $('#prio_chevron').addClass('collapsed');
+                $('#prio_toggle_label').text('Tampilkan');
+                $('#prio_subtitle').text('Tidak ada tiket aktif saat ini');
+
+                html = '<div class="col-12"><div class="prio-empty">' +
+                    '<i class="ti ti-mood-happy"></i>' +
+                    '<p>Tidak ada tiket saat ini. Semua beres!</p>' +
+                    '</div></div>';
+            } else {
+                // Ada tiket → tetap expand
+                $('#prio_subtitle').text(tickets.length + ' tiket aktif perlu dikerjakan');
+
+                tickets.forEach(function(t, i) {
+                    var st = statusLabel[t.status] || ['Unknown', 's-open'];
+                    var rClass = rankClass[i] || '';
+                    var due = t.due_date ? t.due_date.substring(0, 10) : '-';
+
+                    html += '<div class="col-md-4 mb-3">' +
+                        '<div class="prio-card ' + rClass + '">' +
+                        '<div class="rank-badge">' + (i + 1) + '</div>' +
+                        '<p class="prio-ticket-no">' + (t.no_ticket || '-') + '</p>' +
+                        '<p class="prio-report">' + t.report + '</p>' +
+                        '<div class="prio-meta-row">' +
+                        '<i class="ti ti-calendar"></i>' +
+                        '<span>Due: ' + due + '</span>' +
+                        '</div>' +
+                        '<div class="prio-meta-row">' +
+                        '<i class="ti ti-tag"></i>' +
+                        '<span>' + (t.sub_category_name || '-') + '</span>' +
+                        '</div>' +
+                        '<div class="prio-footer">' +
+                        '<span class="prio-client-pill">' + (t.client_name || '-') + '</span>' +
+                        '<div style="display:flex; align-items:center; gap:6px;">' +
+                        '<span class="prio-status ' + st[1] + '">' + st[0] + '</span>' +
+                        '<a href="' + siteurl + 'ticket/view_ticket/' + t.id + '" ' +
+                        'class="btn btn-sm btn-outline-secondary" ' +
+                        'style="padding:2px 8px; font-size:11px; border-radius:20px; line-height:1.6;">' +
+                        '<i class="ti ti-eye" style="font-size:11px;"></i> Detail' +
+                        '</a>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
+                });
+            }
+
+            $('#prio_cards_row').html(html);
+            $('#prio_loading').hide();
+            $('#prio_content').show();
+        }
+
+        $.ajax({
+            url: siteurl + 'dashboard/get_my_priorities',
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                renderPriorityCards(res);
+            },
+            error: function() {
+                $('#prio_loading').hide();
+                $('#prio_content').show();
+                $('#prio_cards_row').html(
+                    '<div class="col-12"><div class="prio-empty">' +
+                    '<i class="ti ti-alert-circle"></i>' +
+                    '<p>Gagal memuat data prioritas.</p>' +
+                    '</div></div>'
+                );
+            }
+        });
+    })();
+    // ===== END PRIORITY TICKETS =====
 </script>

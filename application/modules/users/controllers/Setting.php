@@ -188,7 +188,7 @@ class Setting extends Admin_Controller
         $this->form_validation->set_rules('kota', 'lang:users_kota', 'required');
         $this->form_validation->set_rules('hp', 'lang:users_hp', 'required');
         $this->form_validation->set_rules('status', 'lang:users_status', 'required|in_list[0,1]');
-        $this->form_validation->set_rules('is_ba', 'lang:users_is_ba', 'required|in_list[0,1]');
+        $this->form_validation->set_rules('role_user', 'Role User', 'required|in_list[ba,programmer,user]');
 
         if ($this->form_validation->run($this) === FALSE) {
             $this->template->set_message(validation_errors(), 'error');
@@ -204,8 +204,10 @@ class Setting extends Admin_Controller
         $hp         = $this->input->post('hp');
         $kdcab      = $this->input->post('kdcab');
         $status     = $this->input->post('status');
-        $is_ba      = $this->input->post('is_ba');
         $client_ids = $this->input->post('client_ids');
+        $role_user     = $this->input->post('role_user');
+        $is_ba          = ($role_user === 'ba') ? 1 : 0;
+        $is_programmer  = ($role_user === 'programmer') ? 1 : 0;
 
         $timeTarget = 0.05;
         $cost = 8;
@@ -236,7 +238,8 @@ class Setting extends Admin_Controller
                 'st_aktif' => 1,
                 'kdcab'    => $kdcab,
                 'status'   => $status,
-                'is_ba'    => $is_ba
+                'is_ba'         => $is_ba,
+                'is_programmer' => $is_programmer
             );
 
             $result = $this->users_model->insert($data_insert);
@@ -274,7 +277,8 @@ class Setting extends Admin_Controller
                 'ip'       => $this->input->ip_address(),
                 'kdcab'    => $kdcab,
                 'status'   => $status,
-                'is_ba'    => $is_ba
+                'is_ba'         => $is_ba,
+                'is_programmer' => $is_programmer
             );
 
             if (isset($_POST['password']) && !empty($_POST['password'])) {
