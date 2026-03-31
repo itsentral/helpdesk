@@ -93,12 +93,18 @@ foreach ($ticket as $row) {
                                     <div style="width:40px; flex-shrink:0;">No.</div>
                                     <div style="flex:2; min-width:120px; padding-right:8px;">No Ticket</div>
                                     <div style="flex:2; min-width:120px; padding-right:8px;">Client</div>
-                                    <div style="flex:3; min-width:120px; padding-right:8px;">Report</div>
+
+                                    <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
+                                        <div style="flex:3; min-width:120px; padding-right:8px;">Report</div>
+                                    <?php endif; ?>
+
                                     <div style="flex:2; min-width:140px; padding-right:8px;">Category</div>
                                     <div style="flex:1.5; min-width:90px; padding-right:8px;">Due Date</div>
                                     <div style="flex:1.5; min-width:90px; padding-right:8px;">Man Hour</div>
                                     <div style="flex:1; min-width:80px; padding-right:8px;">Status</div>
-                                    <div style="width:30px; flex-shrink:0;"></div>
+                                    <?php if ($user['id_user'] == $t->pic_id || $user['is_ba'] == 1 || $user['id_user'] == 7) : ?>
+                                        <div style="width:30px; flex-shrink:0;"></div>
+                                    <?php endif; ?>
                                 </div>
 
                                 <ul class="list-unstyled mb-0 sortable-list"
@@ -152,11 +158,13 @@ foreach ($ticket as $row) {
                                                 <?= htmlspecialchars($t->client_name) ?>
                                             </div>
 
-                                            <div style="flex:3; min-width:140px; padding-right:8px; overflow:hidden;"
-                                                class="small text-truncate me-3"
-                                                title="<?= htmlspecialchars($t->report) ?>">
-                                                <?= htmlspecialchars($t->report) ?>
-                                            </div>
+                                            <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
+                                                <div style="flex:3; min-width:140px; padding-right:8px; overflow:hidden;"
+                                                    class="small text-truncate me-3"
+                                                    title="<?= htmlspecialchars($t->report) ?>">
+                                                    <?= htmlspecialchars($t->report) ?>
+                                                </div>
+                                            <?php endif; ?>
 
                                             <!-- Category -->
                                             <div style="flex:2; min-width:140px; padding-right:8px; overflow:hidden;" class="small">

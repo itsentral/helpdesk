@@ -61,124 +61,133 @@ foreach ($ticket as $row) {
                 <div id="<?= $collapseId ?>" class="accordion-collapse collapse">
                     <div class="accordion-body p-0">
 
-                    <?php if (empty($data['tickets'])) : ?>
-            <!-- Tampilan jika tidak ada ticket -->
-            <div class="text-center text-muted py-4">
-                <!-- <i class="fa-solid fa-circle-check fa-2x mb-2 d-block text-success"></i> -->
-                <span>Tidak ada ticket aktif untuk <strong><?= htmlspecialchars($data['name']) ?></strong>.</span>
-            </div>
+                        <?php if (empty($data['tickets'])) : ?>
+                            <!-- Tampilan jika tidak ada ticket -->
+                            <div class="text-center text-muted py-4">
+                                <!-- <i class="fa-solid fa-circle-check fa-2x mb-2 d-block text-success"></i> -->
+                                <span>Tidak ada ticket aktif untuk <strong><?= htmlspecialchars($data['name']) ?></strong>.</span>
+                            </div>
 
-        <?php else : ?>
-            <div class="table-responsive">
-                        <div class="d-flex align-items-center px-3 py-2 bg-light border-bottom text-muted small fw-semibold"
-                            style="min-width:600px;">
-                            <div style="width:40px; flex-shrink:0;">No.</div>
-                            <div style="flex:2; min-width:120px; padding-right:8px;">No Ticket</div>
-                            <div style="flex:2; min-width:120px; padding-right:8px;">Client</div>
-                             <div style="flex:3; min-width:120px; padding-right:8px;">Report</div>
-                            <div style="flex:3; min-width:140px; padding-right:8px;">Category</div>
-                            <div style="flex:1.5; min-width:90px; padding-right:8px;">Due Date</div>
-                            <div style="flex:1.5; min-width:90px; padding-right:8px;">Man Hour</div>
-                            <div style="flex:1; min-width:80px; padding-right:8px;">Status</div>
-                            <div style="width:30px; flex-shrink:0;"></div>
-                        </div>
+                        <?php else : ?>
+                            <div class="table-responsive">
+                                <div class="d-flex align-items-center px-3 py-2 bg-light border-bottom text-muted small fw-semibold"
+                                    style="min-width:600px;">
+                                    <div style="width:40px; flex-shrink:0;">No.</div>
+                                    <div style="flex:2; min-width:120px; padding-right:8px;">No Ticket</div>
+                                    <div style="flex:2; min-width:120px; padding-right:8px;">Client</div>
 
-                        <ul class="list-unstyled mb-0 sortable-list"
-                            id="<?= $sortableId ?>"
-                            data-pic-id="<?= $pic_id ?>"
-                            data-type="ba"
-                            style="min-width:600px;">
+                                    <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
+                                        <div style="flex:3; min-width:120px; padding-right:8px;">Report</div>
+                                    <?php endif ?>
 
-                            <?php
-                            $no = 1;
-                            foreach ($data['tickets'] as $t) :
-                                $status    = $statusConfig[$t->status] ?? ['label' => 'Unknown', 'class' => 'badge bg-secondary'];
-                                $due_date  = $t->due_date ? date('d M Y', strtotime($t->due_date)) : '-';
-                                $isOverdue = $t->due_date && strtotime($t->due_date) < time() && !in_array($t->status, [4, 5]);
-                            ?>
-                                <li class="d-flex align-items-center px-3 py-2 border-bottom ticket-row
+                                    <div style="flex:3; min-width:140px; padding-right:8px;">Category</div>
+                                    <div style="flex:1.5; min-width:90px; padding-right:8px;">Due Date</div>
+                                    <div style="flex:1.5; min-width:90px; padding-right:8px;">Man Hour</div>
+                                    <div style="flex:1; min-width:80px; padding-right:8px;">Status</div>
+                                    <?php if ($user['id_user'] == $t->pic_id || $user['is_ba'] == 1 || $user['id_user'] == 7) : ?>
+                                        <div style="width:30px; flex-shrink:0;"></div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <ul class="list-unstyled mb-0 sortable-list"
+                                    id="<?= $sortableId ?>"
+                                    data-pic-id="<?= $pic_id ?>"
+                                    data-type="ba"
+                                    style="min-width:600px;">
+
+                                    <?php
+                                    $no = 1;
+                                    foreach ($data['tickets'] as $t) :
+                                        $status    = $statusConfig[$t->status] ?? ['label' => 'Unknown', 'class' => 'badge bg-secondary'];
+                                        $due_date  = $t->due_date ? date('d M Y', strtotime($t->due_date)) : '-';
+                                        $isOverdue = $t->due_date && strtotime($t->due_date) < time() && !in_array($t->status, [4, 5]);
+                                    ?>
+                                        <li class="d-flex align-items-center px-3 py-2 border-bottom ticket-row
                                 <?= $isOverdue ? 'bg-danger bg-opacity-10' : '' ?>"
-                                    data-id="<?= $t->id ?>">
+                                            data-id="<?= $t->id ?>">
 
-                                    <!-- No urut -->
-                                    <div class="priority-number fw-bold text-muted small"
-                                        style="width:40px; flex-shrink:0;">
-                                        <?= $no++ ?>
-                                    </div>
-
-                                    <!-- No Ticket -->
-                                    <div style="flex:2; min-width:120px; padding-right:8px; overflow:hidden;">
-                                        <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
-                                            <a href="<?= site_url('ticket/view_ticket/' . $t->id) ?>"
-                                                class="fw-semibold text-primary small d-block text-truncate text-decoration-none"
-                                                title="<?= htmlspecialchars($t->no_ticket) ?>">
-                                                <i class="fa-solid fa-ticket me-1"></i><?= htmlspecialchars($t->no_ticket) ?>
-                                            </a>
-                                        <?php else : ?>
-                                            <span class="fw-semibold text-primary small d-block text-truncate"
-                                                title="<?= htmlspecialchars($t->no_ticket) ?>">
-                                                <i class="fa-solid fa-ticket me-1"></i><?= htmlspecialchars($t->no_ticket) ?>
-                                            </span>
-                                        <?php endif; ?>
-                                        <?php if ($isOverdue) : ?>
-                                            <span class="badge bg-danger mt-1">
-                                                <i class="fa-solid fa-clock me-1"></i>Overdue
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <!-- Client -->
-                                    <div style="flex:2; min-width:120px; padding-right:8px; overflow:hidden;"
-                                        class="small text-truncate"
-                                        title="<?= htmlspecialchars($t->client_name) ?>">
-                                        <?= htmlspecialchars($t->client_name) ?>
-                                    </div>
-
-                                    <div style="flex:3; min-width:140px; padding-right:8px; overflow:hidden;"
-                                                class="small text-truncate me-3"
-                                                title="<?= htmlspecialchars($t->report) ?>">
-                                                <?= htmlspecialchars($t->report) ?>
+                                            <!-- No urut -->
+                                            <div class="priority-number fw-bold text-muted small"
+                                                style="width:40px; flex-shrink:0;">
+                                                <?= $no++ ?>
                                             </div>
 
-                                    <!-- Category -->
-                                    <div style="flex:3; min-width:140px; padding-right:8px; overflow:hidden;" class="small">
-                                        <div class="text-truncate" title="<?= htmlspecialchars($t->category_name) ?>">
-                                            <?= htmlspecialchars($t->category_name) ?>
-                                        </div>
-                                        <div class="text-muted text-truncate" style="font-size:11px;"
-                                            title="<?= htmlspecialchars($t->sub_category_name) ?>">
-                                            <?= htmlspecialchars($t->sub_category_name) ?>
-                                        </div>
-                                    </div>
+                                            <!-- No Ticket -->
+                                            <div style="flex:2; min-width:120px; padding-right:8px; overflow:hidden;">
+                                                <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
+                                                    <a href="<?= site_url('ticket/view_ticket/' . $t->id) ?>"
+                                                        class="fw-semibold text-primary small d-block text-truncate text-decoration-none"
+                                                        title="<?= htmlspecialchars($t->no_ticket) ?>">
+                                                        <i class="fa-solid fa-ticket me-1"></i><?= htmlspecialchars($t->no_ticket) ?>
+                                                    </a>
+                                                <?php else : ?>
+                                                    <span class="fw-semibold text-primary small d-block text-truncate"
+                                                        title="<?= htmlspecialchars($t->no_ticket) ?>">
+                                                        <i class="fa-solid fa-ticket me-1"></i><?= htmlspecialchars($t->no_ticket) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if ($isOverdue) : ?>
+                                                    <span class="badge bg-danger mt-1">
+                                                        <i class="fa-solid fa-clock me-1"></i>Overdue
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
 
-                                    <!-- Due Date -->
-                                    <div style="flex:1.5; min-width:90px; padding-right:8px;"
-                                        class="small <?= $isOverdue ? 'text-danger fw-bold' : '' ?>">
-                                        <?= $due_date ?>
-                                    </div>
+                                            <!-- Client -->
+                                            <div style="flex:2; min-width:120px; padding-right:8px; overflow:hidden;"
+                                                class="small text-truncate"
+                                                title="<?= htmlspecialchars($t->client_name) ?>">
+                                                <?= htmlspecialchars($t->client_name) ?>
+                                            </div>
 
-                                    <!-- Man Hour Plan -->
-                                    <div style="flex:1.5; min-width:90px; padding-right:8px;" class="small">
-                                        <?= $t->man_hour_plan ?? '-' ?> Jam
-                                    </div>
+                                            <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
+                                                <div style="flex:3; min-width:140px; padding-right:8px; overflow:hidden;"
+                                                    class="small text-truncate me-3"
+                                                    title="<?= htmlspecialchars($t->report) ?>">
+                                                    <?= htmlspecialchars($t->report) ?>
+                                                </div>
+                                            <?php endif; ?>
 
-                                    <!-- Status -->
-                                    <div style="flex:1; min-width:80px; padding-right:8px;">
-                                        <span class="<?= $status['class'] ?>"><?= $status['label'] ?></span>
-                                    </div>
+                                            <!-- Category -->
+                                            <div style="flex:3; min-width:140px; padding-right:8px; overflow:hidden;" class="small">
+                                                <div class="text-truncate" title="<?= htmlspecialchars($t->category_name) ?>">
+                                                    <?= htmlspecialchars($t->category_name) ?>
+                                                </div>
+                                                <div class="text-muted text-truncate" style="font-size:11px;"
+                                                    title="<?= htmlspecialchars($t->sub_category_name) ?>">
+                                                    <?= htmlspecialchars($t->sub_category_name) ?>
+                                                </div>
+                                            </div>
 
-                                    <!-- Drag handle -->
-                                    <div class="drag-handle text-muted"
-                                        style="cursor:grab; width:30px; flex-shrink:0; text-align:center;">
-                                        <i class="fa-solid fa-grip-vertical"></i>
-                                    </div>
+                                            <!-- Due Date -->
+                                            <div style="flex:1.5; min-width:90px; padding-right:8px;"
+                                                class="small <?= $isOverdue ? 'text-danger fw-bold' : '' ?>">
+                                                <?= $due_date ?>
+                                            </div>
 
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
+                                            <!-- Man Hour Plan -->
+                                            <div style="flex:1.5; min-width:90px; padding-right:8px;" class="small">
+                                                <?= $t->man_hour_plan ?? '-' ?> Jam
+                                            </div>
+
+                                            <!-- Status -->
+                                            <div style="flex:1; min-width:80px; padding-right:8px;">
+                                                <span class="<?= $status['class'] ?>"><?= $status['label'] ?></span>
+                                            </div>
+
+                                            <!-- Drag handle -->
+                                            <?php if ($user['id_user'] == $t->pic_id || $user['is_ba'] == 1 || $user['id_user'] == 7) : ?>
+                                                <div class="drag-handle text-muted"
+                                                    style="cursor:grab; width:30px; flex-shrink:0; text-align:center;">
+                                                    <i class="fa-solid fa-grip-vertical"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
                     </div>
-                    </div>
-                    <?php endif; ?>
+                <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>

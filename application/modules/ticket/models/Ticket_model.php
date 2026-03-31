@@ -638,4 +638,22 @@ class Ticket_model extends BF_Model
 
         return $this->db->query($sql)->result();
     }
+
+    public function soft_delete_chat($chat_id, $user_id)
+    {
+        $this->db->where('id', $chat_id);
+        $this->db->where('sender_id', $user_id); 
+        return $this->db->update('helpdesk_chat', [
+            'is_delete' => 1
+        ]);
+    }
+
+    public function update_chat_message($chat_id, $user_id, $new_message)
+    {
+        $this->db->where('id', $chat_id);
+        $this->db->where('sender_id', $user_id);
+        return $this->db->update('helpdesk_chat', [
+            'message' => $new_message
+        ]);
+    }
 }

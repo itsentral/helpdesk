@@ -1199,7 +1199,8 @@ class Ticket extends Admin_Controller
         'create_date' => $message->create_date,
         'is_sent_by_me' => $message->sender_id == $user_id,
         'read_count' => $message->total_readers,
-        'is_read_by_me' => $message->is_read_by_me
+        'is_read_by_me' => $message->is_read_by_me,
+        'is_delete' => $message->is_delete
       ];
     }
 
@@ -1247,6 +1248,100 @@ class Ticket extends Admin_Controller
       return "{$hours} jam yang lalu";
     } else {
       return date('d/m/Y H:i', $time);
+    }
+  }
+
+  public function delete_chat_message()
+  {
+    $this->auth->restrict($this->viewPermission);
+
+    $chat_id = $this->input->post('chat_id');
+    $user_id = $this->auth->user_id();
+
+    if (empty($chat_id)) {
+      echo json_encode(['status' => 0, 'message' => 'Chat ID required']);
+      return;
+    }
+
+    // Ambil data chat
+    $chat = $this->Ticket_model->get_chat_by_id($chat_id);
+
+    if (!$chat) {
+      echo json_encode(['status' => 0, 'message' => 'Pesan tidak ditemukan']);
+      return;
+    }
+
+    // Cek kepemilikan
+    if ($chat['sender_id'] != $user_id) {
+      echo json_encode(['status' => 0, 'message' => 'Anda tidak berhak menghapus pesan ini']);
+      return;
+    }
+
+    // Cek batasan hari yang sama
+    $send_date = date('Y-m-d', strtotime($chat['create_date']));
+    $today     = date('Y-m-d');
+
+    if ($send_date !== $today) {
+      echo json_encode(['status' => 0, 'message' => 'Pesan hanya bisa dihapus di hari yang sama']);
+      return;
+    }
+
+    $result = $this->Ticket_model->soft_delete_chat($chat_id, $user_id);
+
+    if ($result) {
+      echo json_encode(['status' => 1, 'message' => 'Pesan berhasil dihapus']);
+    } else {
+      echo json_encode(['status' => 0, 'message' => 'Gagal menghapus pesan']);
+    }
+  }
+
+  public function edit_chat_message()
+  {
+    $this->auth->restrict($this->viewPermission);
+
+    $chat_id     = $this->input->post('chat_id');
+    $new_message = trim($this->input->post('message'));
+    $user_id     = $this->auth->user_id();
+
+    if (empty($chat_id)) {
+      echo json_encode(['status' => 0, 'message' => 'Chat ID required']);
+      return;
+    }
+
+    if (empty($new_message)) {
+      echo json_encode(['status' => 0, 'message' => 'Pesan tidak boleh kosong']);
+      return;
+    }
+
+    // Ambil data chat
+    $chat = $this->Ticket_model->get_chat_by_id($chat_id);
+
+    if (!$chat) {
+      echo json_encode(['status' => 0, 'message' => 'Pesan tidak ditemukan']);
+      return;
+    }
+
+    // Cek kepemilikan
+    if ($chat['sender_id'] != $user_id) {
+      echo json_encode(['status' => 0, 'message' => 'Anda tidak berhak mengedit pesan ini']);
+      return;
+    }
+
+    // Cek batasan hari yang sama
+    $send_date = date('Y-m-d', strtotime($chat['create_date']));
+    $today     = date('Y-m-d');
+
+    if ($send_date !== $today) {
+      echo json_encode(['status' => 0, 'message' => 'Pesan hanya bisa diedit di hari yang sama']);
+      return;
+    }
+
+    $result = $this->Ticket_model->update_chat_message($chat_id, $user_id, $new_message);
+
+    if ($result) {
+      echo json_encode(['status' => 1, 'message' => 'Pesan berhasil diperbarui']);
+    } else {
+      echo json_encode(['status' => 0, 'message' => 'Gagal memperbarui pesan']);
     }
   }
 }

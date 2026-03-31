@@ -354,6 +354,10 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	#chatMessages {
 		background-color: #e5f2ff;
 		background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%2347a8ff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+		line-height: 1.5;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		transition: height 0.1s ease;
 	}
 
 	.chat-image {
@@ -373,6 +377,123 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 	.chat-file a {
 		word-break: break-all;
+	}
+
+	/* Chat action menu */
+	.chat-actions {
+		position: relative;
+		display: inline-block;
+	}
+
+	.chat-actions-btn {
+		background: none;
+		border: none;
+		color: rgba(255, 255, 255, 0.7);
+		cursor: pointer;
+		padding: 0 4px;
+		font-size: 16px;
+		line-height: 1;
+		border-radius: 4px;
+		transition: color 0.2s;
+	}
+
+	.chat-message.sent .chat-actions-btn {
+		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.chat-actions-btn:hover {
+		color: #fff;
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	.chat-actions-dropdown {
+		position: absolute;
+		right: 0;
+		top: 100%;
+		background: #fff;
+		border: 1px solid #ddd;
+		border-radius: 8px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		z-index: 9999;
+		min-width: 140px;
+		overflow: hidden;
+		animation: fadeIn 0.15s ease;
+	}
+
+	.chat-actions-dropdown .dropdown-item {
+		padding: 8px 14px;
+		font-size: 13px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #333;
+		border: none;
+		background: none;
+		width: 100%;
+		text-align: left;
+	}
+
+	.chat-actions-dropdown .dropdown-item:hover {
+		background: #f5f5f5;
+	}
+
+	.chat-actions-dropdown .dropdown-item.text-danger:hover {
+		background: #fff5f5;
+	}
+
+	/* Pesan terhapus */
+	.message-deleted {
+		font-style: italic;
+		color: rgba(255, 255, 255, 0.6) !important;
+		font-size: 13px;
+	}
+
+	.chat-message.received .message-deleted {
+		color: #999 !important;
+	}
+
+	/* Edit input inline */
+	.chat-edit-form {
+		display: flex;
+		gap: 6px;
+		margin-top: 4px;
+		align-items: center;
+	}
+
+	.chat-edit-input {
+		flex: 1;
+		border-radius: 6px;
+		border: 1px solid rgba(255, 255, 255, 0.5);
+		padding: 4px 8px;
+		font-size: 13px;
+		background: rgba(255, 255, 255, 0.2);
+		color: white;
+		outline: none;
+	}
+
+	.chat-edit-input::placeholder {
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.btn-edit-save,
+	.btn-edit-cancel {
+		border: none;
+		border-radius: 5px;
+		padding: 3px 8px;
+		font-size: 12px;
+		cursor: pointer;
+	}
+
+	.btn-edit-save {
+		background: rgba(255, 255, 255, 0.9);
+		color: #007bff;
+		font-weight: bold;
+	}
+
+	.btn-edit-cancel {
+		background: rgba(0, 0, 0, 0.2);
+		color: white;
 	}
 </style>
 
@@ -574,29 +695,46 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 						<!-- File Preview -->
 						<div id="filePreview" class="mb-2" style="display: none;">
-							<div class="alert alert-info d-flex align-items-center justify-content-between mb-0">
-								<div>
-									<i class="fa-solid fa-file"></i>
-									<span id="fileName"></span>
-									<small class="text-muted">(<span id="fileSize"></span>)</small>
+							<div class="alert alert-info d-flex align-items-center justify-content-between mb-0 gap-2">
+								<!-- Preview image jika file adalah gambar -->
+								<div id="imagePreviewWrapper" style="display:none;">
+									<img id="imagePreviewThumb" src="" alt="preview"
+										style="height: 60px; width: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #bee5eb;">
 								</div>
-								<button type="button" class="btn btn-sm btn-danger" id="removeFile">
+
+								<!-- Info file -->
+								<div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width:0;">
+									<i class="fa-solid fa-file" id="fileIcon"></i>
+									<div style="min-width:0;">
+										<div id="fileName" class="text-truncate" style="max-width: 180px; font-size:13px;"></div>
+										<small class="text-muted"><span id="fileSize"></span></small>
+									</div>
+								</div>
+
+								<button type="button" class="btn btn-sm btn-danger flex-shrink-0" id="removeFile">
 									<i class="fa-solid fa-times"></i>
 								</button>
 							</div>
 						</div>
 
-						<div class="input-group">
-							<input type="file" id="chatFile" name="chat_file" class="d-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar">
+						<div class="d-flex align-items-end gap-2">
+							<input type="file" id="chatFile" name="chat_file" class="d-none"
+								accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar">
 
-							<button type="button" class="btn btn-outline-secondary" id="btnAttachFile">
+							<!-- Tombol attach -->
+							<button type="button" class="btn btn-outline-secondary flex-shrink-0 d-flex align-items-center justify-content-center"
+								id="btnAttachFile" style="height: 38px; width: 38px; padding: 0;">
 								<i class="fa-solid fa-paperclip"></i>
 							</button>
 
-							<input type="text" class="form-control" id="chatMessage" name="message"
-								placeholder="Type your message..." autocomplete="off">
+							<!-- Textarea message -->
+							<textarea class="form-control flex-grow-1" id="chatMessage" name="message"
+								placeholder="Type your message..." autocomplete="off"
+								rows="1" style="resize:none; overflow:hidden; max-height: 120px; min-height: 38px;"></textarea>
 
-							<button type="submit" class="btn btn-primary" id="btnSendChat">
+							<!-- Tombol send -->
+							<button type="submit" class="btn btn-primary flex-shrink-0"
+								id="btnSendChat" style="height: 38px; white-space: nowrap; padding: 0 12px;">
 								<i class="fa-solid fa-paper-plane"></i> Send
 							</button>
 						</div>
@@ -1105,7 +1243,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		if (chatRefreshInterval) {
 			clearInterval(chatRefreshInterval);
 			chatRefreshInterval = null;
-			console.log('Chat auto-refresh distop');
+			// console.log('Chat auto-refresh distop');
 		}
 	}
 
@@ -1205,35 +1343,215 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		messages.forEach(function(msg) {
 			const isSent = msg.sender_id == currentUserId;
 			const messageClass = isSent ? 'sent' : 'received';
+			const isDeleted = msg.is_delete == 1;
+			const sendDate = new Date(msg.create_date);
+			const today = new Date();
+			const isSameDay = sendDate.toDateString() === today.toDateString();
+			const canModify = isSent && !isDeleted && isSameDay;
+
+			// Konten pesan
+			let messageContent = '';
+			if (isDeleted) {
+				messageContent = `<div class="message-content message-deleted">
+                                <i class="fa-solid fa-ban fa-xs"></i> Pesan ini telah dihapus
+                              </div>`;
+			} else {
+				const formattedMessage = msg.message
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;')
+					.replace(/\n/g, '<br>');
+
+				messageContent = `<div class="message-content" id="msg-content-${msg.id}">${formattedMessage}</div>`;
+			}
+
+			// Tombol titik 3 — hanya tampil jika bisa dimodifikasi
+			const actionsBtn = canModify ? `
+            <div class="chat-actions ms-1">
+                <button class="chat-actions-btn" data-chat-id="${msg.id}" title="Opsi pesan">&#8942;</button>
+                <div class="chat-actions-dropdown" id="dropdown-${msg.id}" style="display:none;">
+                    <button class="dropdown-item text-primary chat-edit-btn"
+                        data-chat-id="${msg.id}"
+                        data-message="${msg.message.replace(/"/g, '&quot;')}">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                    </button>
+                    <button class="dropdown-item text-danger chat-delete-btn"
+                        data-chat-id="${msg.id}">
+                        <i class="fa-solid fa-trash"></i> Hapus
+                    </button>
+                </div>
+            </div>
+        ` : '';
 
 			html += `
-				<div class="chat-message ${messageClass}" data-message-id="${msg.id}">
-					<div class="chat-bubble">
-						${!isSent ? `<div class="chat-sender">${msg.sender_name}</div>` : ''}
-						<div class="message-content">${msg.message}</div>
-						${msg.file_name ? renderChatFile(msg) : ''}
-						${isSent ? `
-							<div class="chat-read-status ${msg.read_count > 0 ? 'has-readers' : ''}" 
-								data-chat-id="${msg.id}"
-								data-read-count="${msg.read_count}"
-								style="cursor: ${msg.read_count > 0 ? 'pointer' : 'default'};">
-								<small>
-									${msg.read_count > 0 
-										? `<i class="fa-solid fa-check-double text-primary"></i> 
-										<span class="read-count-text">Dilihat (${msg.read_count})</span>`
-										: `<i class="fa-solid fa-check text-muted"></i> Terkirim`
-									}
-								</small>
-							</div>
-						` : ''}
-					</div>
-					<div class="chat-time">${formatChatTime(msg.create_date)}</div>
-				</div>
-			`;
+            <div class="chat-message ${messageClass}" data-message-id="${msg.id}">
+                <div class="chat-bubble">
+                    <div class="d-flex align-items-start justify-content-between gap-1">
+                        <div style="flex:1; min-width:0;">
+                            ${!isSent ? `<div class="chat-sender">${msg.sender_name}</div>` : ''}
+                            ${messageContent}
+                            ${!isDeleted && msg.file_name ? renderChatFile(msg) : ''}
+                        </div>
+                        ${actionsBtn}
+                    </div>
+                    ${isSent && !isDeleted ? `
+                        <div class="chat-read-status ${msg.read_count > 0 ? 'has-readers' : ''}" 
+                            data-chat-id="${msg.id}"
+                            data-read-count="${msg.read_count}"
+                            style="cursor: ${msg.read_count > 0 ? 'pointer' : 'default'};">
+                            <small>
+                                ${msg.read_count > 0 
+                                    ? `<i class="fa-solid fa-check-double text-primary"></i> 
+                                       <span class="read-count-text">Dilihat (${msg.read_count})</span>`
+                                    : `<i class="fa-solid fa-check text-muted"></i> Terkirim`
+                                }
+                            </small>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="chat-time">${formatChatTime(msg.create_date)}</div>
+            </div>
+        `;
 		});
 
 		$('#chatMessagesContent').html(html);
 
+		// Event: buka/tutup dropdown titik 3
+		$(document).off('click.chatActions').on('click.chatActions', '.chat-actions-btn', function(e) {
+			e.stopPropagation();
+			const chatId = $(this).data('chat-id');
+			const $dropdown = $('#dropdown-' + chatId);
+
+			$('.chat-actions-dropdown').not($dropdown).hide();
+			$dropdown.toggle();
+		});
+
+		$(document).off('click.closeDropdown').on('click.closeDropdown', function(e) {
+			if (!$(e.target).closest('.chat-actions').length) {
+				$('.chat-actions-dropdown').hide();
+			}
+		});
+
+		$(document).off('click.deleteChat').on('click.deleteChat', '.chat-delete-btn', function(e) {
+			e.stopPropagation();
+			const chatId = $(this).data('chat-id');
+			$('.chat-actions-dropdown').hide();
+
+			Swal.fire({
+				title: 'Hapus Pesan?',
+				text: 'Pesan akan dihapus dan tidak dapat dikembalikan.',
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonColor: '#dc3545',
+				cancelButtonColor: '#6c757d',
+				confirmButtonText: 'Ya, Hapus',
+				cancelButtonText: 'Batal'
+			}).then((result) => {
+				if (result.isConfirmed) {
+					$.ajax({
+						url: siteurl + active_controller + 'delete_chat_message',
+						type: 'POST',
+						data: {
+							chat_id: chatId
+						},
+						dataType: 'json',
+						success: function(response) {
+							if (response.status == 1) {
+								shouldAutoScroll = false;
+								loadChatMessages(currentHelpdeskId, true);
+							} else {
+								Swal.fire('Gagal', response.message, 'error');
+							}
+						},
+						error: function() {
+							Swal.fire('Error', 'Terjadi kesalahan saat menghapus pesan', 'error');
+						}
+					});
+				}
+			});
+		});
+
+		// Edit pesan 
+		$(document).off('click.editChat').on('click.editChat', '.chat-edit-btn', function(e) {
+			e.stopPropagation();
+			const chatId = $(this).data('chat-id');
+			const originalMessage = $(this).data('message');
+			$('.chat-actions-dropdown').hide();
+
+			const $msgContent = $('#msg-content-' + chatId);
+
+			if ($('#edit-form-' + chatId).length > 0) return;
+
+			// Hide tombol titik 3 saat mode edit
+			$msgContent.closest('.chat-bubble').find('.chat-actions-btn').hide();
+
+			$msgContent.hide();
+			$msgContent.after(`
+        <div class="chat-edit-form" id="edit-form-${chatId}">
+            <input type="text" class="chat-edit-input" id="edit-input-${chatId}" value="${originalMessage}">
+            <button class="btn-edit-save" data-chat-id="${chatId}">
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <button class="btn-edit-cancel" data-chat-id="${chatId}">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    `);
+
+			$('#edit-input-' + chatId).focus().select();
+		});
+
+		// Batal edit — Show kembali tombol titik 3
+		$(document).off('click.cancelEdit').on('click.cancelEdit', '.btn-edit-cancel', function() {
+			const chatId = $(this).data('chat-id');
+			$('#edit-form-' + chatId).remove();
+			$('#msg-content-' + chatId).show();
+			$('#msg-content-' + chatId).closest('.chat-bubble').find('.chat-actions-btn').show();
+		});
+
+		// Event: Simpan edit
+		$(document).off('click.saveEdit').on('click.saveEdit', '.btn-edit-save', function() {
+			const chatId = $(this).data('chat-id');
+			const newMessage = $('#edit-input-' + chatId).val().trim();
+
+			if (!newMessage) {
+				Swal.fire('Peringatan', 'Pesan tidak boleh kosong', 'warning');
+				return;
+			}
+
+			$.ajax({
+				url: siteurl + active_controller + 'edit_chat_message',
+				type: 'POST',
+				data: {
+					chat_id: chatId,
+					message: newMessage
+				},
+				dataType: 'json',
+				success: function(response) {
+					if (response.status == 1) {
+						shouldAutoScroll = false;
+						loadChatMessages(currentHelpdeskId, true);
+					} else {
+						Swal.fire('Gagal', response.message, 'error');
+					}
+				},
+				error: function() {
+					Swal.fire('Error', 'Terjadi kesalahan saat mengedit pesan', 'error');
+				}
+			});
+		});
+
+		// Enter key di input edit
+		$(document).off('keydown.editInput').on('keydown.editInput', '.chat-edit-input', function(e) {
+			const chatId = $(this).attr('id').replace('edit-input-', '');
+			if (e.key === 'Enter') {
+				$('.btn-edit-save[data-chat-id="' + chatId + '"]').trigger('click');
+			} else if (e.key === 'Escape') {
+				$('.btn-edit-cancel[data-chat-id="' + chatId + '"]').trigger('click');
+			}
+		});
+
+		// Event: read status click
 		$('.chat-read-status.has-readers').on('click', function(e) {
 			e.stopPropagation();
 			const chatId = $(this).data('chat-id');
@@ -1650,29 +1968,62 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		});
 
 		// File Selected
+		// File Selected
 		$('#chatFile').on('change', function() {
 			const file = this.files[0];
-			if (file) {
-				if (file.size > 5 * 1024 * 1024) {
-					Swal.fire({
-						icon: 'error',
-						title: 'File terlalu besar',
-						text: 'Ukuran file maksimal 5MB'
-					});
-					$(this).val('');
-					return;
-				}
+			if (!file) return;
 
-				$('#fileName').text(file.name);
-				$('#fileSize').text(formatFileSize(file.size));
-				$('#filePreview').show();
+			if (file.size > 2 * 1024 * 1024) {
+				Swal.fire({
+					icon: 'error',
+					title: 'File terlalu besar',
+					text: 'Ukuran file maksimal 2MB'
+				});
+				$(this).val('');
+				return;
 			}
+
+			$('#fileName').text(file.name);
+			$('#fileSize').text(formatFileSize(file.size));
+
+			// Cek apakah file adalah gambar
+			if (file.type.startsWith('image/')) {
+				const reader = new FileReader();
+				reader.onload = function(e) {
+					$('#imagePreviewThumb').attr('src', e.target.result);
+					$('#imagePreviewWrapper').show();
+					$('#fileIcon').hide();
+				};
+				reader.readAsDataURL(file);
+			} else {
+				// File non-image, tampilkan icon sesuai tipe
+				$('#imagePreviewWrapper').hide();
+				$('#fileIcon').show();
+
+				const ext = file.name.split('.').pop().toLowerCase();
+				const iconMap = {
+					'pdf': 'fa-file-pdf text-danger',
+					'doc': 'fa-file-word text-primary',
+					'docx': 'fa-file-word text-primary',
+					'xls': 'fa-file-excel text-success',
+					'xlsx': 'fa-file-excel text-success',
+					'zip': 'fa-file-zipper text-warning',
+					'rar': 'fa-file-zipper text-warning',
+				};
+				const iconClass = iconMap[ext] || 'fa-file text-secondary';
+				$('#fileIcon').attr('class', 'fa-solid ' + iconClass);
+			}
+
+			$('#filePreview').show();
 		});
 
 		// Remove File
 		$('#removeFile').on('click', function() {
 			$('#chatFile').val('');
 			$('#filePreview').hide();
+			$('#imagePreviewThumb').attr('src', '');
+			$('#imagePreviewWrapper').hide();
+			$('#fileIcon').show();
 		});
 
 		$('#chatForm').on('submit', function(e) {
@@ -1720,6 +2071,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				success: function(response) {
 					if (response.status == 1) {
 						$('#chatMessage').val('');
+						$('#chatMessage')[0].style.height = 'auto';
 						$('#chatFile').val('');
 						$('#filePreview').hide();
 
@@ -1791,13 +2143,13 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			if (document.hidden) {
 				stopUnreadCountPolling();
 				if (chatRefreshInterval) {
-					console.log('Tab hidden - pausing chat refresh');
+					// console.log('Tab hidden - pausing chat refresh');
 					stopChatRefresh();
 				}
 			} else {
 				startUnreadCountPolling();
 				if (currentHelpdeskId && $('#modalChatRoom').hasClass('show')) {
-					console.log('Tab visible - resuming chat refresh');
+					// console.log('Tab visible - resuming chat refresh');
 					loadChatMessages(currentHelpdeskId, true);
 					chatRefreshInterval = setInterval(function() {
 						loadChatMessages(currentHelpdeskId, true);
@@ -1844,7 +2196,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 					console.log('Image viewed');
 				},
 				hidden: () => {
-					console.log('Viewer hidden, cleaning up temp container');
+					// console.log('Viewer hidden, cleaning up temp container');
 					setTimeout(() => {
 						try {
 							viewer.destroy();
@@ -1903,6 +2255,71 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			fpFrom.set('maxDate', null);
 			fpTo.set('minDate', resetFrom);
 			loadApprovedList(selectedClientIdApproved);
+		});
+
+		// Auto resize textarea
+		$(document).on('input', '#chatMessage', function() {
+			this.style.height = 'auto';
+			this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+		});
+
+		$(document).on('keydown', '#chatMessage', function(e) {
+			if (e.key === 'Enter' && !e.shiftKey) {
+				e.preventDefault();
+				$('#chatForm').trigger('submit');
+			}
+		});
+
+		$(document).on('paste', '#chatMessage', function(e) {
+			const clipboardData = e.originalEvent.clipboardData;
+			if (!clipboardData || !clipboardData.items) return;
+
+			const items = Array.from(clipboardData.items);
+			const fileItem = items.find(item => item.kind === 'file');
+
+			if (!fileItem) return; 
+
+			e.preventDefault();
+
+			const file = fileItem.getAsFile();
+			if (!file) return;
+
+			// Validasi
+			if (file.size > 2 * 1024 * 1024) {
+				Swal.fire({
+					icon: 'error',
+					title: 'File terlalu besar',
+					text: 'Ukuran file maksimal 2MB'
+				});
+				return;
+			}
+
+			// Validasi tipe file
+			const allowedTypes = [
+				'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+				'application/pdf',
+				'application/msword',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+				'application/vnd.ms-excel',
+				'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+				'application/zip',
+				'application/x-rar-compressed'
+			];
+
+			if (!allowedTypes.includes(file.type)) {
+				Swal.fire({
+					icon: 'error',
+					title: 'Tipe file tidak didukung',
+					text: 'Hanya mendukung gambar, PDF, Word, Excel, ZIP, RAR'
+				});
+				return;
+			}
+
+			const dataTransfer = new DataTransfer();
+			dataTransfer.items.add(file);
+			$('#chatFile')[0].files = dataTransfer.files;
+
+			$('#chatFile').trigger('change');
 		});
 	});
 </script>
