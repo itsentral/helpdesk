@@ -487,6 +487,9 @@ class Ticket extends Admin_Controller
               'uploaded_by_id'      => $this->auth->user_id(),
               'uploaded_date'       => date('Y-m-d H:i:s')
             ]);
+          } else {
+            $error_code = $_FILES['attachments']['error'][$i];
+            echo "Not uploaded because of error #" . $error_code;
           }
         }
       }
