@@ -251,6 +251,9 @@ class Ticket extends Admin_Controller
 
   public function save_ticket()
   {
+    // echo 'post_max_size: ' . ini_get('post_max_size') . '<br>';
+    // echo 'upload_max_filesize: ' . ini_get('upload_max_filesize') . '<br>';
+    // echo 'PHP ini loaded: ' . php_ini_loaded_file() . '<br>';die;
     $session_data = $this->session->userdata('app_session');
 
     if (!$session_data || !isset($session_data['id_user'])) {
@@ -261,11 +264,6 @@ class Ticket extends Admin_Controller
       ]);
       return;
     }
-echo "--- POST NATIVE ---<br>";
-print_r($_POST);
-echo "--- FILES NATIVE ---<br>";
-print_r($_FILES);
-exit;
 
     $id = $this->input->post('id');
 
@@ -413,7 +411,7 @@ exit;
       $data['is_delete']    = 0;
 
       $insert_id = $this->Ticket_model->insert_ticket($data);
-    
+
       if ($insert_id) {
         $this->handle_file_upload($insert_id);
 
@@ -477,11 +475,6 @@ exit;
           $file_ext = pathinfo($file_name_original, PATHINFO_EXTENSION);
           $new_file_name = 'ticket_' . $helpdesk_id . '_' . time() . '_' . uniqid() . '.' . $file_ext;
           $file_path = $upload_path . $new_file_name;
-          var_dump($file_path);
-          exit;
-          var_dump(move_uploaded_file($file_tmp, $file_path));
-          exit;
-          die;
 
           if (move_uploaded_file($file_tmp, $file_path)) {
             $this->Ticket_model->insert_attachment([

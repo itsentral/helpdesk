@@ -250,8 +250,6 @@ class Ticket_model extends BF_Model
 
     public function insert_ticket($data)
     {
-        echo "<pre>".print_r($data)."</pre>";
-        exit;
         $this->db->insert('helpdesk', $data);
 
         return $this->db->insert_id();

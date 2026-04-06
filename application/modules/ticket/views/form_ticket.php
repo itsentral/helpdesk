@@ -296,7 +296,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
             </div>
         <?php endif; ?>
 
-        <form id="form-helpdesk" enctype="multipart/form-data" method="post">
+        <form id="form-helpdesk" method="post">
             <input type="hidden" name="id" value="<?= $id ?>">
 
             <div class="row g-3">
@@ -1169,9 +1169,6 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     formData.append('attachments[]', file);
                 });
 
-                for (var pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
-                }
                 var url = siteurl + active_controller + 'save_ticket';
 
                 Swal.fire({
