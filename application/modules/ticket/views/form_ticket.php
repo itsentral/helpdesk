@@ -296,7 +296,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
             </div>
         <?php endif; ?>
 
-        <form id="form-helpdesk" method="post">
+        <form id="form-helpdesk" enctype="multipart/form-data" method="post">
             <input type="hidden" name="id" value="<?= $id ?>">
 
             <div class="row g-3">
