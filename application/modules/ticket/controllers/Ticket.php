@@ -411,8 +411,7 @@ class Ticket extends Admin_Controller
       $data['is_delete']    = 0;
 
       $insert_id = $this->Ticket_model->insert_ticket($data);
-      var_dump($insert_id);
-      die;
+    
       if ($insert_id) {
         $this->handle_file_upload($insert_id);
 
