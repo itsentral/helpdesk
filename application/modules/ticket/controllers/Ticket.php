@@ -251,9 +251,6 @@ class Ticket extends Admin_Controller
 
   public function save_ticket()
   {
-    // echo 'post_max_size: ' . ini_get('post_max_size') . '<br>';
-    // echo 'upload_max_filesize: ' . ini_get('upload_max_filesize') . '<br>';
-    // echo 'PHP ini loaded: ' . php_ini_loaded_file() . '<br>';die;
     $session_data = $this->session->userdata('app_session');
 
     if (!$session_data || !isset($session_data['id_user'])) {
@@ -264,9 +261,10 @@ class Ticket extends Admin_Controller
       ]);
       return;
     }
-echo "<pre>";
-print_r($this->input->post());
-echo "</pre>";
+echo "--- POST NATIVE ---<br>";
+print_r($_POST);
+echo "--- FILES NATIVE ---<br>";
+print_r($_FILES);
 exit;
 
     $id = $this->input->post('id');
