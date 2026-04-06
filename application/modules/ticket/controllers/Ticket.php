@@ -411,7 +411,8 @@ class Ticket extends Admin_Controller
       $data['is_delete']    = 0;
 
       $insert_id = $this->Ticket_model->insert_ticket($data);
-
+      var_dump($insert_id);
+      die;
       if ($insert_id) {
         $this->handle_file_upload($insert_id);
 
@@ -475,6 +476,11 @@ class Ticket extends Admin_Controller
           $file_ext = pathinfo($file_name_original, PATHINFO_EXTENSION);
           $new_file_name = 'ticket_' . $helpdesk_id . '_' . time() . '_' . uniqid() . '.' . $file_ext;
           $file_path = $upload_path . $new_file_name;
+          var_dump($file_path);
+          exit;
+          var_dump(move_uploaded_file($file_tmp, $file_path));
+          exit;
+          die;
 
           if (move_uploaded_file($file_tmp, $file_path)) {
             $this->Ticket_model->insert_attachment([
