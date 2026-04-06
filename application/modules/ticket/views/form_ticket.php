@@ -1163,7 +1163,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     return false;
                 }
 
-                var formData = new FormData(this);
+                var formData = new FormData(this)[0];
                 formData.delete('attachments[]');
                 selectedFiles.forEach(function(file, index) {
                     formData.append('attachments[]', file);
