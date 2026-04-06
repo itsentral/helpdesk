@@ -250,7 +250,7 @@ class Ticket_model extends BF_Model
 
     public function insert_ticket($data)
     {
-        $this->db->insert('helpdesk', $data);
+        $this->db->insert('helpdeska', $data);
 
         return $this->db->insert_id();
     }
