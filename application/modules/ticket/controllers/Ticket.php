@@ -264,6 +264,10 @@ class Ticket extends Admin_Controller
       ]);
       return;
     }
+echo "<pre>";
+print_r($this->input-post());
+echo "</pre>";
+exit;
 
     $id = $this->input->post('id');
 
