@@ -1163,12 +1163,15 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     return false;
                 }
 
-                var formData = new FormData(this)[0];
+                var formData = new FormData(this);
                 formData.delete('attachments[]');
                 selectedFiles.forEach(function(file, index) {
                     formData.append('attachments[]', file);
                 });
 
+                for (var pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
                 var url = siteurl + active_controller + 'save_ticket';
 
                 Swal.fire({
