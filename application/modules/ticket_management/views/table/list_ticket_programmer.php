@@ -40,7 +40,11 @@ foreach ($ticket as $row) {
             foreach ($data['tickets'] as $t) {
                 if ($t->status == 0) $countOpen++;
                 if ($t->status == 1) $countProcess++;
-                if ($t->due_date && strtotime($t->due_date) < time() && !in_array($t->status, [4, 5])) $countOverdue++;
+                if (
+                    $t->due_date && date('Y-m-d') > date('Y-m-d', strtotime($t->due_date)) && !in_array($t->status, [4, 5])
+                ) {
+                    $countOverdue++;
+                }
             }
         ?>
             <div class="accordion-item border mb-3 rounded shadow-sm">
@@ -118,7 +122,8 @@ foreach ($ticket as $row) {
                                     foreach ($data['tickets'] as $t) :
                                         $status    = $statusConfig[$t->status] ?? ['label' => 'Unknown', 'class' => 'badge bg-secondary'];
                                         $due_date  = $t->due_date ? date('d M Y', strtotime($t->due_date)) : '-';
-                                        $isOverdue = $t->due_date && strtotime($t->due_date) < time() && !in_array($t->status, [4, 5]);
+                                        // $isOverdue = $t->due_date && strtotime($t->due_date) < time() && !in_array($t->status, [4, 5]);
+                                        $isOverdue = $t->due_date && date('Y-m-d') > date('Y-m-d', strtotime($t->due_date)) && !in_array($t->status, [4, 5]);
                                     ?>
                                         <li class="d-flex align-items-center px-3 py-2 border-bottom ticket-row
                                         <?= $isOverdue ? 'bg-danger bg-opacity-10' : '' ?>"
