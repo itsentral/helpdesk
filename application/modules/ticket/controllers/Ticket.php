@@ -251,9 +251,6 @@ class Ticket extends Admin_Controller
 
   public function save_ticket()
   {
-    // echo 'post_max_size: ' . ini_get('post_max_size') . '<br>';
-    // echo 'upload_max_filesize: ' . ini_get('upload_max_filesize') . '<br>';
-    // echo 'PHP ini loaded: ' . php_ini_loaded_file() . '<br>';die;
     $session_data = $this->session->userdata('app_session');
 
     if (!$session_data || !isset($session_data['id_user'])) {
@@ -302,6 +299,8 @@ class Ticket extends Admin_Controller
     $sub_category_id = $this->input->post('sub_category_id');
     $sub_category = $this->Ticket_model->get_sub_category_by_id($sub_category_id);
     $sub_category_name = $sub_category ? $sub_category->sub_name : '';
+    $due_date_input = $this->input->post('due_date');
+    $man_hour_plan = $this->input->post('man_hour_plan');
 
     // LOGIC APPROVAL LEVEL
     $create_by_id = $id ? $old_ticket->create_by_id : $this->auth->user_id();
@@ -321,7 +320,8 @@ class Ticket extends Admin_Controller
       'causes'            => $this->input->post('causes'),
       'action_plan'       => $this->input->post('action_plan'),
       'due_date'          => $this->input->post('due_date'),
-      'man_hour_plan'     => $this->input->post('man_hour_plan'),
+      'due_date'          => !empty($due_date_input) ? $due_date_input : null,
+      'man_hour_plan'     => !empty($man_hour_plan) ? $man_hour_plan : null,
       'pic_id'            => $pic_id,
       'pic'               => $pic_name,
       'client_id'         => $client_id,

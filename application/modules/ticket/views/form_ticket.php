@@ -504,7 +504,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     <div class="upload-area border rounded p-3 mb-3" style="border-style: dashed !important;">
                         <div class="text-center">
                             <i class="fa-solid fa-cloud-arrow-up fa-3x text-muted mb-2"></i>
-                            <p class="mb-2">Klik atau drag & drop file di sini</p>
+                            <p class="mb-1">Klik, drag & drop, atau <kbd>Ctrl+V</kbd> untuk paste file</p>
                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="$('#attachments').click()">
                                 <i class="fa-solid fa-folder-open"></i> Pilih File
                             </button>
@@ -864,6 +864,40 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 <script src="<?= base_url('assets/js/ticket_actions.js') ?>"></script>
 
 <script>
+    let selectedFiles = [];
+    let viewerNewFiles = null;
+
+    function reinitNewFileViewer() {
+        if (viewerNewFiles) {
+            viewerNewFiles.destroy(); 
+        }
+
+        const container = document.getElementById('file-preview');
+        if (container && container.querySelectorAll('.viewer-image-new').length > 0) {
+            viewerNewFiles = new Viewer(container, {
+                toolbar: {
+                    zoomIn: 4,
+                    zoomOut: 4,
+                    oneToOne: 4,
+                    reset: 4,
+                    prev: 4,
+                    play: false,
+                    next: 4,
+                    rotateLeft: 4,
+                    rotateRight: 4,
+                    flipHorizontal: 4,
+                    flipVertical: 4,
+                },
+                title: [1, (image, imageData) => {
+                    return `${image.alt} (${imageData.naturalWidth} × ${imageData.naturalHeight})`;
+                }],
+                filter(image) {
+                    return image.classList.contains('viewer-image-new');
+                }
+            });
+        }
+    }
+
     function openVideoModal(url, name) {
         const player = document.getElementById('videoPlayer');
         const source = document.getElementById('videoSource');
@@ -897,6 +931,8 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
             $(this).attr('data-index', i);
             $(this).find('.btn-remove').attr('onclick', `removeFilePreview(${i})`);
         });
+
+        reinitNewFileViewer();
     }
 
     function loadPicByClient(clientId, selectedId = '') {
@@ -963,7 +999,6 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
     $(document).ready(function() {
         var isReadonly = <?= $is_readonly ? 'true' : 'false' ?>;
         var mode = '<?= $mode ?>';
-        let selectedFiles = [];
         var backParams = '<?= $back_params ?? '' ?>';
 
         // Initialize Viewer.js untuk View Mode
@@ -1260,16 +1295,23 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     return;
                 }
 
-                newFiles.forEach((file, index) => {
+                for (const file of newFiles) {
                     const fileExt = file.name.split('.').pop().toLowerCase();
                     const isImageFile = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExt);
                     const isVideoFile = ['mp4', 'avi', 'mov', 'mkv', 'webm', '3gp'].includes(fileExt);
 
-                    let maxSize, maxLabel;
                     if (isVideoFile) {
-                        maxSize = 100 * 1024 * 1024; // 100MB
-                        maxLabel = '100MB';
-                    } else if (isImageFile) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Format Tidak Didukung',
+                            text: `Maaf, attach format video belum bisa dilakukan.`
+                        });
+                        this.value = '';
+                        return;
+                    }
+
+                    let maxSize, maxLabel;
+                    if (isImageFile) {
                         maxSize = 2 * 1024 * 1024; // 2MB
                         maxLabel = '2MB';
                     } else {
@@ -1283,12 +1325,11 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                             title: 'File Terlalu Besar',
                             text: `${file.name} melebihi ukuran maksimal ${maxLabel}`
                         });
-                        return;
+                        continue;
                     }
 
                     selectedFiles.push(file);
                     const reader = new FileReader();
-                    // const fileExt = file.name.split('.').pop().toLowerCase();
                     const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt);
                     const fileIndex = selectedFiles.length - 1;
 
@@ -1303,18 +1344,23 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                         `;
 
                         if (isImage) {
-                            previewHTML += `<img src="${e.target.result}" class="img-thumbnail" style="max-height: 80px; width: 80px; object-fit: cover;">`;
+                            previewHTML += `<img src="${e.target.result}" 
+                            class="img-thumbnail viewer-image-new" 
+                            style="max-height: 80px; width: 80px; object-fit: cover; cursor: pointer;"
+                            alt="${file.name}"
+                            data-original="${e.target.result}">`;
                         } else {
                             previewHTML += `
-                            <div class="text-center bg-light p-2 rounded" style="height: 80px; display: flex; flex-direction: column; justify-content: center;">
+                            <div class="text-center bg-light p-2 rounded" 
+                                style="height: 80px; width: 80px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                                 <i class="fa-solid fa-file fa-2x text-secondary"></i>
-                                <small class="mt-1">${fileExt.toUpperCase()}</small>
+                                <small class="mt-1" style="font-size: 10px; line-height: 1;">${fileExt.toUpperCase()}</small>
                             </div>
                         `;
                         }
 
                         previewHTML += `
-                                </div>
+                                    </div>
                                     <div class="col">
                                         <strong class="d-block text-truncate">${file.name}</strong>
                                         <small class="text-muted">${(file.size / 1024).toFixed(2)} KB</small>
@@ -1322,15 +1368,327 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                 </div>
                             </div>
                         `;
-
                         preview.append(previewHTML);
+                        reinitNewFileViewer();
                     };
-
                     reader.readAsDataURL(file);
-                });
+                }
 
                 this.value = '';
             });
+
+            $(document).on('paste', function(e) {
+                const clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+                if (!clipboardData || !clipboardData.items) return;
+
+                const items = Array.from(clipboardData.items);
+                const fileItems = items.filter(item => item.kind === 'file');
+
+                if (fileItems.length === 0) return;
+
+                const totalCount = selectedFiles.length + fileItems.length;
+                if (totalCount > 5) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian',
+                        text: `Maksimal 5 file. Saat ini sudah ada ${selectedFiles.length} file.`
+                    });
+                    return;
+                }
+
+                fileItems.forEach(item => {
+                    const file = item.getAsFile();
+                    if (!file) return;
+
+                    const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
+                    const isImageFile = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExt);
+                    const isVideoFile = ['mp4', 'avi', 'mov', 'mkv', 'webm', '3gp'].includes(fileExt);
+
+                    if (isVideoFile) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Format Tidak Didukung',
+                            text: `File "${file.name}" adalah video. Maaf, attach format video belum bisa dilakukan.`
+                        });
+                        return;
+                    }
+
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const pastedFile = new File([file], `paste-${timestamp}.${fileExt || 'png'}`, {
+                        type: file.type
+                    });
+
+                    let maxSize, maxLabel;
+                    if (isImageFile) {
+                        maxSize = 2 * 1024 * 1024;
+                        maxLabel = '2MB';
+                    } else {
+                        maxSize = 10 * 1024 * 1024;
+                        maxLabel = '10MB';
+                    }
+
+                    if (pastedFile.size > maxSize) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'File Terlalu Besar',
+                            text: `${pastedFile.name} melebihi ukuran maksimal ${maxLabel}`
+                        });
+                        return;
+                    }
+
+                    selectedFiles.push(pastedFile);
+
+                    const reader = new FileReader();
+                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt);
+                    const fileIndex = selectedFiles.length - 1;
+                    const preview = $('#file-preview');
+
+                    reader.onload = function(e) {
+                        let previewHTML = `
+                            <div class="file-preview-item" data-index="${fileIndex}">
+                                <button type="button" class="btn btn-sm btn-danger btn-remove" onclick="removeFilePreview(${fileIndex})">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <div class="row align-items-center">
+                                    <div class="col-auto" style="width: 100px;">
+                        `;
+
+                        if (isImage) {
+                            previewHTML += `
+                            <img src="${e.target.result}"
+                                class="img-thumbnail viewer-image-new"
+                                style="max-height: 80px; width: 80px; object-fit: cover; cursor: pointer;"
+                                alt="${pastedFile.name}"
+                                data-original="${e.target.result}">
+                        `;
+                        } else {
+                            previewHTML += `
+                            <div class="text-center bg-light p-2 rounded" 
+                                style="height: 80px; width: 80px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                <i class="fa-solid fa-file fa-2x text-secondary"></i>
+                                <small class="mt-1" style="font-size: 10px; line-height: 1;">${fileExt.toUpperCase()}</small>
+                            </div>
+                        `;
+                        }
+
+                        previewHTML += `
+                                </div>
+                                <div class="col">
+                                    <strong class="d-block text-truncate">${pastedFile.name}</strong>
+                                    <small class="text-muted">${(pastedFile.size / 1024).toFixed(2)} KB</small>
+                                    <span class="badge bg-info ms-1" style="font-size: 10px;">
+                                        <i class="fa-solid fa-clipboard"></i> Pasted
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                        preview.append(previewHTML);
+                        reinitNewFileViewer();
+                    };
+
+                    reader.readAsDataURL(pastedFile);
+                });
+            });
+
+            // $(document).on('paste', function(e) {
+            //     const clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+            //     if (!clipboardData || !clipboardData.items) return;
+
+            //     const items = Array.from(clipboardData.items);
+            //     const fileItems = items.filter(item => item.kind === 'file');
+
+            //     if (fileItems.length === 0) return;
+
+            //     const totalCount = selectedFiles.length + fileItems.length;
+            //     if (totalCount > 5) {
+            //         Swal.fire({
+            //             icon: 'warning',
+            //             title: 'Perhatian',
+            //             text: `Maksimal 5 file. Saat ini sudah ada ${selectedFiles.length} file.`
+            //         });
+            //         return;
+            //     }
+
+            //     fileItems.forEach(item => {
+            //         const file = item.getAsFile();
+            //         if (!file) return;
+
+            //         const fileExt = file.name.split('.').pop().toLowerCase();
+            //         const isImageFile = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExt);
+            //         const isVideoFile = ['mp4', 'avi', 'mov', 'mkv', 'webm', '3gp'].includes(fileExt);
+
+            //         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            //         const pastedFile = new File([file], `paste-${timestamp}.${fileExt || 'png'}`, {
+            //             type: file.type
+            //         });
+
+            //         let maxSize, maxLabel;
+            //         if (isVideoFile) {
+            //             maxSize = 100 * 1024 * 1024;
+            //             maxLabel = '100MB';
+            //         } else if (isImageFile) {
+            //             maxSize = 2 * 1024 * 1024;
+            //             maxLabel = '2MB';
+            //         } else {
+            //             maxSize = 10 * 1024 * 1024;
+            //             maxLabel = '10MB';
+            //         }
+
+            //         if (pastedFile.size > maxSize) {
+            //             Swal.fire({
+            //                 icon: 'warning',
+            //                 title: 'File Terlalu Besar',
+            //                 text: `${pastedFile.name} melebihi ukuran maksimal ${maxLabel}`
+            //             });
+            //             return;
+            //         }
+
+            //         selectedFiles.push(pastedFile);
+
+            //         const reader = new FileReader();
+            //         const currentExt = pastedFile.name.split('.').pop().toLowerCase();
+            //         const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(currentExt);
+            //         const fileIndex = selectedFiles.length - 1;
+            //         const preview = $('#file-preview');
+
+            //         reader.onload = function(e) {
+            //             let previewHTML = `
+            //     <div class="file-preview-item" data-index="${fileIndex}">
+            //         <button type="button" class="btn btn-sm btn-danger btn-remove" onclick="removeFilePreview(${fileIndex})">
+            //             <i class="fa-solid fa-xmark"></i>
+            //         </button>
+            //         <div class="row align-items-center">
+            //             <div class="col-auto" style="width: 100px;">
+            //     `;
+
+            //             if (isImage) {
+            //                 previewHTML += `
+            //         <img src="${e.target.result}"
+            //             class="img-thumbnail viewer-image-new"
+            //             style="max-height: 80px; width: 80px; object-fit: cover; cursor: pointer;"
+            //             alt="${pastedFile.name}"
+            //             data-original="${e.target.result}">
+            //     `;
+            //             } else {
+            //                 previewHTML += `
+            //         <div class="text-center bg-light p-2 rounded" style="height: 80px; display: flex; flex-direction: column; justify-content: center;">
+            //             <i class="fa-solid fa-file fa-2x text-secondary"></i>
+            //             <small class="mt-1">${currentExt.toUpperCase()}</small>
+            //         </div>
+            //     `;
+            //             }
+
+            //             previewHTML += `
+            //             </div>
+            //             <div class="col">
+            //                 <strong class="d-block text-truncate">${pastedFile.name}</strong>
+            //                 <small class="text-muted">${(pastedFile.size / 1024).toFixed(2)} KB</small>
+            //                 <span class="badge bg-info ms-1" style="font-size: 10px;">
+            //                     <i class="fa-solid fa-clipboard"></i> Pasted
+            //                 </span>
+            //             </div>
+            //         </div>
+            //     </div>
+            //     `;
+
+            //             preview.append(previewHTML);
+            //             reinitNewFileViewer();
+            //         };
+
+            //         reader.readAsDataURL(pastedFile);
+            //     });
+            // });
+
+            // $('#attachments').on('change', function(e) {
+            //     const newFiles = Array.from(e.target.files);
+            //     const preview = $('#file-preview');
+            //     const currentCount = selectedFiles.length;
+            //     const newCount = newFiles.length;
+            //     const totalCount = currentCount + newCount;
+
+            //     if (totalCount > 5) {
+            //         Swal.fire({
+            //             icon: 'warning',
+            //             title: 'Perhatian',
+            //             text: `Maksimal 5 file`
+            //         });
+            //         this.value = '';
+            //         return;
+            //     }
+
+            //     newFiles.forEach((file, index) => {
+            //         const fileExt = file.name.split('.').pop().toLowerCase();
+            //         const isImageFile = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExt);
+            //         const isVideoFile = ['mp4', 'avi', 'mov', 'mkv', 'webm', '3gp'].includes(fileExt);
+
+            //         let maxSize, maxLabel;
+            //         if (isVideoFile) {
+            //             maxSize = 100 * 1024 * 1024; // 100MB
+            //             maxLabel = '100MB';
+            //         } else if (isImageFile) {
+            //             maxSize = 2 * 1024 * 1024; // 2MB
+            //             maxLabel = '2MB';
+            //         } else {
+            //             maxSize = 10 * 1024 * 1024; // 10MB
+            //             maxLabel = '10MB';
+            //         }
+
+            //         if (file.size > maxSize) {
+            //             Swal.fire({
+            //                 icon: 'warning',
+            //                 title: 'File Terlalu Besar',
+            //                 text: `${file.name} melebihi ukuran maksimal ${maxLabel}`
+            //             });
+            //             return;
+            //         }
+
+            //         selectedFiles.push(file);
+            //         const reader = new FileReader();
+            //         // const fileExt = file.name.split('.').pop().toLowerCase();
+            //         const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt);
+            //         const fileIndex = selectedFiles.length - 1;
+
+            //         reader.onload = function(e) {
+            //             let previewHTML = `
+            //                 <div class="file-preview-item" data-index="${fileIndex}">
+            //                     <button type="button" class="btn btn-sm btn-danger btn-remove" onclick="removeFilePreview(${fileIndex})">
+            //                         <i class="fa-solid fa-xmark"></i>
+            //                     </button>
+            //                     <div class="row align-items-center">
+            //                         <div class="col-auto" style="width: 100px;">
+            //             `;
+
+            //             if (isImage) {
+            //                 previewHTML += `<img src="${e.target.result}" class="img-thumbnail" style="max-height: 80px; width: 80px; object-fit: cover;">`;
+            //             } else {
+            //                 previewHTML += `
+            //                 <div class="text-center bg-light p-2 rounded" style="height: 80px; display: flex; flex-direction: column; justify-content: center;">
+            //                     <i class="fa-solid fa-file fa-2x text-secondary"></i>
+            //                     <small class="mt-1">${fileExt.toUpperCase()}</small>
+            //                 </div>
+            //             `;
+            //             }
+
+            //             previewHTML += `
+            //                     </div>
+            //                         <div class="col">
+            //                             <strong class="d-block text-truncate">${file.name}</strong>
+            //                             <small class="text-muted">${(file.size / 1024).toFixed(2)} KB</small>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             `;
+
+            //             preview.append(previewHTML);
+            //         };
+
+            //         reader.readAsDataURL(file);
+            //     });
+
+            //     this.value = '';
+            // });
 
             const uploadArea = $('.upload-area');
             uploadArea.on('dragover', function(e) {

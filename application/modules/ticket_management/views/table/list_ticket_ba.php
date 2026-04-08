@@ -171,7 +171,7 @@ foreach ($ticket as $row) {
 
                                             <!-- Man Hour Plan -->
                                             <div style="flex:1.5; min-width:90px; padding-right:8px;" class="small">
-                                                <?= $t->man_hour_plan ?? '-' ?> Jam
+                                                <?= (!empty($t->man_hour_plan)) ? $t->man_hour_plan . ' Jam' : '-' ?>
                                             </div>
 
                                             <!-- Status -->
