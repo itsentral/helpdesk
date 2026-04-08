@@ -876,12 +876,19 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 					$('#table_helpdesk').DataTable().destroy();
 				}
 
+				var savedPageLength = parseInt(localStorage.getItem('helpdesk_pageLength')) || 10;
+
 				$('#table_helpdesk').DataTable({
 					paging: true,
 					searching: true,
 					order: [],
 					info: true,
 					responsive: true,
+					pageLength: savedPageLength,
+				});
+
+				$('#table_helpdesk').on('length.dt', function(e, settings, len) {
+					localStorage.setItem('helpdesk_pageLength', len);
 				});
 
 				setTimeout(loadUnreadCounts, 500);
@@ -2277,7 +2284,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			const items = Array.from(clipboardData.items);
 			const fileItem = items.find(item => item.kind === 'file');
 
-			if (!fileItem) return; 
+			if (!fileItem) return;
 
 			e.preventDefault();
 
