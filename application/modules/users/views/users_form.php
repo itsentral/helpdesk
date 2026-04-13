@@ -247,7 +247,7 @@
 			</div>
 
 			<!-- Hidden fields -->
-			<input type="hidden" name="status" value="0">
+			<!-- <input type="hidden" name="status" value="0"> -->
 			<input type="hidden" name="is_ba" id="is_ba" value="0">
 			<input type="hidden" name="is_programmer" id="is_programmer" value="0">
 
