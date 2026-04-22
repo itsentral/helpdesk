@@ -306,6 +306,7 @@ class Ticket_model extends BF_Model
         $this->db->where('u.deleted', 0);
         $this->db->where('huc.client_id', $client_id);
         $this->db->where('huc.is_active', 1);
+        $this->db->where('huc.id_user !=', 7);
         $this->db->order_by('u.nm_lengkap', 'ASC');
         return $this->db->get()->result();
     }

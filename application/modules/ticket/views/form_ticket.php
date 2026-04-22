@@ -517,8 +517,8 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                             accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx">
                     </div>
                     <small class="text-muted">
-                        <i class="fa-solid fa-circle-info"></i> Maksimal 5 file. Ukuran: Gambar max 2MB, File max 10MB, Video max 100MB.
-                        Format: JPG, PNG, PDF, DOC, XLS, MP4, dll
+                        <i class="fa-solid fa-circle-info"></i> Maksimal 5 file. Ukuran: Gambar max 2MB, File max 10MB.
+                        Format: JPG, PNG, PDF, DOC, XLS
                     </small>
 
                     <!-- Preview Container for New Files -->
@@ -1783,7 +1783,6 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                 if (clientId) {
                     loadPicByClient(clientId);
                 } else {
-                    // Reset PIC dan Approval jika client di-clear
                     $('#pic_id').html('<option value="">Pilih Client terlebih dahulu</option>');
                     $('#pic_id').prop('disabled', true);
                     $('#pic_id').val('').trigger('change');
