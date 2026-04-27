@@ -704,68 +704,68 @@
 </style>
 
 
-<?php if (($is_programmer == 1 || $is_ba == 1) && $is_exclude != 1): ?>
-    <div class="card">
-        <div class="card-body">
-            <!-- ===== MY PRIORITY TICKETS ===== -->
-            <div id="priority_section" style="margin-bottom: 1.5rem;">
-
-                <div class="prio-header" style="justify-content: space-between;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div class="prio-header-icon">
-                            <i class="ti ti-star" style="font-size:18px; color:#534AB7;"></i>
+<?php
+if ($is_admin != 1):
+    if (($is_programmer == 1 || $is_ba == 1) && $is_exclude != 1): ?>
+        <div class="card">
+            <div class="card-body">
+                <div id="priority_section" style="margin-bottom: 1.5rem;">
+                    <div class="prio-header" style="justify-content: space-between;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="prio-header-icon">
+                                <i class="ti ti-star" style="font-size:18px; color:#534AB7;"></i>
+                            </div>
+                            <div>
+                                <p class="prio-title">My Top Priority Tickets</p>
+                                <p class="prio-subtitle" id="prio_subtitle">
+                                    3 tiket teratas yang harus segera dikerjakan
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="prio-title">My Top Priority Tickets</p>
-                            <p class="prio-subtitle" id="prio_subtitle">
-                                3 tiket teratas yang harus segera dikerjakan
-                            </p>
-                        </div>
-                    </div>
-                    <button class="prio-toggle-btn" id="prio_toggle_btn">
-                        <span id="prio_toggle_label">Sembunyikan</span>
-                        <i class="ti ti-chevron-down prio-chevron" id="prio_chevron"></i>
-                    </button>
-                </div>
-
-                <div class="prio-body" id="prio_body">
-                    <div id="prio_loading" class="row">
-                        <div class="col-md-4">
-                            <div class="prio-skeleton"></div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="prio-skeleton"></div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="prio-skeleton"></div>
-                        </div>
+                        <button class="prio-toggle-btn" id="prio_toggle_btn">
+                            <span id="prio_toggle_label">Sembunyikan</span>
+                            <i class="ti ti-chevron-down prio-chevron" id="prio_chevron"></i>
+                        </button>
                     </div>
 
-                    <div id="prio_content" style="display:none;">
-                        <div class="row" id="prio_cards_row"></div>
+                    <div class="prio-body" id="prio_body">
+                        <div id="prio_loading" class="row">
+                            <div class="col-md-4">
+                                <div class="prio-skeleton"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="prio-skeleton"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="prio-skeleton"></div>
+                            </div>
+                        </div>
+                        <div id="prio_content" style="display:none;">
+                            <div class="row" id="prio_cards_row"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- ===== END ===== -->
         </div>
-    </div>
 
-<?php elseif ($is_admin == 1 || $is_exclude == 1 || ($is_programmer == 0 && $is_ba == 0)): ?>
-
-    <div class="card">
-        <div class="card-body pd-welcome">
-            <div class="pd-welcome-icon">
-                <i class="ti ti-ticket"></i>
+    <?php
+    else: ?>
+        <div class="card">
+            <div class="card-body pd-welcome">
+                <div class="pd-welcome-icon">
+                    <i class="ti ti-ticket"></i>
+                </div>
+                <h4>Selamat Datang 👋</h4>
+                <p class="pd-welcome-text">
+                    Semua solusi dimulai dari satu tiket.<br>
+                    Klik, laporkan, dan biarkan sistem bekerja untuk Anda.
+                </p>
             </div>
-            <h4>Selamat Datang 👋</h4>
-            <p class="pd-welcome-text">
-                Semua solusi dimulai dari satu tiket.<br>
-                Klik, laporkan, dan biarkan sistem bekerja untuk Anda.
-            </p>
         </div>
-    </div>
+    <?php endif; ?>
 
-<?php endif; ?>
+<?php
+endif; ?>
 
 <?php if (($is_programmer == 1 || $is_ba == 1 || $is_admin == 1) && $is_exclude != 1): ?>
     <div class="card mt-3">
