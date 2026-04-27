@@ -4,123 +4,6 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <style>
-    /* Loading Skeleton Styles */
-    .skeleton {
-        animation: skeleton-loading 1s linear infinite alternate;
-    }
-
-    @keyframes skeleton-loading {
-        0% {
-            background-color: hsl(200, 20%, 80%);
-        }
-
-        100% {
-            background-color: hsl(200, 20%, 95%);
-        }
-    }
-
-    .skeleton-card {
-        height: 120px;
-        border-radius: 8px;
-    }
-
-    .skeleton-chart {
-        height: 400px;
-        border-radius: 8px;
-    }
-
-    .skeleton-table {
-        height: 50px;
-        margin-bottom: 10px;
-        border-radius: 4px;
-    }
-
-    .stats-card {
-        border-radius: 12px;
-        border: none !important;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-        transition: all 0.3s ease;
-        overflow: hidden;
-    }
-
-    .stats-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-    }
-
-    .stats-card .card-body {
-        padding: 1.5rem;
-    }
-
-    .stats-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        margin-bottom: 1rem;
-    }
-
-    .stats-title {
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.5rem;
-        opacity: 0.8;
-    }
-
-    .stats-number {
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0;
-        line-height: 1.2;
-    }
-
-    .stats-subtitle {
-        font-size: 0.813rem;
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-        opacity: 0.9;
-    }
-
-    .card-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        color: white !important;
-    }
-
-    .card-danger {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
-        color: white !important;
-    }
-
-    .card-warning {
-        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important;
-        color: #333 !important;
-    }
-
-    .icon-primary {
-        background-color: rgba(255, 255, 255, 0.2) !important;
-        color: white !important;
-    }
-
-    .icon-danger {
-        background-color: rgba(255, 255, 255, 0.2) !important;
-        color: white !important;
-    }
-
-    .icon-warning {
-        background-color: rgba(0, 0, 0, 0.1) !important;
-        color: #333 !important;
-    }
-
-    .card-warning .stats-subtitle {
-        border-top-color: rgba(0, 0, 0, 0.1) !important;
-    }
-
     .prio-header {
         display: flex;
         align-items: center;
@@ -363,324 +246,683 @@
         max-height: 0;
         opacity: 0;
     }
+
+    /* === FILTER PANEL === */
+    .pd-filter-panel {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-bottom: 1.25rem;
+    }
+
+    .pd-filter-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pd-filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: flex-end;
+    }
+
+    .pd-filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .pd-filter-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .pd-date-input {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 13px;
+        color: #343a40;
+        background: #f8f9fa;
+        min-width: 130px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .pd-date-input:focus {
+        border-color: #534AB7;
+        background: #fff;
+    }
+
+    /* Subcategory checklist */
+    .pd-subcat-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .pd-subcat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        border: 1.5px solid #dee2e6;
+        font-size: 12px;
+        color: #495057;
+        cursor: pointer;
+        background: #fff;
+        transition: all 0.15s;
+        user-select: none;
+    }
+
+    .pd-subcat-chip input[type="checkbox"] {
+        display: none;
+    }
+
+    .pd-subcat-chip.checked {
+        background: #EEEDFE;
+        border-color: #534AB7;
+        color: #534AB7;
+        font-weight: 600;
+    }
+
+    .pd-subcat-chip:hover {
+        border-color: #534AB7;
+        color: #534AB7;
+    }
+
+    .pd-apply-btn {
+        background: #534AB7;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 7px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .pd-apply-btn:hover {
+        background: #3f37a0;
+    }
+
+    /* === SECTION HEADER === */
+    .pd-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .pd-section-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pd-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #EEEDFE;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pd-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .pd-subtitle {
+        font-size: 12px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    /* === STAT CARDS === */
+    .pd-stat-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 100%;
+        transition: box-shadow 0.2s;
+    }
+
+    .pd-stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+    }
+
+    .pd-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .pd-stat-icon.total {
+        background: #EEEDFE;
+        color: #534AB7;
+    }
+
+    .pd-stat-icon.open {
+        background: #FCEBEB;
+        color: #A32D2D;
+    }
+
+    .pd-stat-icon.process {
+        background: #E6F1FB;
+        color: #185FA5;
+    }
+
+    .pd-stat-icon.done {
+        background: #E9F7EF;
+        color: #196F3D;
+    }
+
+    .pd-stat-icon.pending {
+        background: #FAEEDA;
+        color: #854F0B;
+    }
+
+    .pd-stat-number {
+        font-size: 22px;
+        font-weight: 700;
+        color: #212529;
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+
+    .pd-stat-label {
+        font-size: 11px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    /* === CHART WRAPPER === */
+    .pd-chart-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-bottom: 1.25rem;
+    }
+
+    .pd-chart-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 14px;
+    }
+
+    /* === TABLE === */
+    .pd-table-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .pd-table-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .pd-table-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #343a40;
+        margin: 0;
+    }
+
+    .pd-table-count {
+        font-size: 12px;
+        color: #6c757d;
+        background: #f1f3f5;
+        padding: 2px 10px;
+        border-radius: 20px;
+    }
+
+    .pd-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .pd-table thead th {
+        background: #f8f9fa;
+        padding: 10px 14px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        border-bottom: 1px solid #e9ecef;
+        white-space: nowrap;
+    }
+
+    .pd-table tbody tr {
+        transition: background 0.15s;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .pd-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .pd-table tbody tr:hover {
+        background: #f8f9ff;
+    }
+
+    .pd-table td {
+        padding: 10px 14px;
+        color: #343a40;
+        vertical-align: middle;
+    }
+
+    .pd-ticket-no {
+        font-size: 11px;
+        color: #6c757d;
+    }
+
+    .pd-report-text {
+        font-weight: 500;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        max-width: 260px;
+    }
+
+    .pd-status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .ps-open {
+        background: #FCEBEB;
+        color: #A32D2D;
+    }
+
+    .ps-process {
+        background: #E6F1FB;
+        color: #185FA5;
+    }
+
+    .ps-pending {
+        background: #FAEEDA;
+        color: #854F0B;
+    }
+
+    .ps-cancel {
+        background: #f1f3f5;
+        color: #6c757d;
+    }
+
+    .ps-done {
+        background: #E9F7EF;
+        color: #196F3D;
+    }
+
+    .ps-close {
+        background: #343a40;
+        color: #fff;
+    }
+
+    .ps-revisi {
+        background: #F4C0D1;
+        color: #72243E;
+    }
+
+    .pd-subcat-tag {
+        font-size: 11px;
+        background: #f1f3f5;
+        color: #495057;
+        padding: 2px 7px;
+        border-radius: 4px;
+    }
+
+    /* === SKELETON === */
+    .pd-skeleton-line {
+        border-radius: 6px;
+        animation: pd-skeleton-anim 1s linear infinite alternate;
+    }
+
+    .pd-skeleton-box {
+        border-radius: 12px;
+        animation: pd-skeleton-anim 1s linear infinite alternate;
+    }
+
+    @keyframes pd-skeleton-anim {
+        0% {
+            background-color: hsl(200, 20%, 82%);
+        }
+
+        100% {
+            background-color: hsl(200, 20%, 95%);
+        }
+    }
+
+    /* Table scroll on mobile */
+    .pd-table-scroll {
+        overflow-x: auto;
+    }
+
+    /* Empty state */
+    .pd-empty {
+        text-align: center;
+        padding: 2.5rem 1rem;
+    }
+
+    .pd-empty i {
+        font-size: 36px;
+        color: #ced4da;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .pd-empty p {
+        font-size: 13px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .pd-welcome {
+        text-align: center;
+        padding: 40px;
+    }
+
+    .pd-welcome-icon {
+        font-size: 32px;
+        color: #534AB7;
+        margin-bottom: 10px;
+    }
+
+    .pd-welcome-text {
+        font-size: 13px;
+        color: #6c757d;
+        margin-top: 8px;
+        line-height: 1.6;
+    }
+
+    .pd-project-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 14px 16px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: box-shadow 0.2s, transform 0.15s;
+    }
+
+    .pd-project-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .pd-badge {
+        font-size: 10px;
+        padding: 2px 7px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
 </style>
 
-<!-- ===== MY PRIORITY TICKETS ===== -->
-<?php if ($is_programmer == 1 || $is_ba == 1): ?>
-    <div id="priority_section" style="margin-bottom: 1.5rem;">
 
-        <div class="prio-header" style="justify-content: space-between;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div class="prio-header-icon">
-                    <i class="ti ti-star" style="font-size:18px; color:#534AB7;"></i>
+<?php if (($is_programmer == 1 || $is_ba == 1) && $is_exclude != 1): ?>
+    <div class="card">
+        <div class="card-body">
+            <!-- ===== MY PRIORITY TICKETS ===== -->
+            <div id="priority_section" style="margin-bottom: 1.5rem;">
+
+                <div class="prio-header" style="justify-content: space-between;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="prio-header-icon">
+                            <i class="ti ti-star" style="font-size:18px; color:#534AB7;"></i>
+                        </div>
+                        <div>
+                            <p class="prio-title">My Top Priority Tickets</p>
+                            <p class="prio-subtitle" id="prio_subtitle">
+                                3 tiket teratas yang harus segera dikerjakan
+                            </p>
+                        </div>
+                    </div>
+                    <button class="prio-toggle-btn" id="prio_toggle_btn">
+                        <span id="prio_toggle_label">Sembunyikan</span>
+                        <i class="ti ti-chevron-down prio-chevron" id="prio_chevron"></i>
+                    </button>
                 </div>
-                <div>
-                    <p class="prio-title">My Top Priority Tickets</p>
-                    <p class="prio-subtitle" id="prio_subtitle">3 tiket teratas yang harus segera dikerjakan</p>
+
+                <div class="prio-body" id="prio_body">
+                    <div id="prio_loading" class="row">
+                        <div class="col-md-4">
+                            <div class="prio-skeleton"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="prio-skeleton"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="prio-skeleton"></div>
+                        </div>
+                    </div>
+
+                    <div id="prio_content" style="display:none;">
+                        <div class="row" id="prio_cards_row"></div>
+                    </div>
                 </div>
             </div>
-            <button class="prio-toggle-btn" id="prio_toggle_btn" title="Collapse/Expand">
-                <span id="prio_toggle_label">Sembunyikan</span>
-                <i class="ti ti-chevron-down prio-chevron" id="prio_chevron"></i>
-            </button>
+            <!-- ===== END ===== -->
         </div>
+    </div>
 
-        <!-- Body yang bisa di-collapse -->
-        <div class="prio-body" id="prio_body">
-            <div id="prio_loading" class="row">
-                <div class="col-md-4">
-                    <div class="prio-skeleton"></div>
-                </div>
-                <div class="col-md-4">
-                    <div class="prio-skeleton"></div>
-                </div>
-                <div class="col-md-4">
-                    <div class="prio-skeleton"></div>
-                </div>
+<?php elseif ($is_admin == 1 || $is_exclude == 1 || ($is_programmer == 0 && $is_ba == 0)): ?>
+
+    <div class="card">
+        <div class="card-body pd-welcome">
+            <div class="pd-welcome-icon">
+                <i class="ti ti-ticket"></i>
             </div>
-            <div id="prio_content" style="display:none;">
-                <div class="row" id="prio_cards_row"></div>
-            </div>
+            <h4>Selamat Datang 👋</h4>
+            <p class="pd-welcome-text">
+                Semua solusi dimulai dari satu tiket.<br>
+                Klik, laporkan, dan biarkan sistem bekerja untuk Anda.
+            </p>
         </div>
+    </div>
 
+<?php endif; ?>
+
+<?php if (($is_programmer == 1 || $is_ba == 1 || $is_admin == 1) && $is_exclude != 1): ?>
+    <div class="card mt-3">
+        <div class="card-body">
+
+            <!-- Section Header -->
+            <div class="pd-section-header mb-3">
+                <div class="pd-section-left">
+                    <div class="pd-header-icon">
+                        <i class="ti ti-bug" style="font-size:18px; color:#534AB7;"></i>
+                    </div>
+                    <div>
+                        <p class="pd-title">Project Bugs & Issues Dashboard</p>
+                        <p class="pd-subtitle" id="pd_subtitle">Ringkasan bugs, error, dan user issue semua project</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="pd-filter-panel">
+                <div class="pd-filter-title">
+                    <i class="ti ti-filter" style="font-size:14px; color:#534AB7;"></i>
+                    Filter Data
+                </div>
+                <div class="pd-filter-row">
+                    <!-- Date From -->
+                    <div class="pd-filter-group">
+                        <span class="pd-filter-label">Dari Tanggal</span>
+                        <input type="text" id="pd_date_from" class="pd-date-input" placeholder="YYYY-MM-DD" readonly>
+                    </div>
+                    <!-- Date To -->
+                    <div class="pd-filter-group">
+                        <span class="pd-filter-label">Sampai Tanggal</span>
+                        <input type="text" id="pd_date_to" class="pd-date-input" placeholder="YYYY-MM-DD" readonly>
+                    </div>
+
+                    <div class="pd-filter-group" style="justify-content:flex-end;">
+                        <span class="pd-filter-label">&nbsp;</span>
+                        <label class="pd-subcat-chip" id="pd_alltime_label" style="border-radius:8px;">
+                            <input type="checkbox" id="pd_all_time">
+                            <i class="ti ti-infinity" style="font-size:11px;"></i> Semua Waktu
+                        </label>
+                    </div>
+                    <!-- Sub Category -->
+                    <div class="pd-filter-group" style="flex:1; min-width:200px;">
+                        <span class="pd-filter-label">Sub Category</span>
+                        <div class="pd-subcat-wrapper" id="pd_subcat_chips">
+                            <!-- chips dirender oleh JS -->
+                            <div class="pd-skeleton-line" style="width:80px;height:28px;"></div>
+                            <div class="pd-skeleton-line" style="width:90px;height:28px;"></div>
+                            <div class="pd-skeleton-line" style="width:70px;height:28px;"></div>
+                        </div>
+                    </div>
+                    <!-- Apply Button -->
+                    <div class="pd-filter-group">
+                        <span class="pd-filter-label">&nbsp;</span>
+                        <button class="pd-apply-btn" id="pd_apply_btn" onclick="pdLoadData()">
+                            <i class="ti ti-search" style="font-size:13px;"></i> Tampilkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="row mb-3" id="pd_stats_row">
+                <!-- Skeleton -->
+                <?php for ($i = 0; $i < 5; $i++): ?>
+                    <div class="col-6 col-md mb-2">
+                        <div class="pd-stat-card">
+                            <div class="pd-skeleton-box" style="width:40px;height:40px;"></div>
+                            <div style="flex:1;">
+                                <div class="pd-skeleton-line mb-1" style="width:50px;height:20px;"></div>
+                                <div class="pd-skeleton-line" style="width:70px;height:12px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Chart Row -->
+            <div class="row mb-3">
+                <div class="col-md-8 mb-3 mb-md-0">
+                    <div class="pd-chart-card" style="height:100%;">
+                        <div class="pd-chart-title">Tiket per Project</div>
+                        <!-- <div class="pd-chart-title">Tren Tiket per Hari</div> -->
+                        <div id="pd_chart_trend_wrap">
+                            <div class="pd-skeleton-box" style="height:220px;"></div>
+                        </div>
+                        <canvas id="pd_chart_trend" style="display:none; max-height:220px;"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pd-chart-card" style="height:100%;">
+                        <div class="pd-chart-title">Status Distribution</div>
+                        <div id="pd_chart_donut_wrap">
+                            <div class="pd-skeleton-box" style="height:220px;"></div>
+                        </div>
+                        <canvas id="pd_chart_donut" style="display:none; max-height:220px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tambahkan ini setelah chart row -->
+            <div class="pd-chart-card mb-3">
+                <div class="pd-chart-title">Tiket per Sub Category</div>
+                <div id="pd_chart_subcat_wrap">
+                    <div class="pd-skeleton-box" style="height:180px;"></div>
+                </div>
+                <canvas id="pd_chart_subcat" style="display:none;"></canvas>
+            </div>
+
+            <!-- Table -->
+            <div class="pd-table-card">
+                <div class="pd-table-header">
+                    <span class="pd-table-title">Daftar Tiket</span>
+                    <span class="pd-table-count" id="pd_table_count">-</span>
+                </div>
+                <!-- Skeleton Table -->
+                <div id="pd_table_skeleton" style="padding:12px 18px;">
+                    <?php for ($i = 0; $i < 5; $i++): ?>
+                        <div class="pd-skeleton-line mb-2" style="width:100%;height:36px;"></div>
+                    <?php endfor; ?>
+                </div>
+                <!-- Real Table -->
+                <div id="pd_table_wrap" style="display:none;" class="pd-table-scroll">
+                    <table class="pd-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>No Tiket</th>
+                                <th>Laporan</th>
+                                <th>Client</th>
+                                <th>Sub Category</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>PIC</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="pd_table_body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
     </div>
 <?php endif; ?>
-<!-- ===== END MY PRIORITY TICKETS ===== -->
+<!-- ===== END PROJECT BUGS & ISSUES DASHBOARD ===== -->
 
-<div class="card">
-    <div class="card-body">
-        <!-- Filter Section -->
-        <div class="row mb-4">
-            <?php if ($client_count > 1): ?>
-                <div class="col-md-3">
-                    <label class="form-label">Pilih Client</label>
-                    <select class="form-select" id="client_id" required>
-                        <option value="">-- Pilih Client --</option>
-                        <?php foreach ($clients as $client): ?>
-                            <option value="<?= $client->client_id ?>"><?= $client->name_app ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            <?php else: ?>
-                <input type="hidden" id="client_id" value="<?= $clients[0]->client_id ?>">
-            <?php endif; ?>
-
-            <div class="col-md-3">
-                <label class="form-label">Tipe Report</label>
-                <select class="form-select" id="report_type" required>
-                    <option value="">-- Pilih Tipe --</option>
-                    <option value="weekly">Mingguan</option>
-                    <option value="monthly">Bulanan</option>
-                </select>
-            </div>
-
-            <!-- Filter Bulanan -->
-            <div class="col-md-3" id="monthly_filter" style="display: none;">
-                <label class="form-label">Pilih Bulan</label>
-                <input type="text" class="form-control" id="date_monthly" placeholder="Pilih bulan dan tahun">
-            </div>
-
-            <!-- Filter Mingguan -->
-            <div class="col-md-3" id="weekly_filter" style="display: none;">
-                <label class="form-label">Pilih Range</label>
-                <input type="text" class="form-control" id="date_weekly" placeholder="Pilih tanggal mulai">
-            </div>
-
-            <!-- Filter Kategori Chart -->
-            <div class="col-md-3" id="chart_category_filter" style="display: none;">
-                <label class="form-label">Kategori Chart</label>
-                <select class="form-select" id="chart_category">
-                    <option value="all">All Categories</option>
-                    <option value="bugs">Bugs & Error Only</option>
-                    <option value="issues">Issues Only</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12 mb-3">
-                <button type="button" class="btn btn-primary" id="btn_filter">
-                    <i class="ti ti-filter"></i> Filter Data
-                </button>
-                <?php if ($can_export == 1): ?>
-                    <button type="button" class="btn btn-success" id="btn_export_pdf" style="display: none;">
-                        <i class="ti ti-file-export"></i> Export PDF
-                    </button>
-                    <button type="button" class="btn btn-warning" id="btn_export_monthly_pdf" style="display: none;">
-                        <i class="ti ti-file-export"></i> Export PDF
-                    </button>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Dashboard Content -->
-<div id="dashboard_content" style="display: none;">
-    <!-- Loading Skeleton -->
-    <div id="loading_skeleton" style="display: none;">
-        <!-- Summary Cards Skeleton -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="skeleton skeleton-card"></div>
-            </div>
-            <div class="col-md-3">
-                <div class="skeleton skeleton-card"></div>
-            </div>
-            <div class="col-md-3">
-                <div class="skeleton skeleton-card"></div>
-            </div>
-            <div class="col-md-3">
-                <div class="skeleton skeleton-card"></div>
-            </div>
-        </div>
-
-        <!-- Category Filter Skeleton -->
-        <div class="row mb-3">
-            <div class="col-md-12">
-                <div class="skeleton skeleton-table"></div>
-            </div>
-        </div>
-
-        <!-- Chart Skeleton -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="skeleton skeleton-chart"></div>
-            </div>
-        </div>
-
-        <!-- Table Skeleton -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="skeleton skeleton-table"></div>
-                <div class="skeleton skeleton-table"></div>
-                <div class="skeleton skeleton-table"></div>
-                <div class="skeleton skeleton-table"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Actual Content -->
-    <div id="actual_content">
-        <!-- Summary Cards -->
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card stats-card card-primary">
-                    <div class="card-body">
-                        <div class="stats-icon icon-primary">
-                            <i class="fas fa-ticket-alt"></i>
-                        </div>
-                        <div class="stats-title">Total Tickets Bugs & User Issue</div>
-                        <h2 class="stats-number" id="total_tickets">0</h2>
-                        <div class="stats-subtitle">
-                            <i class="fas fa-folder-open"></i>
-                            <span id="total_open">0</span> Open Tickets
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card stats-card card-danger">
-                    <div class="card-body">
-                        <div class="stats-icon icon-danger">
-                            <i class="fas fa-bug"></i>
-                        </div>
-                        <div class="stats-title">Bugs & Error</div>
-                        <h2 class="stats-number" id="bugs_tickets">0</h2>
-                        <div class="stats-subtitle">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span id="open_bugs">0</span> Open Bugs
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card stats-card card-warning">
-                    <div class="card-body">
-                        <div class="stats-icon icon-warning">
-                            <i class="fas fa-user-cog"></i>
-                        </div>
-                        <div class="stats-title">User Issues</div>
-                        <h2 class="stats-number" id="issues_tickets">0</h2>
-                        <div class="stats-subtitle">
-                            <i class="fas fa-hourglass-half"></i>
-                            <span id="open_issues">0</span> Open Issues
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chart Line -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Tickets Per Day</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="dailyChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Summary Table -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 id="summary_title">Summary Per Hari</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped" id="summary_table">
-                                <thead class="table" id="summary_thead">
-                                    <tr>
-                                        <th>Tanggal</th>
-                                        <th class="text-center">Bugs & Error</th>
-                                        <th class="text-center">User Issues</th>
-                                        <th class="text-center">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="summary_tbody">
-                                </tbody>
-                                <tfoot style="background-color: #C4C4C4;">
-                                    <tr>
-                                        <th>Total</th>
-                                        <th class="text-center" id="total_bugs_summary">0</th>
-                                        <th class="text-center" id="total_issues_summary">0</th>
-                                        <th class="text-center" id="total_all_summary">0</th>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-
-        <!-- Man Hour Chart (Monthly Only) -->
-        <div class="row mb-4" id="manhour_chart_section" style="display: none;">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Man Hour Plan vs Actual per Minggu</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="manhourChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Man Hour Table (Monthly Only) -->
-        <div class="row mb-4" id="manhour_table_section" style="display: none;">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Man Hour Plan vs Actual Per Minggu</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped" id="manhour_table">
-                                <thead class="table">
-                                    <tr>
-                                        <th>Minggu</th>
-                                        <th class="text-center">Man Hour Plan</th>
-                                        <th class="text-center">Man Hour Actual</th>
-                                        <th class="text-center">Selisih</th>
-                                        <th class="text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="manhour_tbody"></tbody>
-                                <tfoot id="manhour_tfoot"></tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Detail Tickets -->
-<div class="modal fade" id="modalTicketDetail" tabindex="-1" aria-labelledby="modalTicketDetailLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTicketDetailLabel">Detail Tickets</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="modalTicketDetailBody" style="max-height: 80vh; overflow: auto;">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
+<!-- Modal Detail Tiket per Project -->
+<div class="modal fade" id="pd_project_modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+            <div id="pd_modal_body_content">
+                <div style="padding:60px;text-align:center;color:#6c757d;">
+                    <i class="ti ti-loader-2 ti-spin" style="font-size:28px;"></i>
+                    <p style="margin-top:10px;font-size:13px;">Memuat data...</p>
                 </div>
             </div>
         </div>
@@ -699,1676 +941,677 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
 <script>
-    let dailyChart;
-    let chartData = {};
-    let monthlyPicker;
-    let weeklyPicker;
-    let currentReportType = '';
-    let manhourChart;
-    let manhourData = {};
-    let carryOverData = null;
+    is_admin = <?= $is_admin ?>;
+    is_programmer = <?= $is_programmer ?>;
+    is_ba = <?= $is_ba ?>;
+    is_exclude = <?= $is_exclude ?>;
 
-    // Initialize Flatpickr for Monthly (Month picker)
-    monthlyPicker = flatpickr("#date_monthly", {
-        dateFormat: "F Y",
-        plugins: [
-            new monthSelectPlugin({
-                shorthand: true,
-                dateFormat: "F Y",
-                altFormat: "F Y"
-            })
-        ]
-    });
+    $(document).ready(function() {
 
-    // Initialize Flatpickr for Weekly (Date range with 7 days limit)
-    weeklyPicker = flatpickr("#date_weekly", {
-        mode: "range",
-        dateFormat: "Y-m-d",
-        maxDate: "today",
-        locale: {
-            firstDayOfWeek: 1
-        },
-        onClose: function(selectedDates, dateStr, instance) {
-            if (selectedDates.length === 2) {
-                const start = selectedDates[0];
-                const end = selectedDates[1];
+        // ===================================================
+        // SECTION 1: PRIORITY TICKETS
+        // ===================================================
+        (function() {
+            var statusLabel = {
+                0: ['Open', 's-open'],
+                1: ['Process', 's-process'],
+                2: ['Pending', 's-pending'],
+                6: ['Revisi', 's-revisi']
+            };
 
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            $('#prio_toggle_btn').on('click', function() {
+                var body = $('#prio_body');
+                var chevron = $('#prio_chevron');
+                var label = $('#prio_toggle_label');
+                if (body.hasClass('collapsed')) {
+                    body.removeClass('collapsed');
+                    chevron.removeClass('collapsed');
+                    label.text('Sembunyikan');
+                } else {
+                    body.addClass('collapsed');
+                    chevron.addClass('collapsed');
+                    label.text('Tampilkan');
+                }
+            });
 
-                if (diffDays > 6) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Peringatan!',
-                        text: 'Range maksimal adalah 7 hari. Silakan pilih ulang.',
-                        confirmButtonText: 'OK'
-                    }).then(() => {
-                        instance.clear();
+            function renderPriorityCards(tickets) {
+                var rankClass = ['rank-1', 'rank-2', 'rank-3'];
+                var html = '';
+                if (!tickets || tickets.length === 0) {
+                    $('#prio_body').addClass('collapsed');
+                    $('#prio_chevron').addClass('collapsed');
+                    $('#prio_toggle_label').text('Tampilkan');
+                    $('#prio_subtitle').text('Tidak ada tiket aktif saat ini');
+                    html = '<div class="col-12"><div class="prio-empty">' +
+                        '<i class="ti ti-mood-happy"></i>' +
+                        '<p>Tidak ada tiket saat ini. Semua beres!</p>' +
+                        '</div></div>';
+                } else {
+                    $('#prio_subtitle').text(tickets.length + ' tiket aktif perlu dikerjakan');
+                    tickets.forEach(function(t, i) {
+                        var st = statusLabel[t.status] || ['Unknown', 's-open'];
+                        var rClass = rankClass[i] || '';
+                        var due = t.due_date ? t.due_date.substring(0, 10) : '-';
+                        html += '<div class="col-md-4 mb-3">' +
+                            '<div class="prio-card ' + rClass + '">' +
+                            '<div class="rank-badge">' + (i + 1) + '</div>' +
+                            '<p class="prio-ticket-no">' + (t.no_ticket || '-') + '</p>' +
+                            '<p class="prio-report">' + t.report + '</p>' +
+                            '<div class="prio-meta-row"><i class="ti ti-calendar"></i><span>Due: ' + due + '</span></div>' +
+                            '<div class="prio-meta-row"><i class="ti ti-tag"></i><span>' + (t.sub_category_name || '-') + '</span></div>' +
+                            '<div class="prio-footer">' +
+                            '<span class="prio-client-pill">' + (t.client_name || '-') + '</span>' +
+                            '<div style="display:flex;align-items:center;gap:6px;">' +
+                            '<span class="prio-status ' + st[1] + '">' + st[0] + '</span>' +
+                            '<a href="' + siteurl + 'ticket/view_ticket/' + t.id + '" class="btn btn-sm btn-outline-secondary" style="padding:2px 8px;font-size:11px;border-radius:20px;line-height:1.6;">' +
+                            '<i class="ti ti-eye" style="font-size:11px;"></i> Detail</a>' +
+                            '</div></div></div></div>';
                     });
                 }
-            }
-        }
-    });
-
-    // Report type change handler
-    $('#report_type').change(function() {
-        const reportType = $(this).val();
-        $('#monthly_filter').hide();
-        $('#weekly_filter').hide();
-        $('#btn_export_pdf').hide();
-
-        if (monthlyPicker) monthlyPicker.clear();
-        if (weeklyPicker) weeklyPicker.clear();
-
-        if (reportType === 'monthly') {
-            $('#monthly_filter').show();
-        } else if (reportType === 'weekly') {
-            $('#weekly_filter').show();
-        }
-    });
-
-    // Filter Button Click
-    $('#btn_filter').click(function() {
-        const client_id = $('#client_id').val();
-        const report_type = $('#report_type').val();
-
-        if (!client_id) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Perhatian!',
-                text: 'Pilih client terlebih dahulu',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-
-        if (!report_type) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Perhatian!',
-                text: 'Pilih tipe report terlebih dahulu',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-
-        let date_from = '';
-        let date_to = '';
-
-        if (report_type === 'monthly') {
-            const selectedDate = monthlyPicker.selectedDates[0];
-
-            if (!selectedDate) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian!',
-                    text: 'Pilih bulan dan tahun terlebih dahulu',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-
-            // Get first and last day of selected month
-            const year = selectedDate.getFullYear();
-            const month = selectedDate.getMonth();
-
-            date_from = formatDate(new Date(year, month, 1));
-            date_to = formatDate(new Date(year, month + 1, 0));
-
-        } else if (report_type === 'weekly') {
-            const selectedDates = weeklyPicker.selectedDates;
-
-            if (selectedDates.length !== 2) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian!',
-                    text: 'Pilih range tanggal 7 hari terlebih dahulu',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-
-            date_from = formatDate(selectedDates[0]);
-            date_to = formatDate(selectedDates[1]);
-        }
-
-        currentReportType = report_type;
-        loadDashboard(client_id, date_from, date_to);
-    });
-
-    // Handle click button view detail
-    $(document).on('click', '.btn-view-detail', function() {
-        const clientId = $(this).data('client-id');
-        const date = $(this).data('date');
-        const category = $(this).data('category');
-        const dateFrom = $(this).data('date-from') || ''; // ← tambah ini
-
-        const isCarryOver = (date === 'carry_over');
-        const titleLabel = isCarryOver ?
-            'Carry Over Tickets (' + category.toUpperCase() + ')' :
-            'Detail Tickets - ' + date + ' (' + category.toUpperCase() + ')';
-
-        $('#modalTicketDetail').modal('show');
-        $('#modalTicketDetailLabel').text(titleLabel);
-        $('#modalTicketDetailBody').html(`
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        </div>
-    `);
-
-        $.ajax({
-            url: siteurl + 'dashboard/get_ticket_detail',
-            type: 'GET',
-            data: {
-                client_id: clientId,
-                date: date,
-                category: category,
-                date_from: dateFrom // ← tambah ini
-            },
-            success: function(response) {
-                $('#modalTicketDetailBody').html(response);
-                if (!$.fn.DataTable.isDataTable('#ticket_table')) {
-                    $('#ticket_table').DataTable({
-                        pageLength: 10,
-                        order: []
-                    });
-                }
-            },
-            error: function() {
-                $('#modalTicketDetailBody').html(`
-                <div class="alert alert-danger">
-                    <i class="ti ti-alert-circle"></i> Terjadi kesalahan saat memuat data
-                </div>
-            `);
-            }
-        });
-    });
-
-    $('#modalTicketDetail').on('hidden.bs.modal', function() {
-        if ($.fn.DataTable.isDataTable('#ticket_table')) {
-            $('#ticket_table').DataTable().destroy();
-        }
-    });
-
-    function formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    function formatDateWithMonthName(dateString) {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const date = new Date(dateString);
-
-        const day = date.getDate();
-        const month = months[date.getMonth()];
-        const year = date.getFullYear();
-
-        return `${day} ${month} ${year}`;
-    }
-
-    $('#chart_category').change(function() {
-        const category = $(this).val();
-        updateChart(category);
-        updateTable(category);
-    });
-
-    function updateTable(category) {
-        if (currentReportType === 'monthly') {
-            renderMonthlyTable(chartData, category);
-        } else {
-            const data = chartData;
-            const bugsMap = {};
-            const bugsOpenMap = {};
-            const issuesMap = {};
-            const issuesOpenMap = {};
-
-            (data.bugs || []).forEach(i => {
-                bugsMap[i.date] = parseInt(i.total);
-            });
-            (data.bugs_open || []).forEach(i => {
-                bugsOpenMap[i.date] = parseInt(i.total);
-            });
-            (data.issues || []).forEach(i => {
-                issuesMap[i.date] = parseInt(i.total);
-            });
-            (data.issues_open || []).forEach(i => {
-                issuesOpenMap[i.date] = parseInt(i.total);
-            });
-
-            const allDates = new Set([
-                ...(data.bugs || []).map(i => i.date),
-                ...(data.bugs_open || []).map(i => i.date),
-                ...(data.issues || []).map(i => i.date),
-                ...(data.issues_open || []).map(i => i.date),
-            ]);
-            const sortedDates = Array.from(allDates).sort();
-
-            // Update header sesuai category
-            let headerHtml = '<tr><th>Tanggal</th>';
-            if (category === 'all') {
-                headerHtml += `
-                <th class="text-center">Bugs & Error</th>
-                <th class="text-center">User Issues</th>
-                <th class="text-center">Total</th>
-                <th class="text-center">Action</th>`;
-            } else if (category === 'bugs') {
-                headerHtml += `
-                <th class="text-center">Total</th>
-                <th class="text-center">Open</th>
-                <th class="text-center">Action</th>`;
-            } else if (category === 'issues') {
-                headerHtml += `
-                <th class="text-center">Total</th>
-                <th class="text-center">Open</th>
-                <th class="text-center">Action</th>`;
-            }
-            headerHtml += '</tr>';
-            $('#summary_thead').html(headerHtml);
-
-            const currentClientId = $('#client_id').val();
-            const selectedDates = weeklyPicker.selectedDates;
-            const dateFrom = selectedDates.length === 2 ? formatDate(selectedDates[0]) : null;
-
-            // Pakai carryOverData yang sudah di-cache, tidak fetch ulang
-            _buildWeeklyTableBody(
-                sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
-                category, currentClientId, dateFrom, carryOverData
-            );
-        }
-    }
-
-    function showLoadingSkeleton() {
-        $('#loading_skeleton').show();
-        $('#actual_content').hide();
-    }
-
-    function hideLoadingSkeleton() {
-        $('#loading_skeleton').hide();
-        $('#actual_content').show();
-    }
-
-    $('#report_type').change(function() {
-        const reportType = $(this).val();
-        $('#monthly_filter').hide();
-        $('#weekly_filter').hide();
-        $('#btn_export_pdf').hide();
-
-        if (monthlyPicker) monthlyPicker.clear();
-        if (weeklyPicker) weeklyPicker.clear();
-
-        if (reportType === 'monthly') {
-            $('#monthly_filter').show();
-        } else if (reportType === 'weekly') {
-            $('#weekly_filter').show();
-        }
-    });
-
-    function renderManhourChart(data) {
-        if (!data || !data.plan || !data.actual) return;
-
-        const mhPlanMap = {};
-        const mhActualMap = {};
-
-        data.plan.forEach(i => {
-            mhPlanMap[i.date] = parseFloat(i.total);
-        });
-        data.actual.forEach(i => {
-            mhActualMap[i.date] = parseFloat(i.total);
-        });
-
-        // Bangun range tanggal full bulan
-        const selectedDate = monthlyPicker.selectedDates[0];
-        const year = selectedDate.getFullYear();
-        const month = selectedDate.getMonth();
-        const firstDayOfMonth = new Date(year, month, 1);
-        const lastDayOfMonth = new Date(year, month + 1, 0);
-
-        const allDates = [];
-        for (let d = new Date(firstDayOfMonth); d <= lastDayOfMonth; d.setDate(d.getDate() + 1)) {
-            allDates.push(formatDate(new Date(d)));
-        }
-
-        // Kelompokkan per minggu
-        const weeks = [];
-        const weekLabels = [];
-
-        for (let i = 0; i < allDates.length; i += 7) {
-            const chunk = allDates.slice(i, i + 7);
-            const startLabel = formatDateWithMonthName(chunk[0]);
-            const endLabel = formatDateWithMonthName(chunk[chunk.length - 1]);
-            weekLabels.push(`Week ${weeks.length + 1} (${startLabel} - ${endLabel})`);
-            weeks.push(chunk);
-        }
-
-        function sumWeeksMH(map) {
-            return weeks.map(chunk =>
-                parseFloat(chunk.reduce((s, d) => s + (map[d] || 0), 0).toFixed(1))
-            );
-        }
-
-        if (manhourChart) manhourChart.destroy();
-
-        const ctx = document.getElementById('manhourChart').getContext('2d');
-        manhourChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: weekLabels,
-                datasets: [{
-                        label: 'Plan',
-                        data: sumWeeksMH(mhPlanMap),
-                        backgroundColor: 'rgba(111,66,193,0.6)',
-                        borderColor: '#6f42c1',
-                        borderWidth: 2,
-                        borderRadius: 4,
-                    },
-                    {
-                        label: 'Actual',
-                        data: sumWeeksMH(mhActualMap),
-                        backgroundColor: 'rgba(32,201,151,0.6)',
-                        borderColor: '#20c997',
-                        borderWidth: 2,
-                        borderRadius: 4,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        enabled: true
-                    },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 2,
-                        font: {
-                            weight: 'bold',
-                            size: 11
-                        },
-                        formatter: value => value > 0 ? value : ''
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Minggu',
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            }
-                        },
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            autoSkip: false,
-                            maxRotation: 0
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Man Hour',
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            }
-                        },
-                        beginAtZero: true,
-                        grace: '15%',
-                        ticks: {
-                            font: {
-                                size: 11
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(0,0,0,0.05)'
-                        }
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-
-    function renderManhourTable(data) {
-        if (!data || !data.plan || !data.actual) return;
-
-        const mhPlanMap = {};
-        const mhActualMap = {};
-
-        data.plan.forEach(i => {
-            mhPlanMap[i.date] = parseFloat(i.total);
-        });
-        data.actual.forEach(i => {
-            mhActualMap[i.date] = parseFloat(i.total);
-        });
-
-        // Bangun range tanggal full bulan
-        const selectedDate = monthlyPicker.selectedDates[0];
-        const year = selectedDate.getFullYear();
-        const month = selectedDate.getMonth();
-        const firstDayOfMonth = new Date(year, month, 1);
-        const lastDayOfMonth = new Date(year, month + 1, 0);
-
-        const allDates = [];
-        for (let d = new Date(firstDayOfMonth); d <= lastDayOfMonth; d.setDate(d.getDate() + 1)) {
-            allDates.push(formatDate(new Date(d)));
-        }
-
-        // Kelompokkan per minggu
-        const weeks = [];
-        for (let i = 0; i < allDates.length; i += 7) {
-            weeks.push(allDates.slice(i, i + 7));
-        }
-
-        let tbodyHtml = '';
-        let grandPlan = 0;
-        let grandActual = 0;
-
-        weeks.forEach((chunk, index) => {
-            const startLabel = formatDateWithMonthName(chunk[0]);
-            const endLabel = formatDateWithMonthName(chunk[chunk.length - 1]);
-
-            const plan = parseFloat(chunk.reduce((s, d) => s + (mhPlanMap[d] || 0), 0).toFixed(1));
-            const actual = parseFloat(chunk.reduce((s, d) => s + (mhActualMap[d] || 0), 0).toFixed(1));
-            const selisih = parseFloat((actual - plan).toFixed(1));
-
-            grandPlan += plan;
-            grandActual += actual;
-
-            const color = selisih > 0 ? 'color:#dc3545;' : (selisih < 0 ? 'color:#28a745;' : '');
-            // const label = selisih > 0 ? 'Over' : (selisih < 0 ? 'Under' : 'On Track');
-            const label = (plan === 0 && actual === 0) ? '-' : (selisih > 0 ? 'Over' : (selisih < 0 ? 'Under' : 'On Track'));
-            const sign = selisih >= 0 ? '+' : '';
-
-            tbodyHtml += `
-            <tr>
-                <td>Week ${index + 1} (${startLabel} - ${endLabel})</td>
-                <td class="text-center"><strong>${plan.toFixed(1)}</strong></td>
-                <td class="text-center"><strong>${actual.toFixed(1)}</strong></td>
-                <td class="text-center" style="${color}"><strong>${sign}${selisih.toFixed(1)}</strong></td>
-                <td class="text-center" style="${color}"><strong>${label}</strong></td>
-            </tr>
-        `;
-        });
-
-        $('#manhour_tbody').html(tbodyHtml);
-
-        // Average & Total di tfoot
-        const weekCount = weeks.length;
-        const avgPlan = parseFloat((grandPlan / weekCount).toFixed(1));
-        const avgActual = parseFloat((grandActual / weekCount).toFixed(1));
-        const avgSelisih = parseFloat((avgActual - avgPlan).toFixed(1));
-        const grandSelisih = parseFloat((grandActual - grandPlan).toFixed(1));
-
-        const avgColor = avgSelisih > 0 ? 'color:#dc3545;' : (avgSelisih < 0 ? 'color:#28a745;' : '');
-        const totalColor = grandSelisih > 0 ? 'color:#dc3545;' : (grandSelisih < 0 ? 'color:#28a745;' : '');
-
-        // const avgLabel = avgSelisih > 0 ? 'Over' : (avgSelisih < 0 ? 'Under' : 'On Track');
-        // const totalLabel = grandSelisih > 0 ? 'Over' : (grandSelisih < 0 ? 'Under' : 'On Track');
-        const avgLabel = (avgPlan === 0 && avgActual === 0) ? '-' : (avgSelisih > 0 ? 'Over' : (avgSelisih < 0 ? 'Under' : 'On Track'));
-        const totalLabel = (grandPlan === 0 && grandActual === 0) ? '-' : (grandSelisih > 0 ? 'Over' : (grandSelisih < 0 ? 'Under' : 'On Track'));
-
-        $('#manhour_tfoot').html(`
-            <tr style="background-color: #C4C4C4;">
-                <th>Average</th>
-                <th class="text-center">${avgPlan.toFixed(1)}</th>
-                <th class="text-center">${avgActual.toFixed(1)}</th>
-                <th class="text-center" style="${avgColor}">${(avgSelisih >= 0 ? '+' : '') + avgSelisih.toFixed(1)}</th>
-                <th class="text-center" style="${avgColor}">${avgLabel}</th>
-            </tr>
-            <tr style="background-color: #C4C4C4;">
-                <th>Total</th>
-                <th class="text-center">${grandPlan.toFixed(1)}</th>
-                <th class="text-center">${grandActual.toFixed(1)}</th>
-                <th class="text-center" style="${totalColor}">${(grandSelisih >= 0 ? '+' : '') + grandSelisih.toFixed(1)}</th>
-                <th class="text-center" style="${totalColor}">${totalLabel}</th>
-            </tr>
-        `);
-    }
-
-    function loadDashboard(client_id, date_from, date_to) {
-        carryOverData = null; // ← reset setiap filter baru
-        $('#dashboard_content').show();
-        $('#chart_category_filter').show();
-        showLoadingSkeleton();
-
-        $.ajax({
-            url: siteurl + 'dashboard' + '/get_dashboard_data',
-            type: 'POST',
-            data: {
-                client_id: client_id,
-                date_from: date_from,
-                date_to: date_to
-            },
-            dataType: 'json',
-            success: function(response) {
-                hideLoadingSkeleton();
-
-                $('#total_tickets').text(response.total_tickets.total);
-                $('#bugs_tickets').text(response.total_tickets.bugs);
-                $('#issues_tickets').text(response.total_tickets.issues);
-                $('#total_open').text(response.total_tickets.total_open);
-                $('#open_bugs').text(response.total_tickets.open_bugs);
-                $('#open_issues').text(response.total_tickets.open_issues);
-
-                const statusMap = {
-                    0: 'open',
-                    1: 'process',
-                    2: 'pending',
-                    3: 'cancel',
-                    4: 'done',
-                    5: 'close',
-                    6: 'revisi'
-                };
-                let statusCounts = {
-                    open: 0
-                };
-                response.status_data.forEach(item => {
-                    const statusName = statusMap[item.status];
-                    if (statusName === 'open') statusCounts.open = item.total;
-                });
-
-                chartData = response.daily_data;
-
-                $('#chart_category').val('all');
-                renderDailyChart('all');
-
-                if (currentReportType === 'monthly') {
-                    renderMonthlyTable(response.daily_data, 'all');
-                } else {
-                    renderWeeklyTable(response.daily_data, 'all');
-                }
-
-                manhourData = response.manhour_data;
-
-                if (currentReportType === 'monthly') {
-                    $('#manhour_chart_section').show();
-                    $('#manhour_table_section').show();
-                    renderManhourChart(response.manhour_data);
-                    renderManhourTable(response.manhour_data);
-                } else {
-                    $('#manhour_chart_section').hide();
-                    $('#manhour_table_section').hide();
-                    if (manhourChart) manhourChart.destroy();
-                }
-
-                if (currentReportType === 'weekly') {
-                    $('#btn_export_pdf').show();
-                    $('#btn_export_monthly_pdf').hide();
-                } else {
-                    $('#btn_export_pdf').hide();
-                    $('#btn_export_monthly_pdf').show();
-                }
-            },
-            error: function(xhr, status, error) {
-                hideLoadingSkeleton();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: 'Terjadi kesalahan saat memuat data',
-                    confirmButtonText: 'OK'
-                });
-                console.error(error);
-            }
-        });
-    }
-
-    // Handle Export PDF Button Click
-    $('#btn_export_pdf').click(function() {
-        const client_id = $('#client_id').val();
-        const selectedDates = weeklyPicker.selectedDates;
-
-        if (selectedDates.length !== 2) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Perhatian!',
-                text: 'Data belum tersedia. Silakan filter terlebih dahulu.',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-
-        const date_from = formatDate(selectedDates[0]);
-        const date_to = formatDate(selectedDates[1]);
-
-        const url = siteurl + 'dashboard/print_weekly_report?client_id=' + client_id +
-            '&date_from=' + date_from + '&date_to=' + date_to;
-
-        window.open(url, '_blank');
-    });
-
-    function updateChart(category) {
-        renderDailyChart(category);
-    }
-
-    function renderDailyChart(category) {
-        const bugsMap = {};
-        const bugsOpenMap = {};
-        const issuesMap = {};
-        const issuesOpenMap = {};
-
-        chartData.bugs.forEach(item => {
-            bugsMap[item.date] = parseInt(item.total);
-        });
-
-        chartData.bugs_open.forEach(item => {
-            bugsOpenMap[item.date] = parseInt(item.total);
-        });
-
-        chartData.issues.forEach(item => {
-            issuesMap[item.date] = parseInt(item.total);
-        });
-
-        chartData.issues_open.forEach(item => {
-            issuesOpenMap[item.date] = parseInt(item.total);
-        });
-
-        function generateDateRange(startDate, endDate) {
-            const dates = [];
-            const currentDate = new Date(startDate);
-            const lastDate = new Date(endDate);
-
-            while (currentDate <= lastDate) {
-                const year = currentDate.getFullYear();
-                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-                const day = String(currentDate.getDate()).padStart(2, '0');
-                dates.push(`${year}-${month}-${day}`);
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-
-            return dates;
-        }
-
-        let labels;
-
-        if (currentReportType === 'weekly' && weeklyPicker.selectedDates.length === 2) {
-            const dateFrom = formatDate(weeklyPicker.selectedDates[0]);
-            const dateTo = formatDate(weeklyPicker.selectedDates[1]);
-            labels = generateDateRange(dateFrom, dateTo);
-        } else if (currentReportType === 'monthly' && monthlyPicker.selectedDates.length > 0) {
-            const selectedDate = monthlyPicker.selectedDates[0];
-            const year = selectedDate.getFullYear();
-            const month = selectedDate.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            labels = generateDateRange(formatDate(firstDay), formatDate(lastDay));
-        } else {
-            const allDates = new Set([
-                ...chartData.bugs.map(item => item.date),
-                ...chartData.bugs_open.map(item => item.date),
-                ...chartData.issues.map(item => item.date),
-                ...chartData.issues_open.map(item => item.date)
-            ]);
-            labels = Array.from(allDates).sort();
-        }
-
-        // ============================================================
-        // MODE MONTHLY: Render chart per minggu
-        // ============================================================
-        if (currentReportType === 'monthly') {
-            const weeks = [];
-            const weekLabels = [];
-
-            for (let i = 0; i < labels.length; i += 7) {
-                const weekDates = labels.slice(i, i + 7);
-                const startLabel = formatDateWithMonthName(weekDates[0]);
-                const endLabel = formatDateWithMonthName(weekDates[weekDates.length - 1]);
-                weekLabels.push(`Week ${weeks.length + 1} (${startLabel} - ${endLabel})`);
-                weeks.push(weekDates);
-            }
-
-            function sumWeeks(dataMap) {
-                return weeks.map(weekDates =>
-                    weekDates.reduce((sum, date) => sum + (dataMap[date] || 0), 0)
-                );
-            }
-
-            let weeklyDatasets = [];
-
-            if (category === 'all') {
-                weeklyDatasets = [{
-                        label: 'Bugs & Error',
-                        data: sumWeeks(bugsMap),
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointBackgroundColor: '#dc3545',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    },
-                    {
-                        label: 'User Issues',
-                        data: sumWeeks(issuesMap),
-                        borderColor: '#ffc107',
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointBackgroundColor: '#ffc107',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    }
-                ];
-            } else if (category === 'bugs') {
-                weeklyDatasets = [{
-                        label: 'Bugs & Error - Total',
-                        data: sumWeeks(bugsMap),
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointBackgroundColor: '#dc3545',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    },
-                    {
-                        label: 'Bugs & Error - Open',
-                        data: sumWeeks(bugsOpenMap),
-                        borderColor: '#fd7e14',
-                        backgroundColor: 'rgba(253, 126, 20, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointBackgroundColor: '#fd7e14',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        borderDash: [5, 5]
-                    }
-                ];
-            } else if (category === 'issues') {
-                weeklyDatasets = [{
-                        label: 'User Issues - Total',
-                        data: sumWeeks(issuesMap),
-                        borderColor: '#ffc107',
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointBackgroundColor: '#ffc107',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    },
-                    {
-                        label: 'User Issues - Open',
-                        data: sumWeeks(issuesOpenMap),
-                        borderColor: '#20c997',
-                        backgroundColor: 'rgba(32, 201, 151, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointBackgroundColor: '#20c997',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        borderDash: [5, 5]
-                    }
-                ];
-            }
-
-            if (dailyChart) dailyChart.destroy();
-
-            const ctx = document.getElementById('dailyChart').getContext('2d');
-            dailyChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: weekLabels,
-                    datasets: weeklyDatasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            enabled: true,
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y;
-                                }
-                            }
-                        },
-                        datalabels: {
-                            display: true,
-                            align: 'top',
-                            anchor: 'end',
-                            font: {
-                                weight: 'bold',
-                                size: 11
-                            },
-                            formatter: function(value) {
-                                return value > 0 ? value : '';
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Minggu',
-                                font: {
-                                    size: 14,
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                autoSkip: false,
-                                maxRotation: 0
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Jumlah Tickets',
-                                font: {
-                                    size: 14,
-                                    weight: 'bold'
-                                }
-                            },
-                            beginAtZero: true,
-                            grace: '20%',
-                            ticks: {
-                                stepSize: 1,
-                                callback: function(value) {
-                                    if (Number.isInteger(value)) return value;
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-
-            return; // stop, tidak perlu lanjut ke render harian
-        }
-
-        // ============================================================
-        // MODE WEEKLY: Render chart per hari (kode lama tidak berubah)
-        // ============================================================
-        const formattedLabels = labels.map(date => formatDateWithMonthName(date));
-        let datasets = [];
-
-        if (category === 'all') {
-            datasets = [{
-                    label: 'Bugs & Error',
-                    data: labels.map(date => bugsMap[date] || 0),
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: '#dc3545',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                },
-                {
-                    label: 'User Issues',
-                    data: labels.map(date => issuesMap[date] || 0),
-                    borderColor: '#ffc107',
-                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: '#ffc107',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                }
-            ];
-        } else if (category === 'bugs') {
-            datasets = [{
-                    label: 'Bugs & Error - Total',
-                    data: labels.map(date => bugsMap[date] || 0),
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: '#dc3545',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                },
-                {
-                    label: 'Bugs & Error - Open',
-                    data: labels.map(date => bugsOpenMap[date] || 0),
-                    borderColor: '#fd7e14',
-                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: '#fd7e14',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    borderDash: [5, 5]
-                }
-            ];
-        } else if (category === 'issues') {
-            datasets = [{
-                    label: 'User Issues - Total',
-                    data: labels.map(date => issuesMap[date] || 0),
-                    borderColor: '#ffc107',
-                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: '#ffc107',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                },
-                {
-                    label: 'User Issues - Open',
-                    data: labels.map(date => issuesOpenMap[date] || 0),
-                    borderColor: '#20c997',
-                    backgroundColor: 'rgba(32, 201, 151, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: '#20c997',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    borderDash: [5, 5]
-                }
-            ];
-        }
-
-        if (dailyChart) dailyChart.destroy();
-
-        const ctx = document.getElementById('dailyChart').getContext('2d');
-        dailyChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: formattedLabels,
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        enabled: true,
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y;
-                            }
-                        }
-                    },
-                    datalabels: {
-                        display: true,
-                        align: 'top',
-                        anchor: 'end',
-                        font: {
-                            weight: 'bold',
-                            size: 11
-                        },
-                        formatter: function(value) {
-                            return value > 0 ? value : '';
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Tanggal',
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            }
-                        },
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            autoSkip: false,
-                            maxRotation: 45,
-                            minRotation: 0
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Jumlah Tickets',
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            }
-                        },
-                        beginAtZero: true,
-                        grace: '20%',
-                        ticks: {
-                            stepSize: 1,
-                            callback: function(value) {
-                                if (Number.isInteger(value)) return value;
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-
-    // Update fungsi renderWeeklyTable
-    function renderWeeklyTable(data, category = 'all') {
-        $('#summary_title').text('Summary Per Hari');
-
-        if (!data.bugs) data.bugs = [];
-        if (!data.bugs_open) data.bugs_open = [];
-        if (!data.issues) data.issues = [];
-        if (!data.issues_open) data.issues_open = [];
-
-        // Update header
-        let headerHtml = '<tr><th>Tanggal</th>';
-        if (category === 'all') {
-            headerHtml += `
-            <th class="text-center">Bugs & Error</th>
-            <th class="text-center">User Issues</th>
-            <th class="text-center">Total</th>
-            <th class="text-center">Action</th>`;
-        } else if (category === 'bugs') {
-            headerHtml += `
-            <th class="text-center">Total</th>
-            <th class="text-center">Open</th>
-            <th class="text-center">Action</th>`;
-        } else if (category === 'issues') {
-            headerHtml += `
-            <th class="text-center">Total</th>
-            <th class="text-center">Open</th>
-            <th class="text-center">Action</th>`;
-        }
-        headerHtml += '</tr>';
-        $('#summary_thead').html(headerHtml);
-
-        // Build maps
-        const bugsMap = {};
-        const bugsOpenMap = {};
-        const issuesMap = {};
-        const issuesOpenMap = {};
-
-        data.bugs.forEach(i => {
-            bugsMap[i.date] = parseInt(i.total);
-        });
-        data.bugs_open.forEach(i => {
-            bugsOpenMap[i.date] = parseInt(i.total);
-        });
-        data.issues.forEach(i => {
-            issuesMap[i.date] = parseInt(i.total);
-        });
-        data.issues_open.forEach(i => {
-            issuesOpenMap[i.date] = parseInt(i.total);
-        });
-
-        const allDates = new Set([
-            ...data.bugs.map(i => i.date),
-            ...data.bugs_open.map(i => i.date),
-            ...data.issues.map(i => i.date),
-            ...data.issues_open.map(i => i.date),
-        ]);
-        const sortedDates = Array.from(allDates).sort();
-
-        const currentClientId = $('#client_id').val();
-        const selectedDates = weeklyPicker.selectedDates;
-        const dateFrom = selectedDates.length === 2 ? formatDate(selectedDates[0]) : null;
-
-        if (dateFrom && currentClientId) {
-            $.ajax({
-                url: siteurl + 'dashboard/get_carry_over_count',
-                type: 'GET',
-                data: {
-                    client_id: currentClientId,
-                    date_from: dateFrom
-                },
-                dataType: 'json',
-                success: function(carry) {
-                    carryOverData = carry; // ← simpan ke cache
-                    _buildWeeklyTableBody(
-                        sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
-                        category, currentClientId, dateFrom, carry
-                    );
-                },
-                error: function() {
-                    carryOverData = null;
-                    _buildWeeklyTableBody(
-                        sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
-                        category, currentClientId, dateFrom, null
-                    );
-                }
-            });
-        } else {
-            carryOverData = null;
-            _buildWeeklyTableBody(
-                sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
-                category, currentClientId, dateFrom, null
-            );
-        }
-    }
-
-    function _buildWeeklyTableBody(
-        sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
-        category, currentClientId, dateFrom, carry
-    ) {
-        let tableHtml = '';
-
-        const carryBugs = (carry && carry.bugs) ? parseInt(carry.bugs) : 0;
-        const carryIssues = (carry && carry.issues) ? parseInt(carry.issues) : 0;
-        const carryTotal = carryBugs + carryIssues;
-
-        // ── Baris Carry Over ──
-        if (carry && carry.total > 0) {
-            const viewCarryBtn = (cat) => `
-            <button type="button" class="btn btn-sm btn-warning btn-view-detail"
-                    data-client-id="${currentClientId}"
-                    data-date="carry_over"
-                    data-category="${cat}"
-                    data-date-from="${dateFrom}">
-                <i class="ti ti-eye"></i> View
-            </button>`;
-
-            let carryRowHtml = `<tr style="background-color:#fff0e6; font-weight:600;">
-            <td>
-                ⏳ <strong>Carry Over</strong>
-                <div style="font-size:10px; color:#888; font-weight:normal;">
-                    Open ticket dari sebelum periode ini
-                </div>
-            </td>`;
-
-            if (category === 'all') {
-                carryRowHtml += `
-                <td class="text-center">${carryBugs}</td>
-                <td class="text-center">${carryIssues}</td>
-                <td class="text-center"><strong>${carryTotal}</strong></td>
-                <td class="text-center">${viewCarryBtn('all')}</td>`;
-            } else if (category === 'bugs') {
-                carryRowHtml += `
-                <td class="text-center"><strong>${carryBugs}</strong></td>
-                <td class="text-center">${carryBugs}</td>
-                <td class="text-center">${viewCarryBtn('bugs')}</td>`;
-            } else if (category === 'issues') {
-                carryRowHtml += `
-                <td class="text-center"><strong>${carryIssues}</strong></td>
-                <td class="text-center">${carryIssues}</td>
-                <td class="text-center">${viewCarryBtn('issues')}</td>`;
-            }
-
-            carryRowHtml += '</tr>';
-            tableHtml += carryRowHtml;
-        }
-
-        // ── Tidak ada data sama sekali ──
-        if (sortedDates.length === 0 && carryTotal === 0) {
-            let noDataColspan = category === 'all' ? 5 : 4;
-            $('#summary_tbody').html(
-                `<tr><td colspan="${noDataColspan}" class="text-center">Tidak ada data</td></tr>`
-            );
-            _renderWeeklyFooter(category, 0, 0, 0, 0, 0, 0);
-            return;
-        }
-
-        // ── Baris per hari ──
-        let totalBugs = 0,
-            totalBugsOpen = 0,
-            totalIssues = 0,
-            totalIssuesOpen = 0;
-
-        sortedDates.forEach(date => {
-            const bugs = bugsMap[date] || 0;
-            const bugsOpen = bugsOpenMap[date] || 0;
-            const issues = issuesMap[date] || 0;
-            const issuesOpen = issuesOpenMap[date] || 0;
-            const total = bugs + issues;
-
-            totalBugs += bugs;
-            totalBugsOpen += bugsOpen;
-            totalIssues += issues;
-            totalIssuesOpen += issuesOpen;
-
-            let rowHtml = `<tr><td>${date}</td>`;
-
-            if (category === 'all') {
-                rowHtml += `
-                <td class="text-center">${bugs}</td>
-                <td class="text-center">${issues}</td>
-                <td class="text-center"><strong>${total}</strong></td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-info btn-view-detail"
-                            data-client-id="${currentClientId}"
-                            data-date="${date}"
-                            data-category="${category}"
-                            data-date-from="${dateFrom}">
-                        <i class="ti ti-eye"></i> View
-                    </button>
-                </td>`;
-            } else if (category === 'bugs') {
-                rowHtml += `
-                <td class="text-center"><strong>${bugs}</strong></td>
-                <td class="text-center">${bugsOpen}</td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-info btn-view-detail"
-                            data-client-id="${currentClientId}"
-                            data-date="${date}"
-                            data-category="${category}"
-                            data-date-from="${dateFrom}">
-                        <i class="ti ti-eye"></i> View
-                    </button>
-                </td>`;
-            } else if (category === 'issues') {
-                rowHtml += `
-                <td class="text-center"><strong>${issues}</strong></td>
-                <td class="text-center">${issuesOpen}</td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-info btn-view-detail"
-                            data-client-id="${currentClientId}"
-                            data-date="${date}"
-                            data-category="${category}"
-                            data-date-from="${dateFrom}">
-                        <i class="ti ti-eye"></i> View
-                    </button>
-                </td>`;
-            }
-
-            rowHtml += '</tr>';
-            tableHtml += rowHtml;
-        });
-
-        $('#summary_tbody').html(tableHtml);
-
-        _renderWeeklyFooter(
-            category,
-            totalBugs, totalBugsOpen,
-            totalIssues, totalIssuesOpen,
-            carryBugs, carryIssues
-        );
-    }
-
-    function _renderWeeklyFooter(
-        category,
-        totalBugs, totalBugsOpen,
-        totalIssues, totalIssuesOpen,
-        carryBugs = 0, carryIssues = 0
-    ) {
-        const grandBugs = totalBugs + carryBugs;
-        const grandIssues = totalIssues + carryIssues;
-        const grandBugsOpen = totalBugsOpen + carryBugs;
-        const grandIssuesOpen = totalIssuesOpen + carryIssues;
-
-        let footerHtml = '<tr><th>Total</th>';
-
-        if (category === 'all') {
-            footerHtml += `
-            <th class="text-center">${grandBugs}</th>
-            <th class="text-center">${grandIssues}</th>
-            <th class="text-center">${grandBugs + grandIssues}</th>
-            <th></th>`;
-        } else if (category === 'bugs') {
-            footerHtml += `
-            <th class="text-center">${grandBugs}</th>
-            <th class="text-center">${grandBugsOpen}</th>
-            <th></th>`;
-        } else if (category === 'issues') {
-            footerHtml += `
-            <th class="text-center">${grandIssues}</th>
-            <th class="text-center">${grandIssuesOpen}</th>
-            <th></th>`;
-        }
-
-        footerHtml += '</tr>';
-        $('#summary_table tfoot').html(footerHtml);
-    }
-
-    // Render table for monthly report (per minggu)
-    function renderMonthlyTable(data, category = 'all') {
-        $('#summary_title').text('Summary Per Minggu');
-
-        // Safety check - ensure data properties exist
-        if (!data.bugs) data.bugs = [];
-        if (!data.bugs_open) data.bugs_open = [];
-        if (!data.issues) data.issues = [];
-        if (!data.issues_open) data.issues_open = [];
-
-        // Update table header based on category
-        let headerHtml = '<tr><th>Periode</th>';
-
-        if (category === 'all') {
-            headerHtml += `
-            <th class="text-center">Bugs & Error</th>
-            <th class="text-center">User Issues</th>
-            <th class="text-center">Total</th>
-        `;
-        } else if (category === 'bugs') {
-            headerHtml += `
-            <th class="text-center">Total</th>
-            <th class="text-center">Open</th>
-        `;
-        } else if (category === 'issues') {
-            headerHtml += `
-            <th class="text-center">Total</th>
-            <th class="text-center">Open</th>
-        `;
-        }
-
-        headerHtml += '</tr>';
-        $('#summary_thead').html(headerHtml);
-
-        // Create date map
-        const bugsMap = {};
-        const bugsOpenMap = {};
-        const issuesMap = {};
-        const issuesOpenMap = {};
-
-        data.bugs.forEach(item => {
-            bugsMap[item.date] = parseInt(item.total);
-        });
-
-        data.bugs_open.forEach(item => {
-            bugsOpenMap[item.date] = parseInt(item.total);
-        });
-
-        data.issues.forEach(item => {
-            issuesMap[item.date] = parseInt(item.total);
-        });
-
-        data.issues_open.forEach(item => {
-            issuesOpenMap[item.date] = parseInt(item.total);
-        });
-
-        // Get all unique dates
-        const allDates = new Set([
-            ...data.bugs.map(item => item.date),
-            ...data.bugs_open.map(item => item.date),
-            ...data.issues.map(item => item.date),
-            ...data.issues_open.map(item => item.date)
-        ]);
-        const sortedDates = Array.from(allDates).sort();
-
-        if (sortedDates.length === 0) {
-            let noDataColspan = category === 'all' ? 4 : 3;
-            $('#summary_tbody').html(`<tr><td colspan="${noDataColspan}" class="text-center">Tidak ada data</td></tr>`);
-
-            let footerHtml = '<tr><th>Total</th>';
-            if (category === 'all') {
-                footerHtml += '<th class="text-center">0</th><th class="text-center">0</th><th class="text-center">0</th>';
-            } else {
-                footerHtml += '<th class="text-center">0</th><th class="text-center">0</th>';
-            }
-            footerHtml += '</tr>';
-            $('#summary_table tfoot').html(footerHtml);
-            return;
-        }
-
-        // Get first and last date to determine the full month range
-        const firstDate = new Date(sortedDates[0]);
-        const year = firstDate.getFullYear();
-        const month = firstDate.getMonth();
-        const firstDayOfMonth = new Date(year, month, 1);
-        const lastDayOfMonth = new Date(year, month + 1, 0);
-
-        // Create complete date range for the month (including dates with no data)
-        const completeDates = [];
-        for (let d = new Date(firstDayOfMonth); d <= lastDayOfMonth; d.setDate(d.getDate() + 1)) {
-            completeDates.push(formatDate(new Date(d)));
-        }
-
-        // Group dates into weeks (starting from day 1 of the month)
-        const weeks = [];
-        let currentWeek = [];
-
-        completeDates.forEach((date, index) => {
-            currentWeek.push(date);
-
-            // Start new week every 7 days or at the end of month
-            if (currentWeek.length === 7 || index === completeDates.length - 1) {
-                weeks.push([...currentWeek]);
-                currentWeek = [];
-            }
-        });
-
-        let tableHtml = '';
-        let totalBugs = 0;
-        let totalBugsOpen = 0;
-        let totalIssues = 0;
-        let totalIssuesOpen = 0;
-
-        weeks.forEach((week, index) => {
-            const startDate = week[0];
-            const endDate = week[week.length - 1];
-
-            let weekBugs = 0;
-            let weekBugsOpen = 0;
-            let weekIssues = 0;
-            let weekIssuesOpen = 0;
-
-            // Sum up bugs and issues for all dates in this week
-            week.forEach(date => {
-                weekBugs += bugsMap[date] || 0;
-                weekBugsOpen += bugsOpenMap[date] || 0;
-                weekIssues += issuesMap[date] || 0;
-                weekIssuesOpen += issuesOpenMap[date] || 0;
-            });
-
-            const weekTotal = weekBugs + weekIssues;
-            totalBugs += weekBugs;
-            totalBugsOpen += weekBugsOpen;
-            totalIssues += weekIssues;
-            totalIssuesOpen += weekIssuesOpen;
-
-            let rowHtml = `<tr><td>Minggu ${index + 1} (${startDate} s/d ${endDate})</td>`;
-
-            if (category === 'all') {
-                rowHtml += `
-                <td class="text-center">${weekBugs}</td>
-                <td class="text-center">${weekIssues}</td>
-                <td class="text-center"><strong>${weekTotal}</strong></td>
-            `;
-            } else if (category === 'bugs') {
-                rowHtml += `
-                <td class="text-center"><strong>${weekBugs}</strong></td>
-                <td class="text-center">${weekBugsOpen}</td>
-            `;
-            } else if (category === 'issues') {
-                rowHtml += `
-                <td class="text-center"><strong>${weekIssues}</strong></td>
-                <td class="text-center">${weekIssuesOpen}</td>
-            `;
-            }
-
-            rowHtml += '</tr>';
-            tableHtml += rowHtml;
-        });
-
-        $('#summary_tbody').html(tableHtml);
-
-        // Update footer based on category
-        let footerHtml = '<tr><th>Total</th>';
-
-        if (category === 'all') {
-            footerHtml += `
-            <th class="text-center">${totalBugs}</th>
-            <th class="text-center">${totalIssues}</th>
-            <th class="text-center">${totalBugs + totalIssues}</th>
-        `;
-        } else if (category === 'bugs') {
-            footerHtml += `
-            <th class="text-center">${totalBugs}</th>
-            <th class="text-center">${totalBugsOpen}</th>
-        `;
-        } else if (category === 'issues') {
-            footerHtml += `
-            <th class="text-center">${totalIssues}</th>
-            <th class="text-center">${totalIssuesOpen}</th>
-        `;
-        }
-
-        footerHtml += '</tr>';
-        $('#summary_table tfoot').html(footerHtml);
-    }
-
-    $('#btn_export_monthly_pdf').click(function() {
-        const client_id = $('#client_id').val();
-        const selectedDate = monthlyPicker.selectedDates[0];
-
-        if (!selectedDate) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Perhatian!',
-                text: 'Data belum tersedia.',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-
-        const year = selectedDate.getFullYear();
-        const month = selectedDate.getMonth();
-        const date_from = formatDate(new Date(year, month, 1));
-        const date_to = formatDate(new Date(year, month + 1, 0));
-
-        const url = siteurl + 'dashboard/print_monthly_report?client_id=' + client_id +
-            '&date_from=' + date_from + '&date_to=' + date_to;
-
-        window.open(url, '_blank');
-    });
-
-    // ===== PRIORITY TICKETS =====
-    (function() {
-        var statusLabel = {
-            0: ['Open', 's-open'],
-            1: ['Process', 's-process'],
-            2: ['Pending', 's-pending'],
-            6: ['Revisi', 's-revisi']
-        };
-
-        // Toggle accordion
-        $('#prio_toggle_btn').on('click', function() {
-            var body = $('#prio_body');
-            var chevron = $('#prio_chevron');
-            var label = $('#prio_toggle_label');
-
-            if (body.hasClass('collapsed')) {
-                body.removeClass('collapsed');
-                chevron.removeClass('collapsed');
-                label.text('Sembunyikan');
-            } else {
-                body.addClass('collapsed');
-                chevron.addClass('collapsed');
-                label.text('Tampilkan');
-            }
-        });
-
-        function renderPriorityCards(tickets) {
-            var rankClass = ['rank-1', 'rank-2', 'rank-3'];
-            var html = '';
-
-            if (!tickets || tickets.length === 0) {
-                // Tidak ada tiket → auto collapse
-                $('#prio_body').addClass('collapsed');
-                $('#prio_chevron').addClass('collapsed');
-                $('#prio_toggle_label').text('Tampilkan');
-                $('#prio_subtitle').text('Tidak ada tiket aktif saat ini');
-
-                html = '<div class="col-12"><div class="prio-empty">' +
-                    '<i class="ti ti-mood-happy"></i>' +
-                    '<p>Tidak ada tiket saat ini. Semua beres!</p>' +
-                    '</div></div>';
-            } else {
-                // Ada tiket → tetap expand
-                $('#prio_subtitle').text(tickets.length + ' tiket aktif perlu dikerjakan');
-
-                tickets.forEach(function(t, i) {
-                    var st = statusLabel[t.status] || ['Unknown', 's-open'];
-                    var rClass = rankClass[i] || '';
-                    var due = t.due_date ? t.due_date.substring(0, 10) : '-';
-
-                    html += '<div class="col-md-4 mb-3">' +
-                        '<div class="prio-card ' + rClass + '">' +
-                        '<div class="rank-badge">' + (i + 1) + '</div>' +
-                        '<p class="prio-ticket-no">' + (t.no_ticket || '-') + '</p>' +
-                        '<p class="prio-report">' + t.report + '</p>' +
-                        '<div class="prio-meta-row">' +
-                        '<i class="ti ti-calendar"></i>' +
-                        '<span>Due: ' + due + '</span>' +
-                        '</div>' +
-                        '<div class="prio-meta-row">' +
-                        '<i class="ti ti-tag"></i>' +
-                        '<span>' + (t.sub_category_name || '-') + '</span>' +
-                        '</div>' +
-                        '<div class="prio-footer">' +
-                        '<span class="prio-client-pill">' + (t.client_name || '-') + '</span>' +
-                        '<div style="display:flex; align-items:center; gap:6px;">' +
-                        '<span class="prio-status ' + st[1] + '">' + st[0] + '</span>' +
-                        '<a href="' + siteurl + 'ticket/view_ticket/' + t.id + '" ' +
-                        'class="btn btn-sm btn-outline-secondary" ' +
-                        'style="padding:2px 8px; font-size:11px; border-radius:20px; line-height:1.6;">' +
-                        '<i class="ti ti-eye" style="font-size:11px;"></i> Detail' +
-                        '</a>' +
-                        '</div>' +
-                        '</div>' +
-                        '</div>' +
-                        '</div>';
-                });
-            }
-
-            $('#prio_cards_row').html(html);
-            $('#prio_loading').hide();
-            $('#prio_content').show();
-        }
-
-        $.ajax({
-            url: siteurl + 'dashboard/get_my_priorities',
-            type: 'GET',
-            dataType: 'json',
-            success: function(res) {
-                renderPriorityCards(res);
-            },
-            error: function() {
+                $('#prio_cards_row').html(html);
                 $('#prio_loading').hide();
                 $('#prio_content').show();
-                $('#prio_cards_row').html(
-                    '<div class="col-12"><div class="prio-empty">' +
-                    '<i class="ti ti-alert-circle"></i>' +
-                    '<p>Gagal memuat data prioritas.</p>' +
-                    '</div></div>'
-                );
             }
-        });
-    })();
-    // ===== END PRIORITY TICKETS =====
+
+            $.ajax({
+                url: siteurl + 'dashboard/get_my_priorities',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    renderPriorityCards(res);
+                },
+                error: function() {
+                    $('#prio_loading').hide();
+                    $('#prio_content').show();
+                    $('#prio_cards_row').html(
+                        '<div class="col-12"><div class="prio-empty">' +
+                        '<i class="ti ti-alert-circle"></i>' +
+                        '<p>Gagal memuat data prioritas.</p>' +
+                        '</div></div>'
+                    );
+                }
+            });
+        })();
+
+
+        // ===================================================
+        // SECTION 2: PROJECT BUGS & ISSUES DASHBOARD
+        // ===================================================
+        (function() {
+
+            var DEFAULT_SUBCATS = [
+                'User Issue', 'Bugs Program',
+                'Bugs Konsep'
+            ];
+
+            var statusMap = {
+                0: ['Open', 'ps-open'],
+                1: ['Process', 'ps-process'],
+                2: ['Pending', 'ps-pending'],
+                3: ['Cancel', 'ps-cancel'],
+                4: ['Done', 'ps-done'],
+                5: ['Close', 'ps-close'],
+                6: ['Revisi', 'ps-revisi'],
+            };
+
+            var chartProject = null;
+            var chartDonut = null;
+            var chartSubcat = null;
+            var allClientsData = [];
+
+            // ── Flatpickr ──────────────────────────────────
+            var today = new Date();
+            var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            flatpickr('#pd_date_from', {
+                dateFormat: 'Y-m-d',
+                defaultDate: firstDay,
+                allowInput: false
+            });
+            flatpickr('#pd_date_to', {
+                dateFormat: 'Y-m-d',
+                defaultDate: today,
+                allowInput: false
+            });
+
+            $('#pd_all_time').on('change', function() {
+                var isAllTime = $(this).is(':checked');
+                $('#pd_alltime_label').toggleClass('checked', isAllTime);
+                $('#pd_date_from').prop('disabled', isAllTime).css('opacity', isAllTime ? 0.4 : 1);
+                $('#pd_date_to').prop('disabled', isAllTime).css('opacity', isAllTime ? 0.4 : 1);
+            });
+
+            // ── Helper ─────────────────────────────────────
+            function escHtml(str) {
+                return $('<div>').text(str || '').html();
+            }
+
+            function isDefault(name) {
+                return DEFAULT_SUBCATS.some(function(d) {
+                    return d.toLowerCase() === (name || '').toLowerCase();
+                });
+            }
+
+            function getSelectedSubcats() {
+                var names = [];
+                $('#pd_subcat_chips input:checked').each(function() {
+                    names.push($(this).val());
+                });
+                return names;
+            }
+
+            // ── Sub Category Chips ─────────────────────────
+            function renderSubcatChips(subcats) {
+                var wrapper = $('#pd_subcat_chips');
+                wrapper.empty();
+                subcats.forEach(function(sc) {
+                    var checked = isDefault(sc.sub_name);
+                    var chip = $('<label class="pd-subcat-chip ' + (checked ? 'checked' : '') + '">' +
+                        '<input type="checkbox" value="' + escHtml(sc.sub_name) + '" ' + (checked ? 'checked' : '') + '> ' +
+                        '<i class="ti ti-tag" style="font-size:11px;"></i> ' +
+                        escHtml(sc.sub_name) + '</label>');
+
+                    chip.find('input').on('change', function() {
+                        $(this).closest('label').toggleClass('checked', $(this).is(':checked'));
+                    });
+
+                    wrapper.append(chip);
+                });
+            }
+
+            $.ajax({
+                url: siteurl + 'dashboard/get_all_subcategories',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    renderSubcatChips(res);
+                    pdLoadData();
+                },
+                error: function() {
+                    $('#pd_subcat_chips').html('<span style="font-size:12px;color:#dc3545;">Gagal memuat sub category</span>');
+                }
+            });
+
+            // ── Stat Cards ─────────────────────────────────
+            function showStatSkeleton() {
+                var html = '';
+                for (var i = 0; i < 5; i++) {
+                    html += '<div class="col-6 col-md mb-2"><div class="pd-stat-card">' +
+                        '<div class="pd-skeleton-box" style="width:40px;height:40px;flex-shrink:0;"></div>' +
+                        '<div style="flex:1;"><div class="pd-skeleton-line mb-1" style="width:50px;height:20px;"></div>' +
+                        '<div class="pd-skeleton-line" style="width:70px;height:12px;"></div></div>' +
+                        '</div></div>';
+                }
+                $('#pd_stats_row').html(html);
+            }
+
+            function renderStats(summary) {
+                var defs = [{
+                        key: 'total',
+                        icon: 'ti-ticket',
+                        cls: 'total',
+                        label: 'Total Tiket'
+                    },
+                    {
+                        key: 'open',
+                        icon: 'ti-alert-circle',
+                        cls: 'open',
+                        label: 'Open'
+                    },
+                    {
+                        key: 'process',
+                        icon: 'ti-settings',
+                        cls: 'process',
+                        label: 'Process'
+                    },
+                    {
+                        key: 'done',
+                        icon: 'ti-circle-check',
+                        cls: 'done',
+                        label: 'Done'
+                    },
+                    {
+                        key: 'pending',
+                        icon: 'ti-clock',
+                        cls: 'pending',
+                        label: 'Pending'
+                    },
+                ];
+                var html = '';
+                defs.forEach(function(d) {
+                    html += '<div class="col-6 col-md mb-2"><div class="pd-stat-card">' +
+                        '<div class="pd-stat-icon ' + d.cls + '"><i class="ti ' + d.icon + '" style="font-size:18px;"></i></div>' +
+                        '<div><div class="pd-stat-number">' + (summary[d.key] || 0) + '</div>' +
+                        '<p class="pd-stat-label">' + d.label + '</p></div>' +
+                        '</div></div>';
+                });
+                $('#pd_stats_row').html(html);
+            }
+
+            // ── Chart: Stacked Bar per Project ─────────────
+            function renderProjectChart(clients) {
+                // Hanya tampilkan client yang punya tiket di chart
+                var clientsWithTickets = clients.filter(function(c) {
+                    return c.total > 0;
+                });
+
+                $('#pd_chart_trend_wrap').hide();
+                var canvas = $('#pd_chart_trend').show()[0];
+                var ctx = canvas.getContext('2d');
+                if (chartProject) {
+                    chartProject.destroy();
+                }
+
+                if (!clientsWithTickets || clientsWithTickets.length === 0) {
+                    $('#pd_chart_trend_wrap').show().html('<div class="pd-empty" style="padding:40px 0;"><i class="ti ti-mood-smile"></i><p>Tidak ada data tiket pada periode ini.</p></div>');
+                    $('#pd_chart_trend').hide();
+                    return;
+                }
+
+                var barHeight = 30;
+                canvas.style.maxHeight = Math.max(220, clientsWithTickets.length * barHeight + 80) + 'px';
+
+                chartProject = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: clientsWithTickets.map(function(c) {
+                            return c.client_name;
+                        }),
+                        datasets: [{
+                                label: 'Open',
+                                data: clientsWithTickets.map(function(c) {
+                                    return c.open;
+                                }),
+                                backgroundColor: '#E24B4A',
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'Process',
+                                data: clientsWithTickets.map(function(c) {
+                                    return c.process;
+                                }),
+                                backgroundColor: '#378ADD',
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'Pending',
+                                data: clientsWithTickets.map(function(c) {
+                                    return c.pending;
+                                }),
+                                backgroundColor: '#EF9F27',
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'Done',
+                                data: clientsWithTickets.map(function(c) {
+                                    return c.done;
+                                }),
+                                backgroundColor: '#27AE60',
+                                borderRadius: 3
+                            },
+                            {
+                                label: 'Revisi',
+                                data: clientsWithTickets.map(function(c) {
+                                    return c.revisi;
+                                }),
+                                backgroundColor: '#F4A0BB',
+                                borderRadius: 3
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 11
+                                    },
+                                    boxWidth: 12
+                                }
+                            },
+                            datalabels: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Chart: Donut Status ────────────────────────
+            function renderDonutChart(statusCounts) {
+                $('#pd_chart_donut_wrap').hide();
+                var canvas = $('#pd_chart_donut').show()[0];
+                var ctx = canvas.getContext('2d');
+                if (chartDonut) {
+                    chartDonut.destroy();
+                }
+
+                if (!statusCounts || statusCounts.length === 0) {
+                    $('#pd_chart_donut_wrap').show().html('<div class="pd-empty" style="padding:40px 0;"><i class="ti ti-mood-smile"></i><p>Tidak ada data.</p></div>');
+                    $('#pd_chart_donut').hide();
+                    return;
+                }
+
+                chartDonut = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: statusCounts.map(function(s) {
+                            return s.label;
+                        }),
+                        datasets: [{
+                            data: statusCounts.map(function(s) {
+                                return s.count;
+                            }),
+                            backgroundColor: ['#E24B4A', '#378ADD', '#EF9F27', '#adb5bd', '#27AE60', '#343a40', '#F4A0BB'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        cutout: '65%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 11
+                                    },
+                                    boxWidth: 12,
+                                    padding: 10
+                                }
+                            },
+                            datalabels: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Chart: Horizontal Bar per Sub Category ─────
+            function renderSubcatChart(subcatCounts) {
+                $('#pd_chart_subcat_wrap').hide();
+                var canvas = $('#pd_chart_subcat').show()[0];
+                var ctx = canvas.getContext('2d');
+                if (chartSubcat) {
+                    chartSubcat.destroy();
+                }
+
+                if (!subcatCounts || subcatCounts.length === 0) {
+                    $('#pd_chart_subcat_wrap').show().html('<div class="pd-empty" style="padding:30px 0;"><i class="ti ti-mood-smile"></i><p>Tidak ada data sub category.</p></div>');
+                    $('#pd_chart_subcat').hide();
+                    return;
+                }
+
+                canvas.style.maxHeight = Math.max(150, subcatCounts.length * 32 + 60) + 'px';
+
+                chartSubcat = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: subcatCounts.map(function(s) {
+                            return s.name;
+                        }),
+                        datasets: [{
+                            label: 'Jumlah Tiket',
+                            data: subcatCounts.map(function(s) {
+                                return s.count;
+                            }),
+                            backgroundColor: 'rgba(83,74,183,0.75)',
+                            borderRadius: 5,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            datalabels: {
+                                display: true,
+                                anchor: 'end',
+                                align: 'end',
+                                font: {
+                                    size: 11,
+                                    weight: '600'
+                                },
+                                color: '#343a40',
+                                formatter: function(val) {
+                                    return val;
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0,
+                                    font: {
+                                        size: 11
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    plugins: [ChartDataLabels]
+                });
+            }
+
+            // ── Project Cards Grid ─────────────────────────
+            function renderProjectSection(clients, subcatCounts) {
+                allClientsData = clients; // tetap simpan untuk keperluan modal
+
+                renderProjectChart(clients);
+                renderSubcatChart(subcatCounts || []);
+
+                // Render cards via server
+                var dateFrom = $('#pd_date_from').val();
+                var dateTo = $('#pd_date_to').val();
+                var allTime = $('#pd_all_time').is(':checked') ? '1' : '0';
+                var subcatNames = getSelectedSubcats();
+
+                $('#pd_table_skeleton').show();
+                $('#pd_table_wrap').hide();
+
+                $.ajax({
+                    url: siteurl + 'dashboard/render_project_cards',
+                    type: 'GET',
+                    data: {
+                        date_from: dateFrom,
+                        date_to: dateTo,
+                        all_time: allTime,
+                        subcat_names: subcatNames,
+                    },
+                    success: function(html) {
+                        $('#pd_table_skeleton').hide();
+                        $('#pd_table_wrap').show().html(html);
+                        $('#pd_table_count').text(clients.filter(c => c.total > 0).length + ' project');
+                    },
+                    error: function() {
+                        $('#pd_table_skeleton').hide();
+                        $('#pd_table_wrap').show().html(
+                            '<div class="pd-empty"><i class="ti ti-alert-circle"></i><p>Gagal memuat cards project.</p></div>'
+                        );
+                    }
+                });
+            }
+
+            // ── Modal (AJAX → render HTML dari controller) ─────
+            var projectModalBS = new bootstrap.Modal(document.getElementById('pd_project_modal'));
+
+            window.pdOpenModal = function(idx) {
+                var c = allClientsData[idx];
+                if (!c) return;
+
+                var dateFrom = $('#pd_date_from').val();
+                var dateTo = $('#pd_date_to').val();
+                var allTime = $('#pd_all_time').is(':checked') ? '1' : '0';
+                var subcatNames = getSelectedSubcats();
+
+                // Tampilkan loading di dalam modal sebelum AJAX selesai
+                $('#pd_modal_body_content').html(
+                    '<div style="padding:60px;text-align:center;color:#6c757d;">' +
+                    '<i class="ti ti-loader-2 ti-spin" style="font-size:28px;"></i>' +
+                    '<p style="margin-top:10px;font-size:13px;">Memuat data tiket...</p>' +
+                    '</div>'
+                );
+
+                // Buka modal
+                projectModalBS.show();
+
+                $.ajax({
+                    url: siteurl + 'dashboard/render_modal_project',
+                    type: 'GET',
+                    data: {
+                        client_id: c.client_id,
+                        client_name: c.client_name,
+                        date_from: dateFrom,
+                        date_to: dateTo,
+                        all_time: allTime,
+                        subcat_names: subcatNames,
+                    },
+                    success: function(html) {
+                        $('#pd_modal_body_content').html(html);
+                    },
+                    error: function() {
+                        $('#pd_modal_body_content').html(
+                            '<div style="padding:40px;text-align:center;">' +
+                            '<i class="ti ti-alert-circle" style="font-size:28px;color:#dc3545;"></i>' +
+                            '<p style="margin-top:8px;font-size:13px;color:#6c757d;">Gagal memuat data.</p>' +
+                            '<button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>' +
+                            '</div>'
+                        );
+                    }
+                });
+            };
+
+            window.pdCloseModal = function() {
+                projectModalBS.hide();
+            };
+
+            window.pdCloseModal = function() {
+                $('#pd_project_modal').hide();
+                $('body').css('overflow', '');
+            };
+
+            $('#pd_project_modal').on('click', function(e) {
+                if ($(e.target).is('#pd_project_modal')) pdCloseModal();
+            });
+
+            // ── MAIN LOAD ──────────────────────────────────
+            window.pdLoadData = function() {
+                if (!((is_admin == 1 || is_programmer == 1 || is_ba == 1) && is_exclude != 1)) {
+                    return;
+                }
+
+                var dateFrom = $('#pd_date_from').val();
+                var dateTo = $('#pd_date_to').val();
+                var subcatNames = getSelectedSubcats();
+                var allTime = $('#pd_all_time').is(':checked') ? '1' : '0';
+                console.log('subcat_names yang dikirim:', subcatNames);
+
+                if (allTime === '0' && (!dateFrom || !dateTo)) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian',
+                        text: 'Harap lengkapi tanggal.',
+                        confirmButtonColor: '#534AB7'
+                    });
+                    return;
+                }
+                if (subcatNames.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian',
+                        text: 'Pilih minimal satu sub category.',
+                        confirmButtonColor: '#534AB7'
+                    });
+                    return;
+                }
+
+                showStatSkeleton();
+                $('#pd_chart_trend').hide();
+                $('#pd_chart_trend_wrap').show().html('<div class="pd-skeleton-box" style="height:220px;"></div>');
+                $('#pd_chart_donut').hide();
+                $('#pd_chart_donut_wrap').show().html('<div class="pd-skeleton-box" style="height:220px;"></div>');
+                $('#pd_chart_subcat').hide();
+                $('#pd_chart_subcat_wrap').show().html('<div class="pd-skeleton-box" style="height:180px;"></div>');
+                $('#pd_table_wrap').hide();
+                $('#pd_table_skeleton').show();
+
+                $.ajax({
+                    url: siteurl + 'dashboard/get_project_issues',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        date_from: dateFrom,
+                        date_to: dateTo,
+                        subcat_names: subcatNames,
+                        all_time: allTime,
+                    },
+                    success: function(res) {
+
+                        // console.log('response dari server:', res);
+                        renderStats(res.summary || {});
+                        renderProjectSection(res.clients || [], res.subcat_counts || []);
+                        renderDonutChart(res.status_counts || []);
+                        $('#pd_subtitle').text(
+                            allTime === '1' ? 'Semua data sejak awal' : 'Data ' + dateFrom + ' s/d ' + dateTo
+                        );
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Gagal memuat data.',
+                            confirmButtonColor: '#534AB7'
+                        });
+                        $('#pd_stats_row').html('');
+                        $('#pd_chart_trend_wrap').html('');
+                        $('#pd_chart_donut_wrap').html('');
+                        $('#pd_chart_subcat_wrap').html('');
+                        $('#pd_table_skeleton').hide();
+                        $('#pd_table_wrap').show().html('<div class="pd-empty"><i class="ti ti-alert-circle"></i><p>Gagal memuat data.</p></div>');
+                    }
+                });
+            };
+
+        })();
+
+    });
 </script>
