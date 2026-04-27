@@ -825,7 +825,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
     `);
 
         $.ajax({
-            url: siteurl + 'dashboard/get_ticket_detail',
+            url: siteurl + 'report_issue/get_ticket_detail',
             type: 'GET',
             data: {
                 client_id: clientId,
@@ -1205,7 +1205,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
     }
 
     function loadDashboard(client_id, date_from, date_to) {
-        carryOverData = null; // ← reset setiap filter baru
+        carryOverData = null; 
         $('#dashboard_content').show();
         $('#chart_category_filter').show();
         showLoadingSkeleton();
@@ -1309,7 +1309,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         const date_from = formatDate(selectedDates[0]);
         const date_to = formatDate(selectedDates[1]);
 
-        const url = siteurl + 'dashboard/print_weekly_report?client_id=' + client_id +
+        const url = siteurl + 'report_issue/print_weekly_report?client_id=' + client_id +
             '&date_from=' + date_from + '&date_to=' + date_to;
 
         window.open(url, '_blank');
@@ -1818,7 +1818,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
 
         if (dateFrom && currentClientId) {
             $.ajax({
-                url: siteurl + 'dashboard/get_carry_over_count',
+                url: siteurl + 'report_issue/get_carry_over_count',
                 type: 'GET',
                 data: {
                     client_id: currentClientId,
@@ -1826,7 +1826,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                 },
                 dataType: 'json',
                 success: function(carry) {
-                    carryOverData = carry; // ← simpan ke cache
+                    carryOverData = carry; 
                     _buildWeeklyTableBody(
                         sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
                         category, currentClientId, dateFrom, carry
@@ -2227,7 +2227,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         const date_from = formatDate(new Date(year, month, 1));
         const date_to = formatDate(new Date(year, month + 1, 0));
 
-        const url = siteurl + 'dashboard/print_monthly_report?client_id=' + client_id +
+        const url = siteurl + 'report_issue/print_monthly_report?client_id=' + client_id +
             '&date_from=' + date_from + '&date_to=' + date_to;
 
         window.open(url, '_blank');
@@ -2318,7 +2318,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         }
 
         $.ajax({
-            url: siteurl + 'dashboard/get_my_priorities',
+            url: siteurl + 'report_issue/get_my_priorities',
             type: 'GET',
             dataType: 'json',
             success: function(res) {
