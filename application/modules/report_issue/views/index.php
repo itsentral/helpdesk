@@ -1211,7 +1211,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         showLoadingSkeleton();
 
         $.ajax({
-            url: siteurl + 'dashboard' + '/get_dashboard_data',
+            url: siteurl + 'report_issue' + '/get_dashboard_data',
             type: 'POST',
             data: {
                 client_id: client_id,
