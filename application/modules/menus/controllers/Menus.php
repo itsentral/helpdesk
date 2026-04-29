@@ -30,18 +30,6 @@ class Menus extends Admin_Controller
     date_default_timezone_set("Asia/Bangkok");
   }
 
-  // public function index()
-  // {
-  //     $this->auth->restrict($this->viewPermission);
-
-  //     $data = $this->Menus_model->where()->order_by('id','ASC')->find_all();
-  //     // var_dump($data);die;
-
-  //     $this->template->set('results', $data);
-  //     $this->template->title('Menus');
-  //     $this->template->render('list');
-  // }
-
   public function index()
   {
     $this->auth->restrict($this->viewPermission);
@@ -103,8 +91,7 @@ class Menus extends Admin_Controller
   }
   //Save customer ajax
   public function save_data_Menus()
-  {
-    //echo"<pre>";print_r($this->input->post());exit;
+{
     $type           = $this->input->post("type");
     $id             = $this->input->post("id");
     $title          = $this->input->post("title");
@@ -113,134 +100,99 @@ class Menus extends Admin_Controller
     $target         = $this->input->post('target');
     $group_menu     = $this->input->post('group_menu');
     $parent_id      = $this->input->post('parent_id');
-    $permission_id  = $this->input->post('permission_id');
-
-    $max_menu = $this->db->select('MAX(id) AS id_max')->get('menus')->result_array();
-    $id_max = $max_menu[0]['id_max'] + 1;
-
-    if ($type != "edit") {
-      $query_id = $this->db->query("SHOW TABLE STATUS LIKE 'permissions' ");
-      $row_id = $query_id->row();
-      $id_permissions = $row_id->Auto_increment;
-      $permission_nm = str_replace(" ", "_", $title) . ".View";
-
-      $data_perm[0] = array(
-        'id_permission' => $id_permissions + 0,
-        'nm_permission' => str_replace(" ", "_", $title) . ".View",
-        'id_menu' => $id_max,
-        'nm_menu' => $title,
-        'ket' => 'View',
-        'created_on' => date("Y-m-d H:i:s"),
-        'created_by' => $this->auth->user_id()
-      );
-      $data_perm[1] = array(
-        'id_permission' => $id_permissions + 1,
-        'nm_permission' => str_replace(" ", "_", $title) . ".Add",
-        'id_menu' => $id_max,
-        'nm_menu' => $title,
-        'ket' => 'Add',
-        'created_on' => date("Y-m-d H:i:s"),
-        'created_by' => $this->auth->user_id()
-      );
-      $data_perm[2] = array(
-        'id_permission' => $id_permissions + 2,
-        'nm_permission' => str_replace(" ", "_", $title) . ".Manage",
-        'id_menu' => $id_max,
-        'nm_menu' => $title,
-        'ket' => 'Manage',
-        'created_on' => date("Y-m-d H:i:s"),
-        'created_by' => $this->auth->user_id()
-      );
-      $data_perm[3] = array(
-        'id_permission' => $id_permissions + 3,
-        'nm_permission' => str_replace(" ", "_", $title) . ".Delete",
-        'id_menu' => $id_max,
-        'nm_menu' => $title,
-        'ket' => 'Delete',
-        'created_on' => date("Y-m-d H:i:s"),
-        'created_by' => $this->auth->user_id()
-      );
-      $this->db->insert_batch("permissions", $data_perm);
-      $permission_id = $id_permissions;
-    }
     $status         = $this->input->post('status');
     $order          = $this->input->post('order');
+
+    // Mulai Transaksi Database
+    $this->db->trans_start();
+
     if ($type == "edit") {
-      $this->auth->restrict($this->managePermission);
-      if ($id != "") {
-        $data = array(
-          array(
-            'id' => $id,
+        $this->auth->restrict($this->managePermission);
+        
+        if ($id != "") {
+            $data = array(
+                'id' => $id,
+                'title' => $title,
+                'link' => $link,
+                'icon' => $icon,
+                'target' => $target,
+                'group_menu' => $group_menu,
+                'parent_id' => $parent_id,
+                'status' => $status,
+                'order' => $order,
+            );
+            
+            $result = $this->Menus_model->update($id, $data); // Gunakan update standar jika hanya 1 row
+            $keterangan     = "SUKSES, Edit data Menus " . $id . ", Nama : " . $title;
+            $kode_universal = $id;
+        } else {
+            $result = FALSE;
+        }
+    } else {
+        // Mode Add New
+        $this->auth->restrict($this->addPermission);
+        
+        $data_menu = array(
             'title' => $title,
             'link' => $link,
             'icon' => $icon,
             'target' => $target,
             'group_menu' => $group_menu,
             'parent_id' => $parent_id,
-            'permission_id' => $permission_id,
             'status' => $status,
             'order' => $order,
-          )
         );
-        //Update data
-        $result = $this->Menus_model->update_batch($data, 'id');
-        $keterangan     = "SUKSES, Edit data Menus " . $id . ", atas Nama : " . $title;
-        $status         = 1;
-        $nm_hak_akses   = $this->addPermission;
-        $kode_universal = $id;
-        $jumlah         = 1;
-        $sql            = $this->db->last_query();
-      } else {
-        $result = FALSE;
-        $keterangan     = "GAGAL, Edit data Menus " . $id . ", atas Nama : " . $title;
-        $status         = 1;
-        $nm_hak_akses   = $this->addPermission;
-        $kode_universal = $kdcab;
-        $jumlah         = 1;
-        $sql            = $this->db->last_query();
-      }
-      simpan_aktifitas($nm_hak_akses, $kode_universal, $keterangan, $jumlah, $sql, $status);
-    } else //Add New
-    {
-      $this->auth->restrict($this->addPermission);
-      $data = array(
-        'title' => $title,
-        'link' => $link,
-        'icon' => $icon,
-        'target' => $target,
-        'group_menu' => $group_menu,
-        'parent_id' => $parent_id,
-        'permission_id' => $permission_id,
-        'status' => $status,
-        'order' => $order,
-      );
-      //Add Data
-      $id = $this->Menus_model->insert($data);
-      if (is_numeric($id)) {
-        $keterangan     = "SUKSES, tambah data Menus " . $id . ", atas Nama : " . $title;
-        $status         = 1;
-        $nm_hak_akses   = $this->addPermission;
-        $kode_universal = 'NewData';
-        $jumlah         = 1;
-        $sql            = $this->db->last_query();
-        $result         = TRUE;
-      } else {
-        $keterangan     = "GAGAL, tambah data Menus " . $id . ", atas Nama : " . $title;
-        $status         = 0;
-        $nm_hak_akses   = $this->addPermission;
-        $kode_universal = 'NewData';
-        $jumlah         = 1;
-        $sql            = $this->db->last_query();
-        $result = FALSE;
-      }
-      //Save Log
-      simpan_aktifitas($nm_hak_akses, $kode_universal, $keterangan, $jumlah, $sql, $status);
+
+        // 1. Simpan Menu Terlebih Dahulu
+        $new_menu_id = $this->Menus_model->insert($data_menu);
+
+        if ($new_menu_id) {
+            // 2. Buat Permission berdasarkan ID Menu yang baru saja dibuat
+            $actions = ['View', 'Add', 'Manage', 'Delete'];
+            $data_perm = [];
+
+            foreach ($actions as $act) {
+                $data_perm[] = array(
+                    // 'id_permission' TIDAK DIISI (Biarkan Auto Increment)
+                    'nm_permission' => str_replace(" ", "_", $title) . "." . $act,
+                    'id_menu'       => $new_menu_id,
+                    'nm_menu'       => $title,
+                    'ket'           => $act,
+                    'created_on'    => date("Y-m-d H:i:s"),
+                    'created_by'    => $this->auth->user_id()
+                );
+            }
+
+            // Insert semua permission sekaligus
+            $this->db->insert_batch("permissions", $data_perm);
+
+            // 3. Update ID permission utama ke tabel menu (opsional, jika kolom ini masih dibutuhkan)
+            $first_perm_id = $this->db->insert_id();
+            $this->Menus_model->update($new_menu_id, ['permission_id' => $first_perm_id]);
+
+            $keterangan     = "SUKSES, tambah data Menus " . $new_menu_id . ", Nama : " . $title;
+            $kode_universal = 'NewData';
+            $result         = TRUE;
+        } else {
+            $result         = FALSE;
+        }
     }
-    $param = array(
-      'save' => $result
-    );
-    echo json_encode($param);
-  }
+
+    // Selesaikan Transaksi
+    $this->db->trans_complete();
+
+    if ($this->db->trans_status() === FALSE) {
+        $result = FALSE;
+        $status_code = 0;
+    } else {
+        $status_code = 1;
+    }
+
+    // Log Aktivitas
+    simpan_aktifitas($this->addPermission, $kode_universal, $keterangan, 1, $this->db->last_query(), $status_code);
+
+    echo json_encode(['save' => $result]);
+}
   function hapus_Menus()
   {
     $this->auth->restrict($this->deletePermission);
