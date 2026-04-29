@@ -67,7 +67,8 @@
     }
 
     .modal-body {
-        padding: 0 !important;
+        padding: 0 5px 25px 5px !important;
+        margin: 0 5px 25px 5px !important;
     }
 
     .pd-pill {

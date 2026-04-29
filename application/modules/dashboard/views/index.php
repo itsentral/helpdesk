@@ -1189,7 +1189,6 @@ endif; ?>
 
             // ── Chart: Stacked Bar per Project ─────────────
             function renderProjectChart(clients) {
-                // Hanya tampilkan client yang punya tiket di chart
                 var clientsWithTickets = clients.filter(function(c) {
                     return c.total > 0;
                 });
@@ -1433,12 +1432,11 @@ endif; ?>
 
             // ── Project Cards Grid ─────────────────────────
             function renderProjectSection(clients, subcatCounts) {
-                allClientsData = clients; // tetap simpan untuk keperluan modal
+                allClientsData = clients;
 
                 renderProjectChart(clients);
                 renderSubcatChart(subcatCounts || []);
 
-                // Render cards via server
                 var dateFrom = $('#pd_date_from').val();
                 var dateTo = $('#pd_date_to').val();
                 var allTime = $('#pd_all_time').is(':checked') ? '1' : '0';
@@ -1470,7 +1468,6 @@ endif; ?>
                 });
             }
 
-            // ── Modal (AJAX → render HTML dari controller) ─────
             var projectModalBS = new bootstrap.Modal(document.getElementById('pd_project_modal'));
 
             window.pdOpenModal = function(idx) {
@@ -1482,7 +1479,6 @@ endif; ?>
                 var allTime = $('#pd_all_time').is(':checked') ? '1' : '0';
                 var subcatNames = getSelectedSubcats();
 
-                // Tampilkan loading di dalam modal sebelum AJAX selesai
                 $('#pd_modal_body_content').html(
                     '<div style="padding:60px;text-align:center;color:#6c757d;">' +
                     '<i class="ti ti-loader-2 ti-spin" style="font-size:28px;"></i>' +
@@ -1490,7 +1486,6 @@ endif; ?>
                     '</div>'
                 );
 
-                // Buka modal
                 projectModalBS.show();
 
                 $.ajax({
@@ -1532,7 +1527,6 @@ endif; ?>
                 if ($(e.target).is('#pd_project_modal')) pdCloseModal();
             });
 
-            // ── MAIN LOAD ──────────────────────────────────
             window.pdLoadData = function() {
                 if (!((is_admin == 1 || is_programmer == 1 || is_ba == 1) && is_exclude != 1)) {
                     return;
@@ -1585,7 +1579,6 @@ endif; ?>
                     },
                     success: function(res) {
 
-                        // console.log('response dari server:', res);
                         renderStats(res.summary || {});
                         renderProjectSection(res.clients || [], res.subcat_counts || []);
                         renderDonutChart(res.status_counts || []);
