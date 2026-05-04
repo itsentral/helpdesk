@@ -808,9 +808,9 @@ endif; ?>
                             <i class="ti ti-infinity" style="font-size:11px;"></i> Semua Waktu
                         </label>
                     </div>
-                    <!-- Sub Category -->
+                    <!-- Category -->
                     <div class="pd-filter-group" style="flex:1; min-width:200px;">
-                        <span class="pd-filter-label">Sub Category</span>
+                        <span class="pd-filter-label">Category</span>
                         <div class="pd-subcat-wrapper" id="pd_subcat_chips">
                             <!-- chips dirender oleh JS -->
                             <div class="pd-skeleton-line" style="width:80px;height:28px;"></div>
@@ -869,7 +869,7 @@ endif; ?>
 
             <!-- Tambahkan ini setelah chart row -->
             <div class="pd-chart-card mb-3">
-                <div class="pd-chart-title">Tiket per Sub Category</div>
+                <div class="pd-chart-title">Tiket per Category</div>
                 <div id="pd_chart_subcat_wrap">
                     <div class="pd-skeleton-box" style="height:180px;"></div>
                 </div>
@@ -897,7 +897,7 @@ endif; ?>
                                 <th>No Tiket</th>
                                 <th>Laporan</th>
                                 <th>Client</th>
-                                <th>Sub Category</th>
+                                <th>Category</th>
                                 <th>Status</th>
                                 <th>Due Date</th>
                                 <th>PIC</th>
@@ -1099,7 +1099,7 @@ endif; ?>
                 return names;
             }
 
-            // ── Sub Category Chips ─────────────────────────
+            // ── Category Chips ─────────────────────────
             function renderSubcatChips(subcats) {
                 var wrapper = $('#pd_subcat_chips');
                 wrapper.empty();
@@ -1127,7 +1127,7 @@ endif; ?>
                     pdLoadData();
                 },
                 error: function() {
-                    $('#pd_subcat_chips').html('<span style="font-size:12px;color:#dc3545;">Gagal memuat sub category</span>');
+                    $('#pd_subcat_chips').html('<span style="font-size:12px;color:#dc3545;">Gagal memuat category</span>');
                 }
             });
 
@@ -1350,7 +1350,7 @@ endif; ?>
                 });
             }
 
-            // ── Chart: Horizontal Bar per Sub Category ─────
+            // ── Chart: Horizontal Bar per Category ─────
             function renderSubcatChart(subcatCounts) {
                 $('#pd_chart_subcat_wrap').hide();
                 var canvas = $('#pd_chart_subcat').show()[0];
@@ -1360,7 +1360,7 @@ endif; ?>
                 }
 
                 if (!subcatCounts || subcatCounts.length === 0) {
-                    $('#pd_chart_subcat_wrap').show().html('<div class="pd-empty" style="padding:30px 0;"><i class="ti ti-mood-smile"></i><p>Tidak ada data sub category.</p></div>');
+                    $('#pd_chart_subcat_wrap').show().html('<div class="pd-empty" style="padding:30px 0;"><i class="ti ti-mood-smile"></i><p>Tidak ada data category.</p></div>');
                     $('#pd_chart_subcat').hide();
                     return;
                 }
@@ -1551,7 +1551,7 @@ endif; ?>
                     Swal.fire({
                         icon: 'warning',
                         title: 'Perhatian',
-                        text: 'Pilih minimal satu sub category.',
+                        text: 'Pilih minimal satu category.',
                         confirmButtonColor: '#534AB7'
                     });
                     return;
