@@ -17,8 +17,8 @@ $status_map = [
                 <th>#</th>
                 <th>No. Ticket</th>
                 <th>Client</th>
+                <th>Tahapan</th>
                 <th>Category</th>
-                <th>Sub Category</th>
                 <th>Report</th>
                 <th class="text-end">MH Plan</th>
                 <th class="text-end">MH Actual</th>
