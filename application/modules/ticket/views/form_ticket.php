@@ -350,7 +350,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     </div>
                 <?php endif ?>
                 <div class="<?= $colCategory ?>">
-                    <label class="form-label <?= !$is_readonly ? 'required' : '' ?>">Category</label>
+                    <label class="form-label <?= !$is_readonly ? 'required' : '' ?>">Tahapan</label>
 
                     <?php if ($is_readonly): ?>
                         <div class="view-field">
@@ -358,7 +358,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                         </div>
                     <?php else: ?>
                         <select class="form-select select2" name="category_id" id="category_id" required>
-                            <option value="">- Select Category -</option>
+                            <option value="">- Select Tahapan -</option>
 
                             <?php if (!empty($categories)): ?>
                                 <?php foreach ($categories as $cat): ?>
@@ -368,7 +368,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                     </option>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <option value="" disabled>Tidak ada kategori tersedia</option>
+                                <option value="" disabled>Tidak ada Tahapan tersedia</option>
                             <?php endif; ?>
                         </select>
                     <?php endif; ?>
@@ -376,7 +376,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 
 
                 <div class="<?= $colCategory ?>">
-                    <label class="form-label <?= !$is_readonly ? 'required' : '' ?>">Sub Category</label>
+                    <label class="form-label <?= !$is_readonly ? 'required' : '' ?>">Kategori</label>
 
                     <?php if ($is_readonly): ?>
                         <div class="view-field">
@@ -384,7 +384,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                         </div>
                     <?php else: ?>
                         <select class="form-select select2" name="sub_category_id" id="sub_category_id" required>
-                            <option value="">- Select Sub Category -</option>
+                            <option value="">- Select Kategori -</option>
 
                             <?php if (!empty($sub_categories)): ?>
                                 <?php foreach ($sub_categories as $sub): ?>
@@ -394,7 +394,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                                     </option>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <option value="" disabled>Tidak ada sub kategori tersedia</option>
+                                <option value="" disabled>Tidak ada kategori tersedia</option>
                             <?php endif; ?>
                         </select>
                     <?php endif; ?>
@@ -1135,7 +1135,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                             $('#sub_category_id').prop('disabled', true);
                         },
                         success: function(response) {
-                            var options = '<option value="">- Select Sub Category -</option>';
+                            var options = '<option value="">- Select Tahapan -</option>';
 
                             if (response.status == 1 && response.data.length > 0) {
                                 $.each(response.data, function(index, item) {
@@ -1148,12 +1148,12 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                             $('#sub_category_id').prop('disabled', false);
                         },
                         error: function() {
-                            $('#sub_category_id').html('<option value="">- Select Sub Category -</option>');
+                            $('#sub_category_id').html('<option value="">- Select Tahapan -</option>');
                             $('#sub_category_id').prop('disabled', false);
                         }
                     });
                 } else {
-                    $('#sub_category_id').html('<option value="">- Select Sub Category -</option>');
+                    $('#sub_category_id').html('<option value="">- Select Tahapan -</option>');
                     $('#sub_category_id').prop('disabled', false);
                 }
             }
