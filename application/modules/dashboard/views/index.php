@@ -703,7 +703,6 @@
     }
 </style>
 
-
 <?php
 if ($is_admin != 1):
     if (($is_programmer == 1 || $is_ba == 1) && $is_exclude != 1): ?>
