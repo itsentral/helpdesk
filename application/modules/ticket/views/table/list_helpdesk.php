@@ -5,6 +5,30 @@ $ENABLE_DELETE = has_permission('Ticket.Delete');
 $loginUserId = $this->auth->user_id();
 ?>
 
+<style>
+    @keyframes elegantPulse {
+        0% {
+            background-color: inherit;
+            box-shadow: none;
+        }
+
+        50% {
+            background-color: rgba(255, 193, 7, 0.15);
+            box-shadow: inset 0 0 0 2px rgba(255, 193, 7, 0.5);
+        }
+
+        100% {
+            background-color: inherit;
+            box-shadow: none;
+        }
+    }
+
+    .needs-approval {
+        animation: elegantPulse 2s ease-in-out infinite;
+        border-left: 4px solid #ffc107 !important;
+    }
+</style>
+
 <div class="table-responsive">
     <table class="table table-bordered table-striped table-hover" id="table_helpdesk" style="width:100%;">
         <thead class="table-light">
@@ -21,7 +45,28 @@ $loginUserId = $this->auth->user_id();
             <?php if (!empty($helpdesk)): ?>
                 <?php $no = 1;
                 foreach ($helpdesk as $row): ?>
-                    <tr>
+
+                    <?php
+                    $picById            = isset($row['pic_id']) ? trim((string)$row['pic_id']) : '';
+                    $createById         = isset($row['create_by_id']) ? trim((string)$row['create_by_id']) : '';
+                    $approvalById       = isset($row['approval_by_id']) ? trim((string)$row['approval_by_id']) : '';
+                    $status             = isset($row['status']) ? (int)$row['status'] : 0;
+                    $approvalLevel      = (int)($row['approval_level'] ?? 0);
+                    $currentApprovalLevel = (int)($row['current_approval_level'] ?? 0);
+                    $isApprove          = $row['is_approve'] ?? null;
+                    $unread_count       = isset($unread_counts[$row['id']]) ? $unread_counts[$row['id']] : 0;
+
+                    $needsApproval = (
+                        $ENABLE_MANAGE &&
+                        $status === 4 &&
+                        (
+                            ($approvalLevel >= 1 && $currentApprovalLevel === 0 && $approvalById == $loginUserId) ||
+                            ($approvalLevel >= 2 && $currentApprovalLevel === 1 && $createById == $loginUserId)
+                        )
+                    );
+                    ?>
+
+                    <tr class="<?= $needsApproval ? 'needs-approval' : '' ?>">
                         <td class="text-center"><?= $no++ ?></td>
                         <td>
                             <strong><?= htmlspecialchars($row['no_ticket']) ?></strong><br>
@@ -31,7 +76,7 @@ $loginUserId = $this->auth->user_id();
                             $statusIcon  = 'fa-question';
                             $statusText  = 'Unknown';
 
-                            switch ((int)$row['status']) {
+                            switch ($status) {
                                 case 0:
                                     $statusClass = 'bg-info';
                                     $statusIcon  = 'fa-circle-dot';
@@ -75,13 +120,7 @@ $loginUserId = $this->auth->user_id();
                                 <?= $statusText ?>
                             </span>
 
-                            <?php
-                            $approvalLevel  = (int)($row['approval_level'] ?? 0);
-                            $currentLevel   = (int)($row['current_approval_level'] ?? 0);
-                            $isApprove      = $row['is_approve'] ?? null;
-                            ?>
-
-                            <?php if ((int)$row['status'] === 4): ?>
+                            <?php if ($status === 4): ?>
                                 <div class="mt-1">
                                     <?php if ($isApprove == 1): ?>
                                         <span class="badge bg-success">
@@ -94,8 +133,8 @@ $loginUserId = $this->auth->user_id();
                                         </span>
 
                                     <?php elseif ($isApprove == 0): ?>
-                                        <?php if ($currentLevel < $approvalLevel): ?>
-                                            <?php if ($approvalLevel > 1 && $currentLevel == ($approvalLevel - 1)): ?>
+                                        <?php if ($currentApprovalLevel < $approvalLevel): ?>
+                                            <?php if ($approvalLevel > 1 && $currentApprovalLevel == ($approvalLevel - 1)): ?>
                                                 <span class="badge bg-warning text-dark">
                                                     <i class="fa-solid fa-user-check"></i>
                                                     Menunggu Konfirmasi Pembuat
@@ -109,12 +148,20 @@ $loginUserId = $this->auth->user_id();
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
-                            <?php endif; ?>
 
+                                <?php if ($needsApproval): ?>
+                                    <div class="mt-1">
+                                        <span class="badge bg-warning text-dark" style="font-size: 11px;">
+                                            <i class="fa-solid fa-bell fa-shake"></i> Menunggu Persetujuan Anda
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+
+                            <?php endif; ?>
 
                             <?php
                             $picId = trim((string)($row['pic_id'] ?? ''));
-                            if ($picId === '' && (int)$row['status'] !== 3):
+                            if ($picId === '' && $status !== 3):
                             ?>
                                 <div class="mt-1">
                                     <span class="badge bg-warning text-dark">
@@ -143,11 +190,7 @@ $loginUserId = $this->auth->user_id();
                                 <i class="fa-solid fa-calendar-days text-muted"></i>
                                 <?php
                                 $dueDate = $row['due_date'];
-
-                                if (
-                                    empty($dueDate) ||
-                                    $dueDate === '0000-00-00'
-                                ) {
+                                if (empty($dueDate) || $dueDate === '0000-00-00') {
                                     echo '-';
                                 } else {
                                     echo date('d-m-Y', strtotime($dueDate));
@@ -179,22 +222,6 @@ $loginUserId = $this->auth->user_id();
                                 </div>
                             <?php endif; ?>
                         </td>
-
-                        <?php
-                        $status                = (int) $row['status'];
-                        $approvalLevel          = (int) $row['approval_level'];
-                        $currentApprovalLevel   = (int) $row['current_approval_level'];
-                        $approvalById           = $row['approval_by_id'];
-                        $createById             = $row['create_by_id'];
-                        $unread_count           = isset($unread_counts[$row['id']]) ? $unread_counts[$row['id']] : 0;
-                        ?>
-
-                        <?php
-                        $picById     = isset($row['pic_id']) ? trim((string)$row['pic_id']) : '';
-                        $createById = isset($row['create_by_id']) ? trim((string)$row['create_by_id']) : '';
-                        $approvalById = isset($row['approval_by_id']) ? trim((string)$row['approval_by_id']) : '';
-                        $status      = isset($row['status']) ? (int)$row['status'] : 0;
-                        ?>
 
                         <td class="text-center" style="max-width: 260px;">
                             <div class="d-inline-flex gap-1 flex-wrap justify-content-center align-items-center" style="max-width: 260px;">
@@ -356,14 +383,7 @@ $loginUserId = $this->auth->user_id();
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
-                <!-- <tr>
-                    <td colspan="12" class="text-center">
-                        <div class="py-4">
-                            <i class="fa-solid fa-inbox fa-3x text-muted mb-3"></i>
-                            <p class="text-muted mb-0">No helpdesk tickets found</p>
-                        </div>
-                    </td>
-                </tr> -->
+                <!-- kosong -->
             <?php endif; ?>
         </tbody>
     </table>

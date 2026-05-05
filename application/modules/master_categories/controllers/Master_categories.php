@@ -27,13 +27,13 @@ class Master_categories extends Admin_Controller
     $this->datetime = date('Y-m-d H:i:s');
   }
 
-  // ==================== CATEGORY FUNCTIONS ====================
+  // CATEGORY FUNCTIONS
 
   public function index()
   {
     $this->auth->restrict($this->viewPermission);
 
-    $this->template->title('Manage Helpdesk Category');
+    $this->template->title('Manage Helpdesk Stages');
     $this->template->page_icon('fa fa-table');
     $this->template->render('index_category');
   }
@@ -59,7 +59,7 @@ class Master_categories extends Admin_Controller
       if (empty($category_name)) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Nama kategori wajib diisi!'
+          'message' => 'Nama tahapan wajib diisi!'
         ]);
         return;
       }
@@ -68,7 +68,7 @@ class Master_categories extends Admin_Controller
       if ($this->Master_categories_model->check_category_exists($category_name)) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Nama kategori sudah terdaftar!'
+          'message' => 'Nama tahapan sudah terdaftar!'
         ]);
         return;
       }
@@ -87,12 +87,12 @@ class Master_categories extends Admin_Controller
       if ($insert) {
         $result = [
           'status'  => 1,
-          'message' => 'Kategori berhasil ditambahkan.'
+          'message' => 'Tahapan berhasil ditambahkan.'
         ];
       } else {
         $result = [
           'status'  => 0,
-          'message' => 'Gagal menambahkan kategori.'
+          'message' => 'Gagal menambahkan tahapan.'
         ];
       }
 
@@ -115,7 +115,7 @@ class Master_categories extends Admin_Controller
       if (empty($category_name)) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Nama kategori wajib diisi!'
+          'message' => 'Nama tahapan wajib diisi!'
         ]);
         return;
       }
@@ -124,7 +124,7 @@ class Master_categories extends Admin_Controller
       if ($this->Master_categories_model->check_category_exists($category_name, $id)) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Nama kategori sudah digunakan!'
+          'message' => 'Nama tahapan sudah digunakan!'
         ]);
         return;
       }
@@ -143,12 +143,12 @@ class Master_categories extends Admin_Controller
       if ($update) {
         $result = [
           'status'  => 1,
-          'message' => 'Kategori berhasil diperbarui.'
+          'message' => 'Tahapan berhasil diperbarui.'
         ];
       } else {
         $result = [
           'status'  => 0,
-          'message' => 'Gagal memperbarui kategori.'
+          'message' => 'Gagal memperbarui tahapan.'
         ];
       }
 
@@ -195,7 +195,7 @@ class Master_categories extends Admin_Controller
     if (empty($id)) {
       echo json_encode([
         'status'  => 0,
-        'message' => 'ID kategori wajib diisi!'
+        'message' => 'ID tahapan wajib diisi!'
       ]);
       return;
     }
@@ -215,12 +215,12 @@ class Master_categories extends Admin_Controller
     if ($this->db->trans_status() === FALSE || !$delete) {
       $result = [
         'status'  => 0,
-        'message' => 'Gagal menghapus kategori.'
+        'message' => 'Gagal menghapus tahapan.'
       ];
     } else {
-      $message = 'Kategori berhasil dihapus.';
+      $message = 'Tahapan berhasil dihapus.';
       if ($count_sub > 0) {
-        $message .= ' (' . $count_sub . ' sub kategori juga ikut dihapus)';
+        $message .= ' (' . $count_sub . ' kategori juga ikut dihapus)';
       }
 
       $result = [
@@ -233,7 +233,7 @@ class Master_categories extends Admin_Controller
   }
 
 
-  // ==================== SUB CATEGORY FUNCTIONS ====================
+  // SUB CATEGORY FUNCTIONS
 
   public function get_sub_categories()
   {
@@ -274,16 +274,16 @@ class Master_categories extends Admin_Controller
       if (empty($sub_name)) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Nama sub kategori wajib diisi!'
+          'message' => 'Nama kategori wajib diisi!'
         ]);
         return;
       }
 
-      // Cek duplikat sub kategori dalam kategori yang sama
+      // Cek duplikat kategori dalam tahapan yang sama
       if ($this->Master_categories_model->check_sub_category_exists($id_category, $sub_name)) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Nama sub kategori sudah ada pada kategori ini!'
+          'message' => 'Nama kategori sudah ada pada tahapan ini!'
         ]);
         return;
       }
@@ -303,12 +303,12 @@ class Master_categories extends Admin_Controller
       if ($insert) {
         $result = [
           'status'  => 1,
-          'message' => 'Sub kategori berhasil ditambahkan.'
+          'message' => 'kategori berhasil ditambahkan.'
         ];
       } else {
         $result = [
           'status'  => 0,
-          'message' => 'Gagal menambahkan sub kategori.'
+          'message' => 'Gagal menambahkan kategori.'
         ];
       }
 
@@ -328,7 +328,7 @@ class Master_categories extends Admin_Controller
       if (empty($sub_name)) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Nama sub kategori wajib diisi!'
+          'message' => 'Nama kategori wajib diisi!'
         ]);
         return;
       }
@@ -338,7 +338,7 @@ class Master_categories extends Admin_Controller
       if (!$current_sub) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Sub kategori tidak ditemukan!'
+          'message' => 'kategori tidak ditemukan!'
         ]);
         return;
       }
@@ -350,7 +350,7 @@ class Master_categories extends Admin_Controller
       )) {
         echo json_encode([
           'status'  => 0,
-          'message' => 'Nama sub kategori sudah digunakan pada kategori ini!'
+          'message' => 'Nama kategori sudah digunakan pada tahapan ini!'
         ]);
         return;
       }
@@ -368,12 +368,12 @@ class Master_categories extends Admin_Controller
       if ($update) {
         $result = [
           'status'  => 1,
-          'message' => 'Sub kategori berhasil diperbarui.'
+          'message' => 'kategori berhasil diperbarui.'
         ];
       } else {
         $result = [
           'status'  => 0,
-          'message' => 'Gagal memperbarui sub kategori.'
+          'message' => 'Gagal memperbarui kategori.'
         ];
       }
 
@@ -391,7 +391,7 @@ class Master_categories extends Admin_Controller
     if (empty($id)) {
       echo json_encode([
         'status'  => 0,
-        'message' => 'ID sub kategori wajib diisi!'
+        'message' => 'ID kategori wajib diisi!'
       ]);
       return;
     }
@@ -401,12 +401,12 @@ class Master_categories extends Admin_Controller
     if ($delete) {
       $result = [
         'status'  => 1,
-        'message' => 'Sub kategori berhasil dihapus.'
+        'message' => 'kategori berhasil dihapus.'
       ];
     } else {
       $result = [
         'status'  => 0,
-        'message' => 'Gagal menghapus sub kategori.'
+        'message' => 'Gagal menghapus kategori.'
       ];
     }
 

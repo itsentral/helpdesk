@@ -82,7 +82,7 @@ $ENABLE_DELETE  = has_permission('Helpdesk.Delete');
 					<div id="button-add-container">
 						<?php if ($ENABLE_ADD): ?>
 							<button class="btn btn-success btn-sm add-category">
-								<i class="fa-solid fa-plus"></i> Add Category
+								<i class="fa-solid fa-plus"></i> Add Stages
 							</button>
 						<?php endif; ?>
 					</div>
@@ -93,10 +93,10 @@ $ENABLE_DELETE  = has_permission('Helpdesk.Delete');
 							<div class="row g-3">
 								<div class="col-md-5">
 									<label for="new_category_name" class="form-label">
-										Category Name <span class="text-danger">*</span>
+										Stages Name <span class="text-danger">*</span>
 									</label>
 									<input type="text" class="form-control" id="new_category_name"
-										placeholder="Enter category name">
+										placeholder="Enter stages name">
 								</div>
 								<div class="col-md-5">
 									<label for="new_remark" class="form-label">Remark</label>

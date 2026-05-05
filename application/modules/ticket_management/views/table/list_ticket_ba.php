@@ -53,9 +53,14 @@ foreach ($ticket as $row) {
                                 <?= strtoupper(substr($data['name'], 0, 1)) ?>
                             </div>
                             <span class="fw-semibold"><?= htmlspecialchars($data['name']) ?></span>
-                            <div class="ms-auto d-flex gap-2 flex-wrap">
+                            <div class="ms-auto d-flex gap-2 flex-wrap pe-2">
                                 <span class="badge bg-primary"><?= $countOpen ?> Open</span>
                                 <span class="badge bg-info"><?= $countProcess ?> Process</span>
+                                <?php if ($countOverdue > 0) : ?>
+                                    <span class="badge bg-danger">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> <?= $countOverdue ?> Overdue
+                                    </span>
+                                <?php endif; ?>
                                 <span class="badge bg-dark"><?= $total ?> Total</span>
                             </div>
                         </div>
@@ -190,8 +195,8 @@ foreach ($ticket as $row) {
                                     <?php endforeach; ?>
                                 </ul>
                             </div>
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>

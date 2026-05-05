@@ -13,7 +13,7 @@
 .vscode/*
 # application/config
 application/logs/*
-# application/config/development/*
+application/config/development/*
 # application/config/database.php
 # application/config/constants.php
 !application/logs/index.html

@@ -17,7 +17,7 @@ class Master_categories_model extends BF_Model
         $this->ENABLE_DELETE  = has_permission('Master_categories.Delete');
     }
 
-    // ==================== SUB CATEGORY MODEL FUNCTIONS ====================
+    // SUB CATEGORY MODEL FUNCTIONS
 
     public function get_all_category()
     {
@@ -65,7 +65,7 @@ class Master_categories_model extends BF_Model
         return $this->db->get()->num_rows() > 0;
     }
 
-    // ==================== SUB CATEGORY MODEL FUNCTIONS ====================
+    // SUB CATEGORY MODEL FUNCTIONS
 
     public function get_sub_categories_by_category($id_category)
     {
