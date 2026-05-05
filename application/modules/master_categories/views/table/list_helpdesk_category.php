@@ -93,9 +93,9 @@ $ENABLE_DELETE  = has_permission('Helpdesk.Delete');
     <thead>
         <tr>
             <th width="5%" class="text-center">No</th>
-            <th>Category Name</th>
+            <th>Stages Name</th>
             <th>Remark</th>
-            <th width="10%" class="text-center">Sub Categories</th>
+            <th width="10%" class="text-center">Categories</th>
             <th width="15%">Create By</th>
             <th width="15%" class="text-center">Action</th>
         </tr>
@@ -184,7 +184,7 @@ $ENABLE_DELETE  = has_permission('Helpdesk.Delete');
                                 <button class="btn btn-sm btn-success add-sub-category"
                                     data-category-id="<?= $item->id; ?>"
                                     style="margin-bottom: 10px;">
-                                    <i class="fa fa-plus"></i> Add Sub Category
+                                    <i class="fa fa-plus"></i> Add Category
                                 </button>
                             <?php endif; ?>
 

@@ -60,7 +60,7 @@ foreach ($ticket as $row) {
                                 <?= strtoupper(substr($data['name'], 0, 1)) ?>
                             </div>
                             <span class="fw-semibold"><?= htmlspecialchars($data['name']) ?></span>
-                            <div class="ms-auto d-flex gap-2 flex-wrap">
+                            <div class="ms-auto d-flex gap-2 flex-wrap pe-2">
                                 <span class="badge bg-primary"><?= $countOpen ?> Open</span>
                                 <span class="badge bg-info"><?= $countProcess ?> Process</span>
                                 <?php if ($countOverdue > 0) : ?>

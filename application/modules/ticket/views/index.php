@@ -563,7 +563,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 							<i class="fa-solid fa-arrows-rotate"></i> Refresh
 						</button>
 
-						<?php if (has_permission('Ticket.Add')): ?>
+						<?php if (has_permission('Ticket.Add') && $this->session->userdata('app_session')['id_user'] != 7): ?>
 							<a href="<?= site_url('ticket/add_ticket') ?>" class="btn btn-success btn-sm">
 								<i class="fa-solid fa-plus"></i> Add New Ticket
 							</a>
