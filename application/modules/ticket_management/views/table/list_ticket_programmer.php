@@ -118,7 +118,7 @@ foreach ($ticket as $row) {
                                     <?php endif; ?>
                                     <div style="flex:2; min-width:140px; padding-right:8px;">Category</div>
                                     <div style="flex:1.5; min-width:90px; padding-right:8px;">Due Date</div>
-                                    <div style="flex:1.5; min-width:90px; padding-right:8px;">Man Hour</div>
+                                    <div style="flex:1.5; min-width:90px; padding-right:8px;">Man Hour (Est)</div>
                                     <div style="flex:1; min-width:80px; padding-right:8px;">Status</div>
                                     <?php if ($user['id_user'] == $t->pic_id || $user['is_ba'] == 1 || $user['id_user'] == 7) : ?>
                                         <div style="width:30px; flex-shrink:0;"></div>
