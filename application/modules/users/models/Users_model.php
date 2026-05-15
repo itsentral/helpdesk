@@ -161,4 +161,15 @@ class Users_model extends BF_Model
             ->where('is_read', 0)
             ->update('helpdesk_notifications', ['is_read' => 1]);
     }
+
+    public function get_online_users()
+    {
+        $this->db->select('id_user, nm_lengkap, is_programmer, is_ba, status, last_activity');
+        $this->db->from('users');
+        $this->db->where('st_aktif', 1);
+        $this->db->where('deleted', 0);
+        $this->db->where('last_activity >=', date('Y-m-d H:i:s', strtotime('-7 minutes')));
+        $this->db->order_by('nm_lengkap', 'ASC');
+        return $this->db->get()->result();
+    }
 }
