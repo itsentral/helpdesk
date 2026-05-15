@@ -66,27 +66,6 @@ class Ticket_management_model extends BF_Model
         return $this->_merge_users_tickets($users, $tickets);
     }
 
-    private function _merge_users_tickets($users, $tickets)
-    {
-        $ticketMap = [];
-        foreach ($tickets as $t) {
-            $ticketMap[$t->pic_id][] = $t;
-        }
-
-        $result = [];
-        foreach ($users as $u) {
-            $dummy = new stdClass();
-            $dummy->pic_id       = $u->pic_id;
-            $dummy->pic          = $u->pic;
-            $dummy->is_programmer = $u->is_programmer;
-            $dummy->is_ba        = $u->is_ba;
-            $dummy->_tickets     = $ticketMap[$u->pic_id] ?? [];
-            $result[] = $dummy;
-        }
-
-        return $result;
-    }
-
     public function update_order($orders, $field)
     {
         // $orders = [['id' => 1, 'order' => 0], ['id' => 2, 'order' => 1], ...]
@@ -100,5 +79,53 @@ class Ticket_management_model extends BF_Model
             $this->db->update('helpdesk', [$field => (int)$item['order']]);
         }
         return true;
+    }
+
+    private function _merge_users_tickets($users, $tickets)
+    {
+        $ticketMap = [];
+        foreach ($tickets as $t) {
+            $ticketMap[$t->pic_id][] = $t;
+        }
+
+        $result = [];
+        foreach ($users as $u) {
+            $dummy = new stdClass();
+            $dummy->pic_id        = $u->pic_id;
+            $dummy->pic           = $u->pic;
+            $dummy->is_programmer = $u->is_programmer;
+            $dummy->is_ba         = $u->is_ba;
+
+            $tickets_raw = $ticketMap[$u->pic_id] ?? [];
+
+            // Pisahkan done (status=4) dan non-done, done selalu di bawah
+            $nonDone = array_filter($tickets_raw, fn($t) => $t->status != 4);
+            $done    = array_filter($tickets_raw, fn($t) => $t->status == 4);
+
+            $dummy->_tickets = array_merge(array_values($nonDone), array_values($done));
+            $result[] = $dummy;
+        }
+
+        return $result;
+    }
+
+    public function sort_by_due_date($ticket_groups)
+    {
+        foreach ($ticket_groups as &$group) {
+            // Pisah done dan non-done
+            $nonDone = array_filter($group->_tickets, fn($t) => $t->status != 4);
+            $done    = array_filter($group->_tickets, fn($t) => $t->status == 4);
+
+            // Sort non-done by due_date ASC (null/kosong ke paling bawah)
+            usort($nonDone, function ($a, $b) {
+                if (empty($a->due_date) && empty($b->due_date)) return 0;
+                if (empty($a->due_date)) return 1;  // null ke bawah
+                if (empty($b->due_date)) return -1;
+                return strcmp($a->due_date, $b->due_date);
+            });
+
+            $group->_tickets = array_merge(array_values($nonDone), array_values($done));
+        }
+        return $ticket_groups;
     }
 }
