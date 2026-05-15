@@ -103,17 +103,24 @@ class Ticket extends Admin_Controller
     $current_user_id = $this->auth->user_id();
     $current_user = $this->Ticket_model->get_user_by_id($current_user_id);
     $user_clients = $this->Ticket_model->get_user_clients($current_user_id);
+    $referer = $this->input->server('HTTP_REFERER');
+    $back_url = site_url('ticket');
+    if ($referer && strpos($referer, 'ticket_management') !== false) {
+      $back_url = $referer;
+    }
 
     $data = [
-      'categories' => $this->Ticket_model->get_categories(),
-      'sub_categories' => [],
-      'users' => $this->Ticket_model->get_users(),
-      'clients' => $user_clients,
-      'helpdesk' => null,
-      'attachments' => [],
-      'is_external' => ($current_user && $current_user->status == 1),
-      'view_mode' => false,
-      'back_params' => $this->input->get('client_id') || $this->input->get('status_id')
+      'categories'      => $this->Ticket_model->get_categories(),
+      'sub_categories'  => [],
+      'users'           => $this->Ticket_model->get_users(),
+      'clients'         => $user_clients,
+      'helpdesk'        => null,
+      'attachments'     => [],
+      'is_external'     => ($current_user && $current_user->status == 1),
+      'is_ba_user'      => ($current_user && $current_user->is_ba == 1),
+      'view_mode'       => false,
+      'back_url'        => $back_url,
+      'back_params'     => $this->input->get('client_id') || $this->input->get('status_id')
         ? '?' . http_build_query([
           'client_id' => $this->input->get('client_id') ?? '',
           'status_id' => $this->input->get('status_id') ?? '',
@@ -146,16 +153,29 @@ class Ticket extends Admin_Controller
       $sub_categories = $this->Ticket_model->get_sub_categories($helpdesk->category_id);
     }
 
+    $source = $this->input->get('src');
+    $referer = $this->input->server('HTTP_REFERER');
+
+    $back_url = site_url('ticket');
+    if ($source === 'management') {
+      $back_url = site_url('ticket_management');
+    } elseif ($referer && strpos($referer, 'ticket_management') !== false) {
+      $back_url = $referer;
+    }
+
     $data = [
-      'categories' => $this->Ticket_model->get_categories(),
-      'sub_categories' => $sub_categories,
-      'users' => $this->Ticket_model->get_users(),
-      'clients' => $user_clients,
-      'helpdesk' => $helpdesk,
-      'attachments' => $attachments,
-      'is_external' => ($current_user && $current_user->status == 1),
-      'view_mode' => false,
-      'back_params' => $this->input->get('client_id') || $this->input->get('status_id')
+      'categories'      => $this->Ticket_model->get_categories(),
+      'sub_categories'  => $sub_categories,
+      'users'           => $this->Ticket_model->get_users(),
+      'clients'         => $user_clients,
+      'helpdesk'        => $helpdesk,
+      'attachments'     => $attachments,
+      'is_external'     => ($current_user && $current_user->status == 1),
+      'is_ba_user'      => ($current_user && $current_user->is_ba == 1),
+      'view_mode'       => false,
+      'back_url'        => $back_url,
+      'login_user_id'   => $current_user_id,
+      'back_params'     => $this->input->get('client_id') || $this->input->get('status_id')
         ? '?' . http_build_query([
           'client_id' => $this->input->get('client_id') ?? '',
           'status_id' => $this->input->get('status_id') ?? '',
@@ -181,6 +201,15 @@ class Ticket extends Admin_Controller
     }
 
     $current_user_id = $this->auth->user_id();
+    $current_user_data = $this->Ticket_model->get_user_by_id($current_user_id);
+    $referer = $this->input->server('HTTP_REFERER');
+    $back_url = site_url('ticket');
+    $source = 'ticket'; // Default source
+
+    if ($referer && strpos($referer, 'ticket_management') !== false) {
+      $back_url = $referer;
+      $source = 'management'; // Tandai berasal dari management
+    }
 
     $data = [
       'categories'     => $this->Ticket_model->get_categories(),
@@ -190,9 +219,12 @@ class Ticket extends Admin_Controller
       'helpdesk'       => $helpdesk,
       'attachments'    => $attachments,
       'view_mode'      => true,
+      'is_ba_user'     => ($current_user_data->is_ba == 1),
       'login_user_id'  => $current_user_id,
       'enable_manage'  => has_permission('Ticket.Manage'),
-      'back_params' => $this->input->get('client_id') || $this->input->get('status_id')
+      'back_url'       => $back_url,
+      'source'         => $source,
+      'back_params'    => $this->input->get('client_id') || $this->input->get('status_id')
         ? '?' . http_build_query([
           'client_id' => $this->input->get('client_id') ?? '',
           'status_id' => $this->input->get('status_id') ?? '',

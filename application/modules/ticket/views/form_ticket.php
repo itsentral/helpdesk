@@ -738,7 +738,14 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 </form>
 <div class="card-footer">
     <div class="d-flex gap-2 flex-wrap align-items-center">
-        <a href="<?= site_url('ticket') . $back_params ?>" class="btn btn-secondary">
+        <?php
+        $final_back_link = $back_url;
+        if (strpos($back_url, 'ticket_management') === false) {
+            $final_back_link .= $back_params;
+        }
+        ?>
+
+        <a href="<?= $final_back_link ?>" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> Back
         </a>
 
@@ -757,7 +764,20 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
             $currLevel      = (int)($helpdesk->current_approval_level ?? 0);
             $manHourPlan    = $helpdesk->man_hour_plan ?? 0;
             $uid            = (string)($login_user_id ?? '');
+            $isBA       = isset($is_ba_user) && $is_ba_user;
         ?>
+
+            <!-- EDIT -->
+            <?php if ($mode === 'view' && $ENABLE_MANAGE && $status == 0 && ($isBA || $picById === $uid)): ?>
+                <?php
+                $separator = (!empty($back_params)) ? '&' : '?';
+                $src_param = (isset($source) && $source == 'management') ? $separator . 'src=management' : '';
+                $edit_link = site_url('ticket/edit_ticket/' . $helpdesk->id) . $back_params . $src_param;
+                ?>
+                <a href="<?= $edit_link ?>" class="btn btn-warning">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit Ticket
+                </a>
+            <?php endif; ?>
 
             <!-- PROCESS -->
             <?php if ($picById === $uid && in_array($s, [0, 2, 6])): ?>
@@ -869,7 +889,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 
     function reinitNewFileViewer() {
         if (viewerNewFiles) {
-            viewerNewFiles.destroy(); 
+            viewerNewFiles.destroy();
         }
 
         const container = document.getElementById('file-preview');

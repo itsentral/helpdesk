@@ -9,7 +9,6 @@ $statusConfig = [
     6 => ['label' => 'Revisi',  'class' => 'badge bg-orange'],
 ];
 
-
 $grouped = [];
 foreach ($ticket as $row) {
     $grouped[$row->pic_id] = [
@@ -19,11 +18,10 @@ foreach ($ticket as $row) {
 }
 ?>
 
-
 <?php if (empty($grouped)) : ?>
     <div class="text-center text-muted py-5">
         <i class="fa-solid fa-inbox fa-3x mb-3 d-block"></i>
-        Tidak ada ticket open untuk Programmer.
+        Tidak ada ticket untuk Programmer.
     </div>
 <?php else : ?>
 
@@ -36,18 +34,24 @@ foreach ($ticket as $row) {
 
             $countOpen    = 0;
             $countProcess = 0;
+            $countDone    = 0;
             $countOverdue = 0;
+
             foreach ($data['tickets'] as $t) {
                 if ($t->status == 0) $countOpen++;
                 if ($t->status == 1) $countProcess++;
+                if ($t->status == 4) $countDone++;
                 if (
-                    $t->due_date && date('Y-m-d') > date('Y-m-d', strtotime($t->due_date)) && !in_array($t->status, [4, 5])
+                    $t->due_date
+                    && date('Y-m-d') > date('Y-m-d', strtotime($t->due_date))
+                    && !in_array($t->status, [4, 5])
                 ) {
                     $countOverdue++;
                 }
             }
         ?>
             <div class="accordion-item border mb-3 rounded shadow-sm">
+
                 <!-- HEADER -->
                 <h2 class="accordion-header" id="<?= $headingId ?>">
                     <button class="accordion-button rounded" type="button"
@@ -63,6 +67,9 @@ foreach ($ticket as $row) {
                             <div class="ms-auto d-flex gap-2 flex-wrap pe-2">
                                 <span class="badge bg-primary"><?= $countOpen ?> Open</span>
                                 <span class="badge bg-info"><?= $countProcess ?> Process</span>
+                                <?php if ($countDone > 0) : ?>
+                                    <span class="badge bg-success"><?= $countDone ?> Done</span>
+                                <?php endif; ?>
                                 <?php if ($countOverdue > 0) : ?>
                                     <span class="badge bg-danger">
                                         <i class="fa-solid fa-triangle-exclamation"></i> <?= $countOverdue ?> Overdue
@@ -79,16 +86,26 @@ foreach ($ticket as $row) {
                     <div class="accordion-body p-0">
 
                         <?php if (empty($data['tickets'])) : ?>
-                            <!-- Tampilkan keterangan jika tidak ada ticket -->
                             <div class="text-center text-muted py-4">
-                                <!-- <i class="fa-solid fa-circle-check fa-2x mb-2 d-block text-success"></i> -->
                                 <span>Tidak ada ticket aktif untuk <strong><?= htmlspecialchars($data['name']) ?></strong>.</span>
                             </div>
 
                         <?php else : ?>
-
-                            <!-- Wrapper scroll horizontal untuk layar kecil -->
                             <div class="table-responsive">
+
+                                <!-- Toolbar sort per PIC -->
+                                <div class="d-flex align-items-center px-3 py-2 border-bottom gap-2 bg-white">
+                                    <small class="text-muted me-1">
+                                        <i class="fa-solid fa-arrow-up-wide-short"></i> Sort:
+                                    </small>
+                                    <button class="btn btn-sm btn-outline-info sort-per-pic"
+                                        data-sortable-id="<?= $sortableId ?>"
+                                        data-pic-id="<?= $pic_id ?>"
+                                        data-type="programmer"
+                                        data-sort="due_date">
+                                        <i class="fa-solid fa-calendar-days"></i> Due Date
+                                    </button>
+                                </div>
 
                                 <!-- List header -->
                                 <div class="d-flex align-items-center px-3 py-2 bg-light border-bottom text-muted small fw-semibold"
@@ -96,11 +113,9 @@ foreach ($ticket as $row) {
                                     <div style="width:40px; flex-shrink:0;">No.</div>
                                     <div style="flex:2; min-width:120px; padding-right:8px;">No Ticket</div>
                                     <div style="flex:2; min-width:120px; padding-right:8px;">Client</div>
-
                                     <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
                                         <div style="flex:3; min-width:120px; padding-right:8px;">Report</div>
                                     <?php endif; ?>
-
                                     <div style="flex:2; min-width:140px; padding-right:8px;">Category</div>
                                     <div style="flex:1.5; min-width:90px; padding-right:8px;">Due Date</div>
                                     <div style="flex:1.5; min-width:90px; padding-right:8px;">Man Hour</div>
@@ -110,6 +125,7 @@ foreach ($ticket as $row) {
                                     <?php endif; ?>
                                 </div>
 
+                                <!-- Ticket rows -->
                                 <ul class="list-unstyled mb-0 sortable-list"
                                     id="<?= $sortableId ?>"
                                     data-pic-id="<?= $pic_id ?>"
@@ -118,15 +134,19 @@ foreach ($ticket as $row) {
 
                                     <?php
                                     $no = 1;
-                                    foreach ($data['tickets'] as $t) :
+                                    foreach ($data['tickets'] as $idx => $t) :
                                         $status    = $statusConfig[$t->status] ?? ['label' => 'Unknown', 'class' => 'badge bg-secondary'];
                                         $due_date  = $t->due_date ? date('d M Y', strtotime($t->due_date)) : '-';
-                                        // $isOverdue = $t->due_date && strtotime($t->due_date) < time() && !in_array($t->status, [4, 5]);
-                                        $isOverdue = $t->due_date && date('Y-m-d') > date('Y-m-d', strtotime($t->due_date)) && !in_array($t->status, [4, 5]);
+                                        $dueDateRaw = $t->due_date ? date('Y-m-d', strtotime($t->due_date)) : '';
+                                        $isOverdue = $t->due_date
+                                            && date('Y-m-d') > date('Y-m-d', strtotime($t->due_date))
+                                            && !in_array($t->status, [4, 5]);
                                     ?>
-                                        <li class="d-flex align-items-center px-3 py-2 border-bottom ticket-row
-                                        <?= $isOverdue ? 'bg-danger bg-opacity-10' : '' ?>"
-                                            data-id="<?= $t->id ?>">
+                                        <li class="d-flex align-items-center px-3 py-2 border-bottom ticket-row <?= $isOverdue ? 'bg-danger bg-opacity-10' : '' ?>"
+                                            data-id="<?= $t->id ?>"
+                                            data-status="<?= $t->status ?>"
+                                            data-due-date="<?= $dueDateRaw ?>"
+                                            data-original-order="<?= $idx ?>">
 
                                             <!-- No urut -->
                                             <div class="priority-number fw-bold text-muted small"
@@ -172,11 +192,10 @@ foreach ($ticket as $row) {
 
                                             <!-- Category -->
                                             <div style="flex:2; min-width:140px; padding-right:8px; overflow:hidden;" class="small">
-                                                <div class="text-truncate"
-                                                    title="<?= htmlspecialchars($t->category_name) ?>">
+                                                <div class="text-truncate" title="<?= htmlspecialchars($t->category_name) ?>">
                                                     <?= htmlspecialchars($t->category_name) ?>
                                                 </div>
-                                                <div class="text-muted text-truncate"
+                                                <div class="text-muted text-truncate" style="font-size:11px;"
                                                     title="<?= htmlspecialchars($t->sub_category_name) ?>">
                                                     <?= htmlspecialchars($t->sub_category_name) ?>
                                                 </div>
@@ -204,16 +223,14 @@ foreach ($ticket as $row) {
                                                     style="cursor:grab; width:30px; flex-shrink:0; text-align:center;">
                                                     <i class="fa-solid fa-grip-vertical"></i>
                                                 </div>
-                                            <?php endif ?>
+                                            <?php endif; ?>
 
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
 
                             </div>
-
-                        <?php endif ?>
-
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

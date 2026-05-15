@@ -38,10 +38,17 @@ class Ticket_management extends Admin_Controller
   public function get_list_programmer()
   {
     $this->auth->restrict($this->viewPermission);
-    
+
+    $sort = $this->input->get('sort'); // 'due_date' atau default
     $ticket = $this->Ticket_management_model->get_list_programmer();
-    $data['ticket'] = $ticket;
-    $data['user'] = $this->session->userdata('app_session');
+
+    if ($sort === 'due_date') {
+      $ticket = $this->Ticket_management_model->sort_by_due_date($ticket);
+    }
+
+    $data['ticket']      = $ticket;
+    $data['active_sort'] = $sort;
+    $data['user']        = $this->session->userdata('app_session');
 
     $this->template->render('table/list_ticket_programmer', $data);
   }
@@ -50,9 +57,16 @@ class Ticket_management extends Admin_Controller
   {
     $this->auth->restrict($this->viewPermission);
 
+    $sort = $this->input->get('sort');
     $ticket = $this->Ticket_management_model->get_list_ba();
-    $data['ticket'] = $ticket;    
-    $data['user'] = $this->session->userdata('app_session');
+
+    if ($sort === 'due_date') {
+      $ticket = $this->Ticket_management_model->sort_by_due_date($ticket);
+    }
+
+    $data['ticket']      = $ticket;
+    $data['active_sort'] = $sort;
+    $data['user']        = $this->session->userdata('app_session');
 
     $this->template->render('table/list_ticket_ba', $data);
   }

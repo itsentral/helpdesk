@@ -289,7 +289,7 @@ class Ticket_model extends BF_Model
 
     public function get_users()
     {
-        $this->db->select('id_user, username, nm_lengkap, email');
+        $this->db->select('id_user, username, nm_lengkap, email, is_ba');
         $this->db->from('users');
         $this->db->where('st_aktif', 1);
         $this->db->where('deleted', 0);
@@ -313,7 +313,7 @@ class Ticket_model extends BF_Model
 
     public function get_user_by_id($id)
     {
-        $this->db->select('id_user, username, nm_lengkap, email, status');
+        $this->db->select('id_user, username, nm_lengkap, email, status, is_ba');
         $this->db->from('users');
         $this->db->where('id_user', $id);
         return $this->db->get()->row();
