@@ -337,6 +337,106 @@
     // Auto-refresh setiap 60 detik
     loadNotifications();
     setInterval(loadNotifications, 60000);
+
+    // =============================================
+    // ONLINE USERS
+    // =============================================
+    function loadOnlineUsers() {
+      $.ajax({
+        url: siteurl + 'users/get_online_users',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (!res || res.status !== 1) return;
+
+          var count = res.count;
+          var users = res.users;
+
+          // Update badge
+          if (count > 0) {
+            $('#online_users_badge').text(count).show();
+          } else {
+            $('#online_users_badge').hide();
+          }
+          $('#online_users_count').text(count);
+
+          // Render list
+          if (!users || users.length === 0) {
+            $('#online_users_list').html(`
+                    <div class="text-center py-4 text-muted">
+                        <i class="ti ti-user-off" style="font-size:32px;"></i>
+                        <p class="mt-2 mb-0">Tidak ada yang online</p>
+                    </div>
+                `);
+            return;
+          }
+
+          var html = '';
+          users.forEach(function(u) {
+            // Tentukan role label
+            var role = '';
+            if (u.is_ba == 1) role = '<span class="badge bg-info" style="font-size:9px;">BA</span>';
+            else if (u.is_programmer == 1) role = '<span class="badge bg-primary" style="font-size:9px;">Dev</span>';
+            else if (u.status == 1) role = '<span class="badge bg-warning text-dark" style="font-size:9px;">External</span>';
+            else role = '<span class="badge bg-secondary" style="font-size:9px;">Internal</span>';
+
+            // Inisial avatar
+            var initial = u.nm_lengkap ? u.nm_lengkap.charAt(0).toUpperCase() : '?';
+
+            // Hitung berapa menit lalu aktif
+            var lastActivity = new Date(u.last_activity.replace(' ', 'T'));
+            var diffMin = Math.floor((new Date() - lastActivity) / 60000);
+            var activeLabel = diffMin <= 0 ? 'Baru saja' : diffMin + ' menit lalu';
+
+            html += `
+                    <div class="list-group-item d-flex align-items-center gap-2 py-2">
+                        <div class="position-relative flex-shrink-0">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center 
+                                        justify-content-center fw-bold"
+                                style="width:34px; height:34px; font-size:13px;">
+                                ${initial}
+                            </div>
+                            <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle"
+                                style="width:10px; height:10px;"></span>
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="fw-semibold text-truncate" style="font-size:13px;">
+                                ${u.nm_lengkap}
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <small class="text-muted" style="font-size:10px;">${activeLabel}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+          });
+
+          $('#online_users_list').html(html);
+        }
+      });
+    }
+
+    // Load saat dropdown dibuka
+    $('#online_users_dropdown').on('show.bs.dropdown', function() {
+      loadOnlineUsers();
+    });
+
+    // Auto-refresh setiap 60 detik
+    loadOnlineUsers();
+    setInterval(loadOnlineUsers, 60000);
+
+    function sendHeartbeat() {
+      $.ajax({
+        url: siteurl + 'users/heartbeat',
+        type: 'POST',
+        data: {
+          <?= $this->security->get_csrf_token_name() ?>: '<?= $this->security->get_csrf_hash() ?>'
+        }
+      });
+    }
+
+    setInterval(sendHeartbeat, 5 * 60 * 1000); // setiap 5 menit
+    sendHeartbeat();
   </script>
 </head>
 
@@ -406,6 +506,40 @@
       <!-- right -->
       <div class="ms-auto">
         <ul class="list-unstyled">
+
+          <!-- ONLINE USERS -->
+          <li class="dropdown pc-h-item" id="online_users_dropdown">
+            <a class="pc-head-link head-link-secondary dropdown-toggle arrow-none me-0"
+              data-bs-toggle="dropdown"
+              data-bs-auto-close="outside"
+              href="#" role="button"
+              aria-haspopup="false" aria-expanded="false"
+              id="online_users_btn">
+              <i class="ti ti-users"></i>
+              <span class="badge bg-success rounded-pill position-absolute top-0 start-100 translate-middle"
+                id="online_users_badge"
+                style="display:none; font-size:10px; padding: 2px 5px;">0</span>
+            </a>
+
+            <div class="dropdown-menu dropdown-menu-end pc-h-dropdown" style="width:300px;">
+              <div class="dropdown-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                  <i class="ti ti-circle-filled text-success me-1" style="font-size:10px;"></i>
+                  Online Sekarang
+                </h5>
+                <span class="badge bg-success rounded-pill" id="online_users_count">0</span>
+              </div>
+
+              <div style="max-height:350px; overflow-y:auto;">
+                <div class="list-group list-group-flush w-100" id="online_users_list">
+                  <div class="text-center py-4 text-muted" id="online_users_loading">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    Loading...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
 
           <!-- NOTIFICATION -->
           <li class="dropdown pc-h-item" id="notif_dropdown">

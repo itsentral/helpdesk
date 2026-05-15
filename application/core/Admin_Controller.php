@@ -39,6 +39,13 @@ class Admin_Controller extends Base_Controller
 
         $this->user_data = $this->auth->userdata();
 
+        // Update last_activity setiap request
+        $id_user = $this->auth->user_id();
+        if (!empty($id_user)) {
+            $this->db->where('id_user', $id_user);
+            $this->db->update('users', ['last_activity' => date('Y-m-d H:i:s')]);
+        }
+
         $this->form_validation->set_error_delimiters('', '');
 
         // Pagination config
