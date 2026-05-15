@@ -383,10 +383,24 @@
             // Inisial avatar
             var initial = u.nm_lengkap ? u.nm_lengkap.charAt(0).toUpperCase() : '?';
 
-            // Hitung berapa menit lalu aktif
-            var lastActivity = new Date(u.last_activity.replace(' ', 'T'));
-            var diffMin = Math.floor((new Date() - lastActivity) / 60000);
-            var activeLabel = diffMin <= 0 ? 'Baru saja' : diffMin + ' menit lalu';
+            // Hitung sudah login berapa lama (dari login_at)
+            var loginAt = new Date(u.login_at.replace(' ', 'T'));
+            var diffMs = new Date() - loginAt;
+            var diffMin = Math.floor(diffMs / 60000);
+            var diffHour = Math.floor(diffMin / 60);
+            var diffDay = Math.floor(diffHour / 24);
+
+            var loginLabel = '';
+            if (diffDay >= 1) {
+              loginLabel = diffDay + ' hari';
+            } else if (diffHour >= 1) {
+              var sisaMin = diffMin % 60;
+              loginLabel = diffHour + ' jam' + (sisaMin > 0 ? ' ' + sisaMin + ' menit' : '');
+            } else if (diffMin >= 1) {
+              loginLabel = diffMin + ' menit';
+            } else {
+              loginLabel = 'Baru saja';
+            }
 
             html += `
                     <div class="list-group-item d-flex align-items-center gap-2 py-2">
@@ -404,16 +418,19 @@
                                 ${u.nm_lengkap}
                             </div>
                             <div class="d-flex align-items-center gap-1">
-                                <small class="text-muted" style="font-size:10px;">${activeLabel}</small>
+                                ${role}
+                                <small class="text-muted" style="font-size:10px;">
+                                    <i class="ti ti-clock me-1"></i>${loginLabel}
+                                </small>
                             </div>
                         </div>
                     </div>
                 `;
-          });
+          }); 
 
           $('#online_users_list').html(html);
-        }
-      });
+        } 
+      }); 
     }
 
     // Load saat dropdown dibuka

@@ -44,6 +44,12 @@ class Admin_Controller extends Base_Controller
         if (!empty($id_user)) {
             $this->db->where('id_user', $id_user);
             $this->db->update('users', ['last_activity' => date('Y-m-d H:i:s')]);
+
+            if (!$this->session->userdata('login_at_set')) {
+                $this->db->where('id_user', $id_user);
+                $this->db->update('users', ['login_at' => date('Y-m-d H:i:s')]);
+                $this->session->set_userdata('login_at_set', true);
+            }
         }
 
         $this->form_validation->set_error_delimiters('', '');

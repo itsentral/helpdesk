@@ -164,7 +164,7 @@ class Users_model extends BF_Model
 
     public function get_online_users()
     {
-        $this->db->select('id_user, nm_lengkap, is_programmer, is_ba, status, last_activity');
+        $this->db->select('id_user, nm_lengkap, is_programmer, is_ba, status, last_activity, login_at');
         $this->db->from('users');
         $this->db->where('st_aktif', 1);
         $this->db->where('deleted', 0);

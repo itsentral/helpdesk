@@ -73,7 +73,10 @@ class Users extends Front_Controller
             history("Logout");
 
             $this->db->where('id_user', $this->id_user);
-            $this->db->update('users', ['last_activity' => null]);
+            $this->db->update('users', [
+                'last_activity' => null,
+                'login_at'      => null,
+            ]);
         }
         $this->auth->logout();
     }
