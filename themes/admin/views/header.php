@@ -418,7 +418,6 @@
                                 ${u.nm_lengkap}
                             </div>
                             <div class="d-flex align-items-center gap-1">
-                                ${role}
                                 <small class="text-muted" style="font-size:10px;">
                                     <i class="ti ti-clock me-1"></i>${loginLabel}
                                 </small>
