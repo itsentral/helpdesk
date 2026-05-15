@@ -71,6 +71,9 @@ class Users extends Front_Controller
     {
         if (!empty($this->id_user)) {
             history("Logout");
+
+            $this->db->where('id_user', $this->id_user);
+            $this->db->update('users', ['last_activity' => null]);
         }
         $this->auth->logout();
     }
@@ -140,6 +143,28 @@ class Users extends Front_Controller
             $this->Users_model->mark_as_read($id, $user_id);
         }
 
+        echo json_encode(['status' => 1]);
+    }
+
+    public function get_online_users()
+    {
+        $this->load->model('Users_model');
+        $online = $this->Users_model->get_online_users();
+
+        echo json_encode([
+            'status' => 1,
+            'count'  => count($online),
+            'users'  => $online,
+        ]);
+    }
+
+    public function heartbeat()
+    {
+        $id_user = $this->auth->user_id();
+        if (!empty($id_user)) {
+            $this->db->where('id_user', $id_user);
+            $this->db->update('users', ['last_activity' => date('Y-m-d H:i:s')]);
+        }
         echo json_encode(['status' => 1]);
     }
 }
