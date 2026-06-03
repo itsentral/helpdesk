@@ -147,9 +147,9 @@ $ENABLE_DELETE = has_permission('Productivity_report.Delete');
             </div>
 
             <div class="col-md-3">
-                <label class="form-label fw-semibold">Category</label>
+                <label class="form-label fw-semibold">Stage</label>
                 <select id="category_id" class="form-select">
-                    <option value="">-- All Categories --</option>
+                    <option value="">-- All Stages --</option>
                     <?php foreach ($categories as $cat): ?>
                         <option value="<?= $cat->id ?>"><?= htmlspecialchars($cat->category_name) ?></option>
                     <?php endforeach; ?>

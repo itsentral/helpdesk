@@ -27,6 +27,11 @@ $loginUserId = $this->auth->user_id();
         animation: elegantPulse 2s ease-in-out infinite;
         border-left: 4px solid #ffc107 !important;
     }
+
+    .btn:hover {
+        transform: scale(1.05);
+        animation-duration: 0.1s;
+    }
 </style>
 
 <div class="table-responsive">

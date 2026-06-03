@@ -23,6 +23,7 @@ class Ticket_management_model extends BF_Model
         $this->db->select('u.id_user as pic_id, u.nm_lengkap as pic, u.is_programmer, u.is_ba');
         $this->db->from('users u');
         $this->db->where('u.is_programmer', 1);
+        $this->db->where('u.st_aktif', 1);
         $users = $this->db->get()->result();
 
         // Ambil semua ticket programmer
@@ -48,6 +49,8 @@ class Ticket_management_model extends BF_Model
         $this->db->select('u.id_user as pic_id, u.nm_lengkap as pic, u.is_programmer, u.is_ba');
         $this->db->from('users u');
         $this->db->where('u.is_ba', 1);
+        $this->db->where('u.st_aktif', 1);
+        $this->db->order_by('u.nm_lengkap', 'ASC');
         $users = $this->db->get()->result();
 
         // Ambil semua ticket BA

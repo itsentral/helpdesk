@@ -41,23 +41,36 @@ class Users extends Front_Controller
             $username = $this->input->post('username', true);
             $password = $this->input->post('password', true);
 
-            // Coba login dan tangkap hasilnya
-            $login_result = $this->auth->login($username, $password);
+            // 1. Ambil data user berdasarkan username dari database
+            $user = $this->db->get_where('users', ['username' => $username])->row();
 
-            // Jika login gagal, set flashdata error
-            if (!$login_result) {
+            // 2. Validasi utama: Cek apakah user ada DAN password-nya cocok
+            if (!$user || !password_verify($password, $user->password)) {
                 $this->session->set_flashdata('error', 'Username atau password salah!');
                 redirect('users/login');
                 return;
             }
 
-            // Jika berhasil, akan diarahkan ke halaman utama oleh auth library
+            // 3. Validasi kedua: Jika login benar, baru cek apakah akunnya aktif
+            if (isset($user->st_aktif) && $user->st_aktif == 0) {
+                $this->session->set_flashdata('error', 'Akun Anda nonaktif. Silahkan hubungi administrator helpdesk!');
+                redirect('users/login');
+                return;
+            }
+
+            // 4. Jika lolos semua pengecekan, jalankan library auth login untuk membuat session
+            $login_result = $this->auth->login($username, $password);
+
+            if (!$login_result) {
+                $this->session->set_flashdata('error', 'Gagal memproses pembuatan session login.');
+                redirect('users/login');
+                return;
+            }
         }
 
         $this->template->set('recaptcha_site_key', $this->site_key);
         $this->template->set('idt', $identitas);
 
-        // Tambahkan ini untuk meneruskan flashdata ke view
         $error_message = $this->session->flashdata('error');
         $this->template->set('login_error', $error_message);
 

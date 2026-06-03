@@ -33,6 +33,7 @@ class Productivity_report_model extends BF_Model
         return $this->db
             ->select('id, category_name')
             ->from('helpdesk_category')
+            ->where('is_delete', 0)
             ->order_by('category_name', 'ASC')
             ->get()
             ->result();
@@ -60,6 +61,7 @@ class Productivity_report_model extends BF_Model
         $this->db->from('users u');
         $this->db->join('helpdesk h', 'h.pic_id = u.id_user AND h.is_delete = 0', 'inner');
         $this->db->where('h.status !=', 3);
+        $this->db->where('u.st_aktif', 1);
         $this->db->where('DATE(h.update_date) >=', $date_from);
         $this->db->where('DATE(h.update_date) <=', $date_to);
 
@@ -103,6 +105,7 @@ class Productivity_report_model extends BF_Model
         $this->db->from('users u');
         $this->db->join('helpdesk h', 'h.pic_id = u.id_user AND h.is_delete = 0', 'inner');
         $this->db->where('h.status !=', 3);
+        $this->db->where('u.st_aktif', 1);
         $this->db->where('DATE(h.update_date) >=', $date_from);
         $this->db->where('DATE(h.update_date) <=', $date_to);
 
