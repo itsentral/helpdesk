@@ -846,28 +846,17 @@ endif; ?>
 
             <!-- Chart Row -->
             <div class="row mb-3">
-                <div class="col-md-8 mb-3 mb-md-0">
+                <div class="col-md-12 mb-3 mb-md-0">
                     <div class="pd-chart-card" style="height:100%;">
                         <div class="pd-chart-title">Tiket per Project</div>
-                        <!-- <div class="pd-chart-title">Tren Tiket per Hari</div> -->
                         <div id="pd_chart_trend_wrap">
                             <div class="pd-skeleton-box" style="height:220px;"></div>
                         </div>
                         <canvas id="pd_chart_trend" style="display:none; max-height:220px;"></canvas>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="pd-chart-card" style="height:100%;">
-                        <div class="pd-chart-title">Status Distribution</div>
-                        <div id="pd_chart_donut_wrap">
-                            <div class="pd-skeleton-box" style="height:220px;"></div>
-                        </div>
-                        <canvas id="pd_chart_donut" style="display:none; max-height:220px;"></canvas>
-                    </div>
-                </div>
             </div>
 
-            <!-- Tambahkan ini setelah chart row -->
             <div class="pd-chart-card mb-3">
                 <div class="pd-chart-title">Tiket per Category</div>
                 <div id="pd_chart_subcat_wrap">
@@ -1298,58 +1287,6 @@ endif; ?>
                 });
             }
 
-            // ── Chart: Donut Status ────────────────────────
-            function renderDonutChart(statusCounts) {
-                $('#pd_chart_donut_wrap').hide();
-                var canvas = $('#pd_chart_donut').show()[0];
-                var ctx = canvas.getContext('2d');
-                if (chartDonut) {
-                    chartDonut.destroy();
-                }
-
-                if (!statusCounts || statusCounts.length === 0) {
-                    $('#pd_chart_donut_wrap').show().html('<div class="pd-empty" style="padding:40px 0;"><i class="ti ti-mood-smile"></i><p>Tidak ada data.</p></div>');
-                    $('#pd_chart_donut').hide();
-                    return;
-                }
-
-                chartDonut = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: statusCounts.map(function(s) {
-                            return s.label;
-                        }),
-                        datasets: [{
-                            data: statusCounts.map(function(s) {
-                                return s.count;
-                            }),
-                            backgroundColor: ['#E24B4A', '#378ADD', '#EF9F27', '#adb5bd', '#27AE60', '#343a40', '#F4A0BB'],
-                            borderWidth: 2,
-                            borderColor: '#fff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        cutout: '65%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: {
-                                        size: 11
-                                    },
-                                    boxWidth: 12,
-                                    padding: 10
-                                }
-                            },
-                            datalabels: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
-
             // ── Chart: Horizontal Bar per Category ─────
             function renderSubcatChart(subcatCounts) {
                 $('#pd_chart_subcat_wrap').hide();
@@ -1560,8 +1497,6 @@ endif; ?>
                 showStatSkeleton();
                 $('#pd_chart_trend').hide();
                 $('#pd_chart_trend_wrap').show().html('<div class="pd-skeleton-box" style="height:220px;"></div>');
-                $('#pd_chart_donut').hide();
-                $('#pd_chart_donut_wrap').show().html('<div class="pd-skeleton-box" style="height:220px;"></div>');
                 $('#pd_chart_subcat').hide();
                 $('#pd_chart_subcat_wrap').show().html('<div class="pd-skeleton-box" style="height:180px;"></div>');
                 $('#pd_table_wrap').hide();
@@ -1581,7 +1516,6 @@ endif; ?>
 
                         renderStats(res.summary || {});
                         renderProjectSection(res.clients || [], res.subcat_counts || []);
-                        renderDonutChart(res.status_counts || []);
                         $('#pd_subtitle').text(
                             allTime === '1' ? 'Semua data sejak awal' : 'Data ' + dateFrom + ' s/d ' + dateTo
                         );
@@ -1595,7 +1529,6 @@ endif; ?>
                         });
                         $('#pd_stats_row').html('');
                         $('#pd_chart_trend_wrap').html('');
-                        $('#pd_chart_donut_wrap').html('');
                         $('#pd_chart_subcat_wrap').html('');
                         $('#pd_table_skeleton').hide();
                         $('#pd_table_wrap').show().html('<div class="pd-empty"><i class="ti ti-alert-circle"></i><p>Gagal memuat data.</p></div>');
