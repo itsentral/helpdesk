@@ -454,22 +454,85 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	}
 
 	/* Edit input inline */
+	/* Mode edit: bubble melebar penuh */
+	.chat-bubble.editing {
+		max-width: 100% !important;
+		width: 100%;
+	}
+
 	.chat-edit-form {
 		display: flex;
-		gap: 6px;
-		margin-top: 4px;
-		align-items: center;
+		flex-direction: column;
+		gap: 8px;
+		width: 100%;
 	}
 
 	.chat-edit-input {
-		flex: 1;
-		border-radius: 6px;
-		border: 1px solid rgba(255, 255, 255, 0.5);
-		padding: 4px 8px;
+		width: 100%;
+		border-radius: 8px;
+		border: 2px solid rgba(255, 255, 255, 0.7);
+		padding: 8px 10px;
 		font-size: 13px;
-		background: rgba(255, 255, 255, 0.2);
+		background: rgba(255, 255, 255, 0.15);
 		color: white;
 		outline: none;
+		font-family: inherit;
+		line-height: 1.6;
+		resize: none;
+		overflow: hidden;
+		min-height: 60px;
+		max-height: 200px;
+		box-sizing: border-box;
+	}
+
+	.chat-edit-input::placeholder {
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.chat-edit-input:focus {
+		border-color: rgba(255, 255, 255, 0.95);
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	.chat-edit-actions {
+		display: flex;
+		gap: 6px;
+		justify-content: flex-end;
+	}
+
+	.btn-edit-save {
+		background: rgba(255, 255, 255, 0.95);
+		color: #007bff;
+		font-weight: 700;
+		border: none;
+		border-radius: 6px;
+		padding: 5px 12px;
+		font-size: 12px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.btn-edit-cancel {
+		background: rgba(0, 0, 0, 0.2);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		padding: 5px 12px;
+		font-size: 12px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.btn-edit-save:hover {
+		background: #fff;
+	}
+
+	.btn-edit-cancel:hover {
+		background: rgba(0, 0, 0, 0.35);
 	}
 
 	.chat-edit-input::placeholder {
@@ -1379,8 +1442,8 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 						'  </g>' +
 						'</svg>' +
 						// --- SVG Animasi Pesan Dalam Botol Selesai Sini ---
-						'<h6 class="fw-bold mb-1" style="color: #475569;">Lautan Percakapan Masih Tenang</h6>' +
-						'<p class="small text-muted m-0">Lempar pesan pertamamu dan biarkan obrolan mengalir.</p>' +
+						'<h6 class="fw-bold mb-1" style="color: #475569;">Belum Ada Pesan</h6>' +
+						'<p class="small text-muted m-0">Silakan kirim pesan untuk memulai percakapan.</p>' +
 						'</div>' +
 						'</div>'
 					).show();
@@ -1553,28 +1616,42 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 			if ($('#edit-form-' + chatId).length > 0) return;
 
-			// Hide tombol titik 3 saat mode edit
 			$msgContent.closest('.chat-bubble').find('.chat-actions-btn').hide();
 
 			$msgContent.hide();
 			$msgContent.after(`
-        <div class="chat-edit-form" id="edit-form-${chatId}">
-            <input type="text" class="chat-edit-input" id="edit-input-${chatId}" value="${originalMessage}">
-            <button class="btn-edit-save" data-chat-id="${chatId}">
-                <i class="fa-solid fa-check"></i>
-            </button>
-            <button class="btn-edit-cancel" data-chat-id="${chatId}">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-    `);
+				<div class="chat-edit-form" id="edit-form-${chatId}">
+					<textarea class="chat-edit-input" 
+							id="edit-input-${chatId}" 
+							rows="3"
+					>${originalMessage}</textarea>
+					<div class="chat-edit-actions">
+						<button class="btn-edit-cancel" data-chat-id="${chatId}">
+							<i class="fa-solid fa-xmark"></i> Batal
+						</button>
+						<button class="btn-edit-save" data-chat-id="${chatId}">
+							<i class="fa-solid fa-check"></i> Simpan
+						</button>
+					</div>
+				</div>
+			`);
+
+			$('#edit-form-' + chatId).closest('.chat-bubble').addClass('editing');
+
+			const $ta = $('#edit-input-' + chatId);
+			$ta[0].style.height = 'auto';
+			$ta[0].style.height = Math.min($ta[0].scrollHeight, 200) + 'px';
+
+			const len = $ta.val().length;
+			$ta[0].setSelectionRange(len, len);
+			$ta.focus();
 
 			$('#edit-input-' + chatId).focus().select();
 		});
 
-		// Batal edit — Show kembali tombol titik 3
 		$(document).off('click.cancelEdit').on('click.cancelEdit', '.btn-edit-cancel', function() {
 			const chatId = $(this).data('chat-id');
+			$('#edit-form-' + chatId).closest('.chat-bubble').removeClass('editing');
 			$('#edit-form-' + chatId).remove();
 			$('#msg-content-' + chatId).show();
 			$('#msg-content-' + chatId).closest('.chat-bubble').find('.chat-actions-btn').show();
@@ -1615,11 +1692,30 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		// Enter key di input edit
 		$(document).off('keydown.editInput').on('keydown.editInput', '.chat-edit-input', function(e) {
 			const chatId = $(this).attr('id').replace('edit-input-', '');
-			if (e.key === 'Enter') {
+
+			if (e.key === 'Enter' && e.shiftKey) {
+				setTimeout(() => {
+					this.style.height = 'auto';
+					this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+				}, 0);
+				return;
+			}
+
+			if (e.key === 'Enter' && !e.shiftKey) {
+				e.preventDefault(); 
 				$('.btn-edit-save[data-chat-id="' + chatId + '"]').trigger('click');
-			} else if (e.key === 'Escape') {
+				return;
+			}
+
+			if (e.key === 'Escape') {
+				e.preventDefault();
 				$('.btn-edit-cancel[data-chat-id="' + chatId + '"]').trigger('click');
 			}
+		});
+
+		$(document).off('input.editInput').on('input.editInput', '.chat-edit-input', function() {
+			this.style.height = 'auto';
+			this.style.height = Math.min(this.scrollHeight, 200) + 'px';
 		});
 
 		// Event: read status click
