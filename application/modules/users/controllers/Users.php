@@ -58,14 +58,15 @@ class Users extends Front_Controller
                 return;
             }
 
-            // 4. Jika lolos semua pengecekan, jalankan library auth login untuk membuat session
-            $login_result = $this->auth->login($username, $password);
-
-            if (!$login_result) {
-                $this->session->set_flashdata('error', 'Gagal memproses pembuatan session login.');
-                redirect('users/login');
-                return;
+            if (!empty($user->is_ba) && $user->is_ba == 1) {
+                setcookie('show_ba_popup', '1', time() + 60, '/');
             }
+
+            $this->auth->login($username, $password);
+
+
+            redirect('/');
+            return;
         }
 
         $this->template->set('recaptcha_site_key', $this->site_key);

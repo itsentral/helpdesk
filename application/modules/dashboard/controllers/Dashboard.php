@@ -19,20 +19,78 @@ class Dashboard extends Admin_Controller
 
     public function index()
     {
-        $user_id = $this->auth->user_id();
+        $user_id   = $this->auth->user_id();
         $user_info = $this->db->get_where('users', ['id_user' => $user_id])->row();
 
+        $is_ba = (int)($user_info->is_ba ?? 0);
+
+
+        $show_popup       = false;
+        $unassigned_count = 0;
+
+        if ($is_ba == 1 && !empty($_COOKIE['show_ba_popup'])) {
+            setcookie('show_ba_popup', '', time() - 3600, '/');
+            unset($_COOKIE['show_ba_popup']);
+
+            $unassigned_count = $this->_count_unassigned_for_ba($user_id);
+            if ($unassigned_count > 0) {
+                $show_popup = true;
+            }
+        }
+
         $data = [
-        'is_programmer' => (int)($user_info->is_programmer ?? 0),
-        'is_ba'         => (int)($user_info->is_ba ?? 0),
-        'is_admin'      => ($user_info->id_user == 7) ? 1 : 0,
-        'is_exclude'    => ($user_info->id_user == 231) ? 1 : 0,
-    ];
-        // var_dump($user_info);die;
+            'is_programmer'    => (int)($user_info->is_programmer ?? 0),
+            'is_ba'            => $is_ba,
+            'is_admin'         => ($user_info->id_user == 7)   ? 1 : 0,
+            'is_exclude'       => ($user_info->id_user == 231) ? 1 : 0,
+            'show_popup'       => $show_popup,
+            'unassigned_count' => $unassigned_count,
+        ];
 
         $this->template->title('Dashboard');
         $this->template->page_icon('ti ti-lock-access');
         $this->template->render('index', $data);
+    }
+
+    private function _count_unassigned_for_ba($user_id)
+    {
+        $this->db->select('COUNT(h.id) as total');
+        $this->db->from('helpdesk h');
+        $this->db->join('helpdesk_user_client huc', 'huc.client_id = h.client_id', 'inner');
+        $this->db->where('huc.id_user', $user_id);
+        $this->db->where('huc.is_active', 1);
+        $this->db->where('h.is_delete', 0);
+        $this->db->where('(h.pic IS NULL OR h.pic = "")', null, false);
+        $this->db->where('h.status', 0);
+        $this->db->where('h.create_date <=', date('Y-m-d H:i:s', strtotime('-7 days')));
+        $row = $this->db->get()->row();
+        return (int)($row->total ?? 0);
+    }
+
+    public function get_unassigned_tickets()
+    {
+        $user_id   = $this->auth->user_id();
+        $user_info = $this->db->get_where('users', ['id_user' => $user_id])->row();
+
+        if (!$user_info || $user_info->is_ba != 1) {
+            echo json_encode([]);
+            return;
+        }
+
+        $this->db->select('h.id, h.no_ticket, h.report, h.client_name, h.sub_category_name, h.due_date, h.status, h.create_date');
+        $this->db->from('helpdesk h');
+        $this->db->join('helpdesk_user_client huc', 'huc.client_id = h.client_id', 'inner');
+        $this->db->where('huc.id_user', $user_id);
+        $this->db->where('huc.is_active', 1);
+        $this->db->where('h.is_delete', 0);
+        $this->db->where('(h.pic IS NULL OR h.pic = "")', null, false);
+        $this->db->where('h.status', 0);
+        $this->db->where('h.create_date <=', date('Y-m-d H:i:s', strtotime('-7 days')));
+        $this->db->order_by('h.create_date', 'ASC');
+        $this->db->limit(15);
+
+        $tickets = $this->db->get()->result();
+        echo json_encode($tickets);
     }
 
     public function get_my_priorities()

@@ -86,7 +86,8 @@ $ENABLE_VIEW = has_permission('Ticket.View');
                                         class="btn btn-primary btn-sm px-2 py-1 open-chat position-relative"
                                         data-id="<?= $row['id'] ?>"
                                         data-ticket="<?= $row['no_ticket'] ?>"
-                                        title="Chat Room">
+                                        title="Chat Room"
+                                        style="width: 120px">
                                         <i class="fa-solid fa-comments"></i> Chat Room
                                         <?php if ($unread_count > 0): ?>
                                             <span class="chat-unread-badge-<?= $row['id'] ?> position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
@@ -104,13 +105,15 @@ $ENABLE_VIEW = has_permission('Ticket.View');
                                         class="btn btn-secondary btn-sm px-2 py-1 view-history"
                                         data-id="<?= $row['id'] ?>"
                                         data-ticket="<?= $row['no_ticket'] ?>"
-                                        title="View History">
+                                        title="View History"
+                                        style="width: 120px">
                                         <i class="fa-solid fa-clock-rotate-left"></i> History
                                     </button>
                                     <button type="button"
                                         class="btn btn-info btn-sm px-2 py-1 view-ticket"
                                         data-id="<?= $row['id'] ?>"
-                                        title="View Details">
+                                        title="View Details"
+                                        style="width: 120px">
                                         <i class="fa-solid fa-eye"></i> View
                                     </button>
                                 </div>

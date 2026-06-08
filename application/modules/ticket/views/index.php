@@ -1313,10 +1313,74 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 					}
 				} else {
 					$('#chatMessagesContent').html(
-						'<div class="d-flex align-items-center justify-content-center" style="height: 100%; min-height: 400px;">' +
-						'<div class="text-center text-muted">' +
-						'<i class="fa-solid fa-comments fa-3x mb-3"></i>' +
-						'<p>Belum ada pesan. Mulai percakapan!</p>' +
+						'<div class="d-flex align-items-center justify-content-center">' +
+						'<div class="text-center">' +
+						// --- SVG Animasi Pesan Dalam Botol Mulai Sini ---
+						'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="180" height="180" class="mb-3">' +
+						'<defs>' +
+						'  <clipPath id="waveClip">' +
+						'    <rect x="0" y="0" width="200" height="200" rx="20" />' +
+						'  </clipPath>' +
+						'</defs>' +
+						'<style>' +
+						'  /* Animasi Botol Mengapung */' +
+						'  @keyframes floatBottle {' +
+						'    0%, 100% { transform: translateY(0px) rotate(-3deg); }' +
+						'    50% { transform: translateY(-12px) rotate(4deg); }' +
+						'  }' +
+						'  /* Animasi Ombak Mengalir */' +
+						'  @keyframes waveMove {' +
+						'    0% { transform: translateX(0); }' +
+						'    100% { transform: translateX(-80px); }' +
+						'  }' +
+						'  /* Animasi Burung Terbang */' +
+						'  @keyframes birdFly {' +
+						'    0%, 100% { transform: translateY(0); }' +
+						'    50% { transform: translateY(-5px); }' +
+						'  }' +
+						'  .bottle-group { transform-origin: 100px 140px; animation: floatBottle 5s ease-in-out infinite; }' +
+						'  .wave-bg { animation: waveMove 7s linear infinite; }' +
+						'  .wave-fg { animation: waveMove 5s linear infinite reverse; }' +
+						'  .bird { animation: birdFly 4s ease-in-out infinite; }' +
+						'</style>' +
+
+						'  ' +
+						'  <circle cx="100" cy="100" r="90" fill="#f8fafc" />' +
+						'  ' +
+						'  <circle cx="150" cy="60" r="16" fill="#fde047" opacity="0.8" />' +
+
+						'  ' +
+						'  <g class="bird" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6">' +
+						'    <path d="M 35,50 Q 42,43 50,50 Q 58,43 65,50" />' +
+						'    <path d="M 65,75 Q 70,70 75,75 Q 80,70 85,75" stroke-width="2" opacity="0.5" />' +
+						'  </g>' +
+
+						'  ' +
+						'  <g class="bottle-group">' +
+						'    ' +
+						'    <path d="M 85,100 L 115,90 L 115,145 L 85,155 Z" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>' +
+						'    <line x1="92" y1="110" x2="108" y2="105" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>' +
+						'    <line x1="92" y1="120" x2="108" y2="115" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>' +
+						'    <line x1="92" y1="130" x2="100" y2="128" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>' +
+						'    ' +
+						'    <path d="M 92,40 L 108,40 L 105,50 L 95,50 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>' +
+						'    ' +
+						'    <path d="M 90,50 L 110,50 L 110,70 C 110,85 130,100 130,120 L 130,150 C 130,165 115,175 100,175 C 85,175 70,165 70,150 L 70,120 C 70,100 90,85 90,70 Z" fill="#e2e8f0" fill-opacity="0.3" stroke="#64748b" stroke-width="3" stroke-linejoin="round"/>' +
+						'    ' +
+						'    <path d="M 78,115 L 78,150" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.8" />' +
+						'  </g>' +
+
+						'  ' +
+						'  <g clip-path="url(#waveClip)" stroke="#64748b" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.5">' +
+						'    ' +
+						'    <path class="wave-bg" d="M -80,160 Q -60,150 -40,160 T 0,160 T 40,160 T 80,160 T 120,160 T 160,160 T 200,160 T 240,160 T 280,160" />' +
+						'    ' +
+						'    <path class="wave-fg" d="M -80,175 Q -60,185 -40,175 T 0,175 T 40,175 T 80,175 T 120,175 T 160,175 T 200,175 T 240,175 T 280,175" stroke-width="4" opacity="0.7" />' +
+						'  </g>' +
+						'</svg>' +
+						// --- SVG Animasi Pesan Dalam Botol Selesai Sini ---
+						'<h6 class="fw-bold mb-1" style="color: #475569;">Lautan Percakapan Masih Tenang</h6>' +
+						'<p class="small text-muted m-0">Lempar pesan pertamamu dan biarkan obrolan mengalir.</p>' +
 						'</div>' +
 						'</div>'
 					).show();

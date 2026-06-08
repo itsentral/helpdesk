@@ -1451,9 +1451,6 @@ endif; ?>
                 });
             };
 
-            window.pdCloseModal = function() {
-                projectModalBS.hide();
-            };
 
             window.pdCloseModal = function() {
                 $('#pd_project_modal').hide();
@@ -1540,3 +1537,407 @@ endif; ?>
 
     });
 </script>
+
+<?php if (!empty($show_popup) && $show_popup): ?>
+    <style>
+        /* ── Overlay ── */
+        #ba-popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 12, 41, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: baFadeIn 0.3s ease;
+        }
+
+        @keyframes baFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ── Card ── */
+        .ba-popup-card {
+            background: #fff;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 520px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+            animation: baSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+
+        @keyframes baSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ── Header banner ── */
+        .ba-popup-banner {
+            background: linear-gradient(135deg, #534AB7 0%, #7B6EE8 100%);
+            padding: 24px 24px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ba-popup-banner::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .ba-popup-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: -10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .ba-popup-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            font-size: 24px;
+        }
+
+        .ba-popup-title {
+            color: #fff;
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0 0 4px;
+        }
+
+        .ba-popup-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .ba-count-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #FF4D4D;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            box-shadow: 0 3px 12px rgba(255, 77, 77, 0.4);
+            animation: baPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes baPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 3px 12px rgba(255, 77, 77, 0.4);
+            }
+
+            50% {
+                transform: scale(1.06);
+                box-shadow: 0 5px 20px rgba(255, 77, 77, 0.6);
+            }
+        }
+
+        /* ── Body ── */
+        .ba-popup-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* ── Tiket item ── */
+        .ba-ticket-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            color: inherit;
+            background: #fafafa;
+        }
+
+        .ba-ticket-item:hover {
+            background: #EEEDFE;
+            border-color: #534AB7;
+            transform: translateX(3px);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .ba-ticket-num {
+            font-size: 10px;
+            color: #6c757d;
+            margin: 0 0 3px;
+        }
+
+        .ba-ticket-report {
+            font-size: 13px;
+            font-weight: 600;
+            color: #212529;
+            margin: 0 0 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .ba-ticket-meta {
+            font-size: 11px;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ba-due-warn {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .ba-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        /* ── Footer ── */
+        .ba-popup-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .ba-btn-primary {
+            flex: 1;
+            background: #534AB7;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .ba-btn-primary:hover {
+            background: #3f37a0;
+        }
+
+        .ba-btn-ghost {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 13px;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ba-btn-ghost:hover {
+            border-color: #534AB7;
+            color: #534AB7;
+        }
+
+        /* ── Skeleton ── */
+        .ba-skel {
+            border-radius: 8px;
+            animation: baSkel 1s linear infinite alternate;
+        }
+
+        @keyframes baSkel {
+            from {
+                background: hsl(200, 20%, 82%);
+            }
+
+            to {
+                background: hsl(200, 20%, 94%);
+            }
+        }
+    </style>
+
+    <!-- Pop-up DOM -->
+    <div id="ba-popup-overlay">
+        <div class="ba-popup-card">
+            <!-- Banner -->
+            <div class="ba-popup-banner">
+                <p class="ba-popup-title">Tiket Butuh Perhatianmu!</p>
+                <p class="ba-popup-subtitle">Ada tiket masuk yang belum ditentukan PIC-nya dan sudah lebih dari 7 hari</p>
+            </div>
+
+            <!-- Body -->
+            <div class="ba-popup-body" id="ba_popup_body">
+                <!-- Skeleton sementara AJAX load -->
+                <?php for ($i = 0; $i < 3; $i++): ?>
+                    <div class="ba-ticket-item" style="pointer-events:none;">
+                        <div class="ba-skel" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;"></div>
+                        <div style="flex:1;">
+                            <div class="ba-skel mb-1" style="width:80px;height:10px;"></div>
+                            <div class="ba-skel mb-2" style="width:100%;height:13px;"></div>
+                            <div class="ba-skel" style="width:60%;height:10px;"></div>
+                        </div>
+                    </div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Footer -->
+            <div class="ba-popup-footer">
+                <button class="ba-btn-primary" onclick="window.location.href='<?= site_url('ticket') ?>'">
+                    <i class="ti ti-ticket" style="font-size:14px;"></i>
+                    Lihat Semua Tiket
+                </button>
+                <button class="ba-btn-ghost" onclick="baClosePopup()">Nanti Dulu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+
+
+            function isOverdue(dueDateStr) {
+                if (!dueDateStr) return false;
+                return new Date(dueDateStr.substring(0, 10)) < new Date(new Date().toDateString());
+            }
+
+            function getAgeInfo(createDateStr) {
+                if (!createDateStr) return null;
+
+                var created = new Date(createDateStr.substring(0, 10));
+                var now = new Date(new Date().toDateString());
+                var days = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+
+                if (days >= 7) {
+                    return {
+                        days: days,
+                        color: '#EF9F27',
+                        bg: '#FAEEDA',
+                        icon: '⚠️'
+                    };
+                }
+
+                return null;
+            }
+
+            function renderTickets(tickets) {
+                var body = document.getElementById('ba_popup_body');
+
+                if (!tickets || tickets.length === 0) {
+                    body.innerHTML =
+                        '<div style="text-align:center;padding:30px;color:#6c757d;font-size:13px;">' +
+                        '<i class="ti ti-mood-happy" style="font-size:28px;display:block;margin-bottom:8px;color:#27AE60;"></i>' +
+                        'Tidak ada tiket baru (Open) 🎉</div>';
+                    return;
+                }
+
+                var html = '';
+                tickets.forEach(function(t) {
+                    var age = getAgeInfo(t.create_date);
+
+                    var ageHtml = '';
+                    if (age) {
+                        ageHtml = '<span style="background:' + age.bg + ';color:' + age.color +
+                            ';padding:2px 8px;border-radius:20px;font-weight:700;font-size:10px;' +
+                            'display:inline-flex;align-items:center;gap:3px;">' +
+                            age.icon + ' ' + age.days + ' hari</span>';
+                    }
+
+                    var created = t.create_date ? t.create_date.substring(0, 10) : '-';
+
+                    html += '<a href="' + siteurl + 'ticket/view_ticket/' + t.id + '" class="ba-ticket-item">' +
+                        '<div class="ba-status-dot" style="background:#E24B4A;margin-top:5px;"></div>' +
+                        '<div style="flex:1;">' +
+                        '<p class="ba-ticket-num">' + escHtml(t.no_ticket || '-') + ' &bull; ' + escHtml(t.client_name || '') + '</p>' +
+                        '<p class="ba-ticket-report">' + escHtml(t.report) + '</p>' +
+                        '<div class="ba-ticket-meta" style="gap:6px;">' +
+                        '<span style="background:#FCEBEB;color:#E24B4A;padding:1px 7px;border-radius:20px;font-weight:600;">Open</span>' +
+                        ageHtml +
+                        '<span style="color:#adb5bd;"><i class="ti ti-calendar-plus" style="font-size:10px;"></i> Dibuat: ' + created + '</span>' +
+                        '</div></div></a>';
+                });
+
+                body.innerHTML = html;
+            }
+
+            function escHtml(str) {
+                var d = document.createElement('div');
+                d.textContent = str || '';
+                return d.innerHTML;
+            }
+
+            // Load via AJAX
+            $.ajax({
+                url: siteurl + 'dashboard/get_unassigned_tickets',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    renderTickets(res);
+                },
+                error: function() {
+                    document.getElementById('ba_popup_body').innerHTML =
+                        '<div style="text-align:center;padding:20px;font-size:13px;color:#dc3545;">' +
+                        'Gagal memuat data tiket.</div>';
+                }
+            });
+
+            window.baClosePopup = function() {
+                var overlay = document.getElementById('ba-popup-overlay');
+                if (!overlay) return;
+                overlay.style.animation = 'baFadeIn 0.2s ease reverse';
+                setTimeout(function() {
+                    overlay.remove();
+                }, 180);
+            };
+        })();
+    </script>
+<?php endif; ?>
