@@ -31,7 +31,7 @@ class Ticket_management_model extends BF_Model
         $this->db->from('helpdesk h');
         $this->db->join('users u', 'u.id_user = h.pic_id', 'left');
         $this->db->where('u.is_programmer', 1);
-        $this->db->where('h.is_approve', 0);
+        $this->db->where('(h.is_approve = 0 OR h.status = 6)');
         $this->db->where('h.status !=', 3);
         $this->db->where('h.status !=', 5);
         $this->db->where('h.is_delete', 0);

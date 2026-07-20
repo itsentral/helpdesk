@@ -6,7 +6,7 @@ $statusConfig = [
     3 => ['label' => 'Cancel',  'class' => 'badge bg-danger'],
     4 => ['label' => 'Done',    'class' => 'badge bg-success'],
     5 => ['label' => 'Close',   'class' => 'badge bg-secondary'],
-    6 => ['label' => 'Revisi',  'class' => 'badge bg-orange'],
+    6 => ['label' => 'Revisi',  'class' => 'badge bg-secondary'],
 ];
 
 $grouped = [];
@@ -35,16 +35,19 @@ foreach ($ticket as $row) {
             $countOpen    = 0;
             $countProcess = 0;
             $countDone    = 0;
+            $countRevisi  = 0; // ← TAMBAHAN
             $countOverdue = 0;
 
             foreach ($data['tickets'] as $t) {
                 if ($t->status == 0) $countOpen++;
                 if ($t->status == 1) $countProcess++;
                 if ($t->status == 4) $countDone++;
+                if ($t->status == 6) $countRevisi++;
+
                 if (
                     $t->due_date
                     && date('Y-m-d') > date('Y-m-d', strtotime($t->due_date))
-                    && !in_array($t->status, [4, 5])
+                    && !in_array($t->status, [4, 5]) 
                 ) {
                     $countOverdue++;
                 }
@@ -69,6 +72,9 @@ foreach ($ticket as $row) {
                                 <span class="badge bg-info"><?= $countProcess ?> Process</span>
                                 <?php if ($countDone > 0) : ?>
                                     <span class="badge bg-success"><?= $countDone ?> Done</span>
+                                <?php endif; ?>
+                                <?php if ($countRevisi > 0) : ?>
+                                    <span class="badge bg-secondary"><?= $countRevisi ?> Revisi</span>
                                 <?php endif; ?>
                                 <?php if ($countOverdue > 0) : ?>
                                     <span class="badge bg-danger">
@@ -140,7 +146,7 @@ foreach ($ticket as $row) {
                                         $dueDateRaw = $t->due_date ? date('Y-m-d', strtotime($t->due_date)) : '';
                                         $isOverdue = $t->due_date
                                             && date('Y-m-d') > date('Y-m-d', strtotime($t->due_date))
-                                            && !in_array($t->status, [4, 5]);
+                                            && !in_array($t->status, [4, 5]); // ← 6 dikecualikan dari overdue
                                     ?>
                                         <li class="d-flex align-items-center px-3 py-2 border-bottom ticket-row <?= $isOverdue ? 'bg-danger bg-opacity-10' : '' ?>"
                                             data-id="<?= $t->id ?>"
