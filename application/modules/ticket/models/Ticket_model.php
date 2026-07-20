@@ -406,16 +406,19 @@ class Ticket_model extends BF_Model
     public function save_history($data = [])
     {
         $insert = [
-            'helpdesk_id'  => $data['helpdesk_id'],
-            'no_ticket'    => $data['no_ticket'],
-            'action_type'  => $data['action_type'],
-            'description'  => $data['description'] ?? null,
-            'cause_pic'    => $data['cause_pic'] ?? null,
-            'old_status'   => $data['old_status'] ?? null,
-            'new_status'   => $data['new_status'] ?? null,
-            'action_by'    => $this->auth->nama(),
-            'action_by_id' => $this->auth->user_id(),
-            'action_date'  => date('Y-m-d H:i:s')
+            'helpdesk_id'             => $data['helpdesk_id'],
+            'no_ticket'               => $data['no_ticket'],
+            'action_type'             => $data['action_type'],
+            'description'             => $data['description'] ?? null,
+            'cause_pic'               => $data['cause_pic'] ?? null,
+            'old_status'              => $data['old_status'] ?? null,
+            'new_status'              => $data['new_status'] ?? null,
+            'keterangan_penyelesaian' => $data['keterangan_penyelesaian'] ?? null,
+            'file_done_original_name' => $data['file_done_original_name'] ?? null,
+            'file_done_hash_name'     => $data['file_done_hash_name'] ?? null,
+            'action_by'               => $this->auth->nama(),
+            'action_by_id'            => $this->auth->user_id(),
+            'action_date'             => date('Y-m-d H:i:s')
         ];
 
         return $this->db->insert('helpdesk_history', $insert);
@@ -643,7 +646,7 @@ class Ticket_model extends BF_Model
     public function soft_delete_chat($chat_id, $user_id)
     {
         $this->db->where('id', $chat_id);
-        $this->db->where('sender_id', $user_id); 
+        $this->db->where('sender_id', $user_id);
         return $this->db->update('helpdesk_chat', [
             'is_delete' => 1
         ]);
@@ -656,5 +659,37 @@ class Ticket_model extends BF_Model
         return $this->db->update('helpdesk_chat', [
             'message' => $new_message
         ]);
+    }
+
+    public function is_valid_done_file($helpdesk_id, $hash_name)
+    {
+        // Cek di tabel utama (versi terbaru)
+        $this->db->where('id', $helpdesk_id);
+        $this->db->where('file_done_hash_name', $hash_name);
+        $main = $this->db->get('helpdesk')->row();
+
+        if ($main) return true;
+
+        // Cek di history (versi lama)
+        $this->db->where('helpdesk_id', $helpdesk_id);
+        $this->db->where('file_done_hash_name', $hash_name);
+        $history = $this->db->get('helpdesk_history')->row();
+
+        return $history ? true : false;
+    }
+
+    public function get_done_file_original_name($helpdesk_id, $hash_name)
+    {
+        $this->db->where('id', $helpdesk_id);
+        $this->db->where('file_done_hash_name', $hash_name);
+        $main = $this->db->get('helpdesk')->row();
+
+        if ($main) return $main->file_done_original_name;
+
+        $this->db->where('helpdesk_id', $helpdesk_id);
+        $this->db->where('file_done_hash_name', $hash_name);
+        $history = $this->db->get('helpdesk_history')->row();
+
+        return $history ? $history->file_done_original_name : null;
     }
 }

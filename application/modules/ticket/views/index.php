@@ -114,7 +114,6 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 	}
 
 	/* Chat Styles */
-	/* Chat Styles */
 	.chat-message {
 		margin-bottom: 15px;
 		display: flex;
@@ -1076,6 +1075,13 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
    	 `;
 	}
 
+	function isImageFile(fileName) {
+		if (!fileName) return false;
+		const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+		const ext = fileName.split('.').pop().toLowerCase();
+		return imageExtensions.includes(ext);
+	}
+
 	function buildHistoryTimeline(historyData) {
 		var timeline = '';
 
@@ -1157,75 +1163,125 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 				var newStatusText = statusLabels[item.new_status] || item.new_status;
 
 				description += `
-				<br>
-				<small class="text-muted">
-					Status:
-					<strong>${oldStatusText}</strong> →
-					<strong>${newStatusText}</strong>
-				</small>`;
+            <br>
+            <small class="text-muted">
+                Status:
+                <strong>${oldStatusText}</strong> →
+                <strong>${newStatusText}</strong>
+            </small>`;
 			}
 
 			// APPROVAL LEVEL INFO
 			if (item.action_type == 4 && item.old_status == item.new_status) {
 				description += `
-				<br>
-				<small class="text-secondary">
-					<i class="fa-solid fa-clock"></i>
-					Menunggu approval berikutnya
-				</small>`;
+            <br>
+            <small class="text-secondary">
+                <i class="fa-solid fa-clock"></i>
+                Menunggu approval berikutnya
+            </small>`;
 			}
 
 			if (item.action_type == 7) {
 				description += `
-				<br>
-				<small class="text-success">
-					<i class="fa-solid fa-lock"></i>
-					Ticket ditutup setelah final approval
-				</small>`;
+            <br>
+            <small class="text-success">
+                <i class="fa-solid fa-lock"></i>
+                Ticket ditutup setelah final approval
+            </small>`;
 			}
 
 			// REJECT INFO
 			if (item.action_type == 5) {
 				description += `
-				<br>
-				<small class="text-warning">
-					<i class="fa-solid fa-rotate-left"></i>
-					Tiket dikembalikan ke revisi
-				</small>`;
+            <br>
+            <small class="text-warning">
+                <i class="fa-solid fa-rotate-left"></i>
+                Tiket dikembalikan ke revisi
+            </small>`;
 			}
 
 			// REMARK / NOTE
 			if (item.cause_pic && item.cause_pic.trim() !== '') {
 				description += `
-				<br>
-				<small class="text-info">
-					<i class="fa-solid fa-comment-dots"></i>
-					<strong>Remark:</strong> ${item.cause_pic}
-				</small>`;
+            <br>
+            <small class="text-info">
+                <i class="fa-solid fa-comment-dots"></i>
+                <strong>Remark:</strong> ${item.cause_pic}
+            </small>`;
+			}
+
+			// KETERANGAN PENYELESAIAN (saat status diubah ke Done)
+			if (item.new_status == 4 && item.keterangan_penyelesaian && item.keterangan_penyelesaian.trim() !== '') {
+				description += `
+            <br>
+            <small class="text-info">
+                <i class="fa-solid fa-note-sticky"></i>
+                <strong>Keterangan Penyelesaian:</strong> ${item.keterangan_penyelesaian}
+            </small>`;
+			}
+
+			// ATTACHMENT BUKTI PENYELESAIAN
+			if (item.new_status == 4 && item.file_done_hash_name) {
+				const downloadUrl = siteurl + active_controller + 'download_done_file/' + item.helpdesk_id + '/' + item.file_done_hash_name;
+				const displayName = item.file_done_original_name || item.file_done_hash_name;
+
+				if (isImageFile(item.file_done_hash_name)) {
+					// Tampilkan preview gambar (bisa diklik via Viewer.js)
+					description += `
+                	<br>
+					<div class="history-file mt-2">
+						<small class="d-block mb-1 text-primary">
+							<i class="fa-solid fa-paperclip"></i> <strong>Bukti Penyelesaian:</strong>
+						</small>
+						<img src="${downloadUrl}"
+							alt="${displayName}"
+							class="history-image-preview"
+							data-viewer-src="${downloadUrl}"
+							style="max-width: 150px; max-height: 150px; border-radius: 8px; cursor: pointer; border: 1px solid #dee2e6;">
+						<div class="mt-1">
+							<small>
+								<a href="${downloadUrl}" download>
+									<i class="fa-solid fa-download"></i> ${displayName}
+								</a>
+							</small>
+						</div>
+					</div>`;
+				} else {
+					// File non-image, langsung download saat diklik
+					description += `
+                <br>
+                <small class="text-primary d-block mt-1">
+                    <i class="fa-solid fa-paperclip"></i>
+                    <strong>Bukti Penyelesaian:</strong>
+                    <a href="${downloadUrl}" download>
+                        <i class="fa-solid fa-file"></i> ${displayName}
+                    </a>
+                </small>`;
+				}
 			}
 
 			// BUILD HTML
 			timeline += `
-					<div class="timeline-item">
-						<div class="timeline-marker" style="background-color: ${actionInfo.color};">
-							<i class="fa-solid ${actionInfo.icon}"></i>
-						</div>
-						<div class="timeline-content">
-							<div class="d-flex justify-content-between align-items-start mb-1">
-								<span class="fw-bold" style="color: ${actionInfo.color};">
-									${actionInfo.text}
-								</span>
-								<small class="text-muted">
-									<i class="fa-solid fa-clock"></i> ${formatDate(item.action_date)}
-								</small>
-							</div>
-							<div class="mb-1">${description}</div>
-							<small class="text-muted fst-italic">
-								<i class="fa-solid fa-user"></i> ${item.action_by || 'System'}
-							</small>
-						</div>
-					</div>
-				`;
+                <div class="timeline-item">
+                    <div class="timeline-marker" style="background-color: ${actionInfo.color};">
+                        <i class="fa-solid ${actionInfo.icon}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="fw-bold" style="color: ${actionInfo.color};">
+                                ${actionInfo.text}
+                            </span>
+                            <small class="text-muted">
+                                <i class="fa-solid fa-clock"></i> ${formatDate(item.action_date)}
+                            </small>
+                        </div>
+                        <div class="mb-1">${description}</div>
+                        <small class="text-muted fst-italic">
+                            <i class="fa-solid fa-user"></i> ${item.action_by || 'System'}
+                        </small>
+                    </div>
+                </div>
+            `;
 		});
 
 		return timeline;
@@ -1702,7 +1758,7 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			}
 
 			if (e.key === 'Enter' && !e.shiftKey) {
-				e.preventDefault(); 
+				e.preventDefault();
 				$('.btn-edit-save[data-chat-id="' + chatId + '"]').trigger('click');
 				return;
 			}
@@ -2487,6 +2543,54 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 			$('#chatFile')[0].files = dataTransfer.files;
 
 			$('#chatFile').trigger('change');
+		});
+
+		$(document).on('click', '.history-image-preview', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+
+			const $allImages = $('#historyTimeline .history-image-preview');
+			const currentIndex = $allImages.index(this);
+
+			// Buat container di BODY, bukan di dalam modal
+			const $tempContainer = $('<div id="tempHistoryViewerContainer" style="display:none;"></div>');
+
+			// Clone semua images dalam timeline history
+			$allImages.each(function() {
+				const $clone = $(this).clone();
+				$tempContainer.append($clone);
+			});
+
+			// Append ke body (di luar modal)
+			$('body').append($tempContainer);
+
+			// Buat viewer
+			const viewer = new Viewer($tempContainer[0], {
+				inline: false,
+				navbar: $allImages.length > 1,
+				title: true,
+				toolbar: {
+					zoomIn: 1,
+					zoomOut: 1,
+					oneToOne: 1,
+					reset: 1,
+					rotateLeft: 1,
+					rotateRight: 1,
+					download: 1,
+				},
+				hidden: () => {
+					setTimeout(() => {
+						try {
+							viewer.destroy();
+						} catch (e) {
+							console.log('Destroy error:', e);
+						}
+						$tempContainer.remove();
+					}, 100);
+				}
+			});
+
+			viewer.view(currentIndex);
 		});
 	});
 </script>

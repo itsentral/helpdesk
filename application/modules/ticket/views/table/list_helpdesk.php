@@ -317,7 +317,7 @@ $loginUserId = $this->auth->user_id();
                                 <?php endif; ?>
 
                                 <!-- EDIT -->
-                                <?php if ($ENABLE_MANAGE && $status === 0): ?>
+                                <?php if ($ENABLE_MANAGE && in_array($status, [0, 2, 6], true)): ?>
                                     <button type="button"
                                         class="btn btn-warning btn-sm px-2 py-1 edit-ticket"
                                         style="width: 120px"

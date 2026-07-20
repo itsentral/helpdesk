@@ -753,7 +753,6 @@ class Ticket extends Admin_Controller
         return;
       }
 
-      // Validasi Causes
       $causes_input    = $this->input->post('causes');
       $existing_causes = $old_ticket->causes ?? '';
       if (empty($existing_causes) && empty($causes_input)) {
@@ -764,7 +763,6 @@ class Ticket extends Admin_Controller
         return;
       }
 
-      // Validasi Action Plan
       $action_plan_input    = $this->input->post('action_plan');
       $existing_action_plan = $old_ticket->action_plan ?? '';
       if (empty($existing_action_plan) && empty($action_plan_input)) {
@@ -822,7 +820,6 @@ class Ticket extends Admin_Controller
       $data['causes'] = $this->input->post('causes');
     }
 
-    // Handle Action Plan jika diisi dari modal
     if ((int)$status === 1 && $this->input->post('action_plan')) {
       $data['action_plan'] = $this->input->post('action_plan');
     }
@@ -833,6 +830,80 @@ class Ticket extends Admin_Controller
       $old_man_hour = (float)($old_ticket->man_hour_actual ?? 0);
 
       $data['man_hour_actual'] = $old_man_hour > 0 ? ($old_man_hour + $new_man_hour) : $new_man_hour;
+    }
+
+    // Handle Keterangan Penyelesaian (opsional, hanya saat status Done)
+    // Variabel ini juga dipakai untuk disimpan ke history di bawah
+    $keterangan_penyelesaian = null;
+    if ((int)$status === 4) {
+      $keterangan_input = $this->input->post('keterangan_penyelesaian');
+      if ($keterangan_input !== null && trim($keterangan_input) !== '') {
+        $keterangan_penyelesaian         = trim($keterangan_input);
+        $data['keterangan_penyelesaian'] = $keterangan_penyelesaian;
+      }
+    }
+
+    // Handle Lampiran Bukti Penyelesaian (opsional, hanya saat status Done)
+    // Variabel ini juga dipakai untuk disimpan ke history di bawah
+    $file_done_original_name = null;
+    $file_done_hash_name     = null;
+
+    if ((int)$status === 4 && !empty($_FILES['file_done']['name'])) {
+      $allowed_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'];
+      $max_size    = 2 * 1024 * 1024; // 2MB
+
+      $file_error    = $_FILES['file_done']['error'];
+      $file_size     = $_FILES['file_done']['size'];
+      $file_tmp      = $_FILES['file_done']['tmp_name'];
+      $original_name = $_FILES['file_done']['name'];
+      $ext           = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+
+      if ($file_error !== UPLOAD_ERR_OK) {
+        echo json_encode([
+          'status'  => 0,
+          'message' => 'Gagal mengunggah file bukti penyelesaian'
+        ]);
+        return;
+      }
+
+      if ($file_size > $max_size) {
+        echo json_encode([
+          'status'  => 0,
+          'message' => 'Ukuran file bukti penyelesaian maksimal 2MB'
+        ]);
+        return;
+      }
+
+      if (!in_array($ext, $allowed_ext)) {
+        echo json_encode([
+          'status'  => 0,
+          'message' => 'Tipe file bukti penyelesaian tidak didukung'
+        ]);
+        return;
+      }
+
+      $upload_dir = FCPATH . 'uploads/bukti_penyelesaian_ticket/';
+      if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+      }
+
+      $hash_name = md5(uniqid($id . '_', true)) . '.' . $ext;
+
+      if (move_uploaded_file($file_tmp, $upload_dir . $hash_name)) {
+        // NOTE: file lama (jika ada) SENGAJA tidak dihapus,
+        // supaya masih bisa diakses lewat history/timeline
+        $file_done_original_name = $original_name;
+        $file_done_hash_name     = $hash_name;
+
+        $data['file_done_original_name'] = $file_done_original_name;
+        $data['file_done_hash_name']     = $file_done_hash_name;
+      } else {
+        echo json_encode([
+          'status'  => 0,
+          'message' => 'Gagal menyimpan file bukti penyelesaian'
+        ]);
+        return;
+      }
     }
 
     // Reset approval jika dari rejected ke process
@@ -851,16 +922,19 @@ class Ticket extends Admin_Controller
 
     if ($result) {
       $this->Ticket_model->save_history([
-        'helpdesk_id'  => $id,
-        'no_ticket'    => $old_ticket->no_ticket,
-        'action_type'  => 1,
-        'old_status'   => $old_ticket->status,
-        'new_status'   => $status,
-        'description'  => $description,
-        'cause_pic'    => $this->input->post('cancel_reason') ?: null,
-        'action_by'    => $this->auth->nama(),
-        'action_by_id' => $this->auth->user_id(),
-        'action_date'  => date('Y-m-d H:i:s')
+        'helpdesk_id'             => $id,
+        'no_ticket'               => $old_ticket->no_ticket,
+        'action_type'             => 1,
+        'old_status'              => $old_ticket->status,
+        'new_status'              => $status,
+        'description'             => $description,
+        'cause_pic'               => $this->input->post('cancel_reason') ?: null,
+        'keterangan_penyelesaian' => $keterangan_penyelesaian,
+        'file_done_original_name' => $file_done_original_name,
+        'file_done_hash_name'     => $file_done_hash_name,
+        'action_by'               => $this->auth->nama(),
+        'action_by_id'            => $this->auth->user_id(),
+        'action_date'             => date('Y-m-d H:i:s')
       ]);
 
       if ((int)$status === 4 && !empty($old_ticket->approval_by_id)) {
@@ -1379,4 +1453,47 @@ class Ticket extends Admin_Controller
       echo json_encode(['status' => 0, 'message' => 'Gagal memperbarui pesan']);
     }
   }
+
+  public function download_done_file($helpdesk_id, $hash_name)
+{
+    if (!has_permission('Ticket.View') && !has_permission('Ticket.Manage')) {
+        show_error('Anda tidak memiliki izin untuk mengunduh file ini', 403);
+        return;
+    }
+
+    $is_valid = $this->Ticket_model->is_valid_done_file($helpdesk_id, $hash_name);
+    if (!$is_valid) {
+        show_error('File tidak ditemukan atau tidak valid', 404);
+        return;
+    }
+
+    $file_path = FCPATH . 'uploads/bukti_penyelesaian_ticket/' . $hash_name;
+    if (!file_exists($file_path)) {
+        show_error('File tidak ditemukan di server', 404);
+        return;
+    }
+
+    $ext = strtolower(pathinfo($hash_name, PATHINFO_EXTENSION));
+    $image_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+    // Jika request untuk preview gambar (?view=1) dan filenya memang image, tampilkan inline
+    if ($this->input->get('view') && in_array($ext, $image_ext)) {
+        $mime_types = [
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+        ];
+        header('Content-Type: ' . $mime_types[$ext]);
+        header('Content-Length: ' . filesize($file_path));
+        header('Content-Disposition: inline; filename="' . basename($file_path) . '"');
+        readfile($file_path);
+        exit;
+    }
+
+    // Default: force download
+    $this->load->helper('download');
+    force_download($file_path, null, true);
+}
 }

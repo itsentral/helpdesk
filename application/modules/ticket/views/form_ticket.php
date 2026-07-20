@@ -164,6 +164,64 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
         align-items: center;
         justify-content: center;
     }
+
+    /* Timeline History */
+    .timeline-item {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 14px;
+        top: 30px;
+        bottom: -15px;
+        width: 2px;
+        background: #dee2e6;
+    }
+
+    .timeline-marker {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+        z-index: 1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .timeline-marker i {
+        font-size: 13px;
+    }
+
+    .timeline-content {
+        flex: 1;
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .timeline-history::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .timeline-history::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .timeline-history::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 10px;
+    }
 </style>
 
 <div class="card">
@@ -768,7 +826,7 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
         ?>
 
             <!-- EDIT -->
-            <?php if ($mode === 'view' && $ENABLE_MANAGE && $status == 0 && ($isBA || $picById === $uid)): ?>
+            <?php if ($mode === 'view' && $ENABLE_MANAGE && in_array($status, [0, 2, 6]) && ($isBA || $picById === $uid)): ?>
                 <?php
                 $separator = (!empty($back_params)) ? '&' : '?';
                 $src_param = (isset($source) && $source == 'management') ? $separator . 'src=management' : '';
@@ -778,6 +836,13 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     <i class="fa-solid fa-pen-to-square"></i> Edit Ticket
                 </a>
             <?php endif; ?>
+
+            <!-- HISTORY -->
+            <button type="button" class="btn btn-outline-primary view-history"
+                data-id="<?= $helpdesk->id ?>"
+                data-ticket="<?= htmlspecialchars($no_ticket) ?>">
+                <i class="fa-solid fa-clock-rotate-left"></i> History
+            </button>
 
             <!-- PROCESS -->
             <?php if ($picById === $uid && in_array($s, [0, 2, 6])): ?>
@@ -867,6 +932,37 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
                     <source id="videoSource" src="" type="video/mp4">
                     Browser Anda tidak mendukung pemutaran video.
                 </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal History Ticket -->
+<div class="modal fade" id="modalHistoryTicket" tabindex="-1" aria-labelledby="modalHistoryLabel" aria-hidden="true" data-bs-backdrop="static"
+    data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-scrollable" style="max-width: 650px;">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white" id="modalHistoryLabel">
+                    <i class="fa-solid fa-clock-rotate-left"></i> History Ticket: <span id="historyTicketNo"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Loading State -->
+                <div id="historyLoading" class="text-center py-5" style="display: none;">
+                    <i class="fa-solid fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading history...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="historyEmpty" class="text-center py-5" style="display: none;">
+                    <i class="fa-solid fa-inbox fa-3x text-muted"></i>
+                    <p class="mt-3 text-muted">Belum ada history untuk ticket ini</p>
+                </div>
+
+                <!-- Timeline Content -->
+                <div id="historyTimeline" class="timeline-history p-3" style="max-height: 600px; overflow-y: auto;"></div>
             </div>
         </div>
     </div>
@@ -1840,6 +1936,273 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 
 <?php if ($is_readonly && isset($helpdesk->id)): ?>
     <script>
+        function isImageFile(fileName) {
+            if (!fileName) return false;
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            const ext = fileName.split('.').pop().toLowerCase();
+            return imageExtensions.includes(ext);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+
+            var date = new Date(dateString);
+            var options = {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+
+            return date.toLocaleDateString('id-ID', options);
+        }
+
+        function buildHistoryTimeline(historyData) {
+            var timeline = '';
+
+            var actionTypeLabels = {
+                0: {
+                    icon: 'fa-plus-circle',
+                    text: 'Created',
+                    color: '#28a745'
+                },
+                1: {
+                    icon: 'fa-sync-alt',
+                    text: 'Status Updated',
+                    color: '#007bff'
+                },
+                2: {
+                    icon: 'fa-hourglass-half',
+                    text: 'Pending',
+                    color: '#ffc107'
+                },
+                3: {
+                    icon: 'fa-ban',
+                    text: 'Cancelled',
+                    color: '#dc3545'
+                },
+                4: {
+                    icon: 'fa-check-circle',
+                    text: 'Approval',
+                    color: '#28a745'
+                },
+                5: {
+                    icon: 'fa-times-circle',
+                    text: 'Rejected',
+                    color: '#dc3545'
+                },
+                6: {
+                    icon: 'fa-lock',
+                    text: 'Closed',
+                    color: '#6c757d'
+                },
+                7: {
+                    icon: 'fa-user-check',
+                    text: 'Final Approval',
+                    color: '#198754'
+                },
+                8: {
+                    icon: 'fa-pen-to-square',
+                    text: 'Data Updated',
+                    color: '#0d6efd'
+                }
+            };
+
+            var statusLabels = {
+                0: 'Open',
+                1: 'Process',
+                2: 'Pending',
+                3: 'Cancel',
+                4: 'Done',
+                5: 'Close',
+                6: 'Revisi'
+            };
+
+            historyData.forEach(function(item) {
+                var actionInfo = actionTypeLabels[item.action_type] || {
+                    icon: 'fa-circle',
+                    text: 'Unknown',
+                    color: '#6c757d'
+                };
+
+                var description = item.description || '';
+
+                if (item.old_status !== null && item.new_status !== null && item.old_status != item.new_status) {
+                    var oldStatusText = statusLabels[item.old_status] || item.old_status;
+                    var newStatusText = statusLabels[item.new_status] || item.new_status;
+
+                    description += `
+                <br>
+                <small class="text-muted">
+                    Status:
+                    <strong>${oldStatusText}</strong> →
+                    <strong>${newStatusText}</strong>
+                </small>`;
+                }
+
+                if (item.action_type == 4 && item.old_status == item.new_status) {
+                    description += `
+                <br>
+                <small class="text-secondary">
+                    <i class="fa-solid fa-clock"></i>
+                    Menunggu approval berikutnya
+                </small>`;
+                }
+
+                if (item.action_type == 7) {
+                    description += `
+                <br>
+                <small class="text-success">
+                    <i class="fa-solid fa-lock"></i>
+                    Ticket ditutup setelah final approval
+                </small>`;
+                }
+
+                if (item.action_type == 5) {
+                    description += `
+                <br>
+                <small class="text-warning">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Tiket dikembalikan ke revisi
+                </small>`;
+                }
+
+                if (item.cause_pic && item.cause_pic.trim() !== '') {
+                    description += `
+                <br>
+                <small class="text-info">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    <strong>Remark:</strong> ${item.cause_pic}
+                </small>`;
+                }
+
+                if (item.new_status == 4 && item.keterangan_penyelesaian && item.keterangan_penyelesaian.trim() !== '') {
+                    description += `
+                <br>
+                <small class="text-info">
+                    <i class="fa-solid fa-note-sticky"></i>
+                    <strong>Keterangan Penyelesaian:</strong> ${item.keterangan_penyelesaian}
+                </small>`;
+                }
+
+                if (item.new_status == 4 && item.file_done_hash_name) {
+                    const downloadUrl = siteurl + active_controller + 'download_done_file/' + item.helpdesk_id + '/' + item.file_done_hash_name;
+                    const viewUrl = downloadUrl + '?view=1';
+                    const displayName = item.file_done_original_name || item.file_done_hash_name;
+
+                    if (isImageFile(item.file_done_hash_name)) {
+                        description += `
+                    <br>
+                    <div class="history-file mt-2">
+                        <small class="d-block mb-1 text-primary">
+                            <i class="fa-solid fa-paperclip"></i> <strong>Bukti Penyelesaian:</strong>
+                        </small>
+                        <img src="${viewUrl}"
+                             alt="${displayName}"
+                             class="history-image-preview"
+                             data-viewer-src="${viewUrl}"
+                             style="max-width: 150px; max-height: 150px; border-radius: 8px; cursor: pointer; border: 1px solid #dee2e6;">
+                        <div class="mt-1">
+                            <small>
+                                <a href="${downloadUrl}" download>
+                                    <i class="fa-solid fa-download"></i> ${displayName}
+                                </a>
+                            </small>
+                        </div>
+                    </div>`;
+                    } else {
+                        description += `
+                    <br>
+                    <small class="text-primary d-block mt-1">
+                        <i class="fa-solid fa-paperclip"></i>
+                        <strong>Bukti Penyelesaian:</strong>
+                        <a href="${downloadUrl}" download>
+                            <i class="fa-solid fa-file"></i> ${displayName}
+                        </a>
+                    </small>`;
+                    }
+                }
+
+                timeline += `
+                    <div class="timeline-item">
+                        <div class="timeline-marker" style="background-color: ${actionInfo.color};">
+                            <i class="fa-solid ${actionInfo.icon}"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span class="fw-bold" style="color: ${actionInfo.color};">
+                                    ${actionInfo.text}
+                                </span>
+                                <small class="text-muted">
+                                    <i class="fa-solid fa-clock"></i> ${formatDate(item.action_date)}
+                                </small>
+                            </div>
+                            <div class="mb-1">${description}</div>
+                            <small class="text-muted fst-italic">
+                                <i class="fa-solid fa-user"></i> ${item.action_by || 'System'}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            });
+
+            return timeline;
+        }
+
+        // Handler klik untuk lihat History
+        $(document).on('click', '.view-history', function(e) {
+            e.preventDefault();
+            var ticketId = $(this).data('id');
+            var ticketNo = $(this).data('ticket');
+            viewTicketHistory(ticketId, ticketNo);
+        });
+
+        // Viewer.js untuk gambar bukti penyelesaian di History
+        $(document).on('click', '.history-image-preview', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const $allImages = $('#historyTimeline .history-image-preview');
+            const currentIndex = $allImages.index(this);
+
+            const $tempContainer = $('<div id="tempHistoryViewerContainer" style="display:none;"></div>');
+
+            $allImages.each(function() {
+                const $clone = $(this).clone();
+                $tempContainer.append($clone);
+            });
+
+            $('body').append($tempContainer);
+
+            const viewer = new Viewer($tempContainer[0], {
+                inline: false,
+                navbar: $allImages.length > 1,
+                title: true,
+                toolbar: {
+                    zoomIn: 1,
+                    zoomOut: 1,
+                    oneToOne: 1,
+                    reset: 1,
+                    rotateLeft: 1,
+                    rotateRight: 1,
+                    download: 1,
+                },
+                hidden: () => {
+                    setTimeout(() => {
+                        try {
+                            viewer.destroy();
+                        } catch (e) {
+                            console.log('Destroy error:', e);
+                        }
+                        $tempContainer.remove();
+                    }, 100);
+                }
+            });
+
+            viewer.view(currentIndex);
+        });
+
         window.loadHelpdeskList = function() {
             setTimeout(() => {
                 window.location.href = siteurl + active_controller;

@@ -102,36 +102,56 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
             break;
 
         case 4: // Done
-            // Cek apakah dari status Process (1)
+            var doneExtraHtml = `
+                <div class="form-group mt-3 text-start">
+                    <label for="keteranganPenyelesaian" class="form-label">
+                        <i class="fa-solid fa-note-sticky"></i> Keterangan Penyelesaian
+                        <small class="text-muted">(opsional)</small>
+                    </label>
+                    <textarea class="form-control" id="keteranganPenyelesaian" rows="3"
+                        placeholder="Masukkan keterangan penyelesaian (opsional)..."></textarea>
+                </div>
+                <div class="form-group mt-3 text-start">
+                    <label for="fileDonePenyelesaian" class="form-label">
+                        <i class="fa-solid fa-paperclip"></i> Lampiran Bukti Penyelesaian
+                        <small class="text-muted">(opsional)</small>
+                    </label>
+                    <input type="file" class="form-control" id="fileDonePenyelesaian"
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar">
+                    <small class="text-muted d-block mt-1">
+                        <i class="fa-solid fa-info-circle"></i> Maksimal ukuran file 2MB
+                    </small>
+                </div>
+            `;
+
             if (currentStatus == 1) {
                 modalContent = `
-                    <div class="mb-3">
-                        <h2>Tandai ticket ini sudah selesai?</h2>
+                    <div class="mb-3 text-start">
+                        <h2 class="text-center">Tandai ticket ini sudah selesai?</h2>
                         <div class="form-group mt-3">
                             <label for="manHourActual" class="form-label">
                                 <i class="fa-solid fa-clock"></i> Man Hour Actual <small class="text-danger">*</small>
                             </label>
                             <div class="input-group">
-                                <input
-                                    type="number"
-                                    class="form-control"
-                                    id="manHourActual"
-                                    placeholder="Contoh: 2.5"
-                                    min="0"
-                                    step="0.5"
-                                    required
-                                >
+                                <input type="number" class="form-control" id="manHourActual"
+                                    placeholder="Contoh: 2.5" min="0" step="0.5" required>
                                 <span class="input-group-text">jam</span>
                             </div>
                             <small class="text-muted d-block mt-1">
                                 <i class="fa-solid fa-info-circle"></i> Masukkan waktu aktual yang dihabiskan untuk menyelesaikan ticket ini
                             </small>
                         </div>
+                        ${doneExtraHtml}
                     </div>
                 `;
                 showManHourInput = true;
             } else {
-                modalContent = '<h2>Tandai ticket ini sudah selesai?</h2>';
+                modalContent = `
+                    <div class="mb-3 text-start">
+                        <h2 class="text-center">Tandai ticket ini sudah selesai?</h2>
+                        ${doneExtraHtml}
+                    </div>
+                `;
             }
             break;
 
@@ -159,6 +179,8 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
             var manHourPlanInput = '';
             var causesInput = '';
             var actionPlanInput = '';
+            var keteranganPenyelesaian = '';
+            var fileDone = null;
 
             // Validasi Cancel Reason
             if (showReasonInput) {
@@ -204,20 +226,41 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
                 }
             }
 
+            // Ambil Keterangan Penyelesaian & File (opsional, hanya untuk status Done)
+            if (status === 4) {
+                keteranganPenyelesaian = $('#keteranganPenyelesaian').val() || '';
+
+                const fileInputEl = $('#fileDonePenyelesaian')[0];
+                if (fileInputEl && fileInputEl.files.length > 0) {
+                    fileDone = fileInputEl.files[0];
+                    if (fileDone.size > 2 * 1024 * 1024) {
+                        Swal.showValidationMessage('Ukuran file bukti penyelesaian maksimal 2MB');
+                        return false;
+                    }
+                }
+            }
+
             return new Promise((resolve, reject) => {
+                var formData = new FormData();
+                formData.append('id', ticketId);
+                formData.append('status', status);
+                formData.append('current_status', currentStatus);
+                formData.append('cancel_reason', cancelReason ? cancelReason.trim() : '');
+                formData.append('man_hour_actual', manHourActual ? parseFloat(manHourActual) : '');
+                formData.append('man_hour_plan', manHourPlanInput ? parseFloat(manHourPlanInput) : '');
+                formData.append('causes', causesInput ? causesInput.trim() : '');
+                formData.append('action_plan', actionPlanInput ? actionPlanInput.trim() : '');
+                formData.append('keterangan_penyelesaian', keteranganPenyelesaian ? keteranganPenyelesaian.trim() : '');
+                if (fileDone) {
+                    formData.append('file_done', fileDone);
+                }
+
                 $.ajax({
                     url: siteurl + active_controller + 'update_status',
                     type: 'POST',
-                    data: {
-                        id: ticketId,
-                        status: status,
-                        current_status: currentStatus,
-                        cancel_reason: cancelReason ? cancelReason.trim() : '',
-                        man_hour_actual: manHourActual ? parseFloat(manHourActual) : '',
-                        man_hour_plan: manHourPlanInput ? parseFloat(manHourPlanInput) : '',
-                        causes: causesInput ? causesInput.trim() : '',
-                        action_plan: actionPlanInput ? actionPlanInput.trim() : ''
-                    },
+                    data: formData,
+                    processData: false,
+                    contentType: false,
                     dataType: 'json',
                     success: function (response) {
                         if (response.status == 1) {
@@ -244,8 +287,6 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
                 timer: 2000,
                 showConfirmButton: false
             });
-            // loadHelpdeskList();
-            // loadHelpdeskList(selectedClientId, selectedStatusId);
             loadHelpdeskList(
                 typeof selectedClientId !== 'undefined' ? selectedClientId : '',
                 typeof selectedStatusId !== 'undefined' ? selectedStatusId : ''
