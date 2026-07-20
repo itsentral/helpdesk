@@ -252,7 +252,7 @@ function changeTicketStatus(ticketId, status, statusText, currentStatus = null, 
                 formData.append('action_plan', actionPlanInput ? actionPlanInput.trim() : '');
                 formData.append('keterangan_penyelesaian', keteranganPenyelesaian ? keteranganPenyelesaian.trim() : '');
                 if (fileDone) {
-                    formData.append('file_done', fileDone);
+                    formData.append('file_done', fileDone); 
                 }
 
                 $.ajax({

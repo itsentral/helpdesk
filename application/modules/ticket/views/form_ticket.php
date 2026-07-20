@@ -28,6 +28,17 @@ $status = isset($helpdesk->status) ? $helpdesk->status : 'Open';
 $is_approve = isset($helpdesk->is_approve) ? $helpdesk->is_approve : '-';
 $create_by = isset($helpdesk->create_by) ? $helpdesk->create_by : '';
 $create_date = isset($helpdesk->create_date) ? $helpdesk->create_date : '';
+$keterangan_penyelesaian = '';
+if (isset($helpdesk->keterangan_penyelesaian)) {
+    $lines = explode("\n", $helpdesk->keterangan_penyelesaian);
+    $lines = array_map(function ($line) {
+        return trim(preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', $line));
+    }, $lines);
+    $keterangan_penyelesaian = trim(implode("\n", $lines));
+}
+$file_done_original_name = isset($helpdesk->file_done_original_name) ? $helpdesk->file_done_original_name : '';
+$file_done_hash_name     = isset($helpdesk->file_done_hash_name) ? $helpdesk->file_done_hash_name : '';
+$has_done_info = !empty($keterangan_penyelesaian) || !empty($file_done_hash_name);
 $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
 ?>
 
@@ -794,129 +805,206 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
     </div>
 <?php endif; ?>
 </form>
-<div class="card-footer">
-    <div class="d-flex gap-2 flex-wrap align-items-center">
-        <?php
-        $final_back_link = $back_url;
-        if (strpos($back_url, 'ticket_management') === false) {
-            $final_back_link .= $back_params;
-        }
-        ?>
 
-        <a href="<?= $final_back_link ?>" class="btn btn-secondary">
-            <i class="fa-solid fa-arrow-left"></i> Back
-        </a>
-
-        <?php if (!$is_readonly): ?>
-            <button type="submit" form="form-helpdesk" class="btn btn-primary" id="btn-save">
-                <i class="fa-solid fa-floppy-disk"></i> Save
-            </button>
-        <?php endif; ?>
-
-        <?php if ($is_readonly && isset($enable_manage) && $enable_manage && isset($helpdesk->id)):
-            $s              = (int) $helpdesk->status;
-            $picById        = trim((string)($helpdesk->pic_id ?? ''));
-            $createById     = trim((string)($helpdesk->create_by_id ?? ''));
-            $approvalById   = trim((string)($helpdesk->approval_by_id ?? ''));
-            $approvalLevel  = (int)($helpdesk->approval_level ?? 0);
-            $currLevel      = (int)($helpdesk->current_approval_level ?? 0);
-            $manHourPlan    = $helpdesk->man_hour_plan ?? 0;
-            $uid            = (string)($login_user_id ?? '');
-            $isBA       = isset($is_ba_user) && $is_ba_user;
-        ?>
-
-            <!-- EDIT -->
-            <?php if ($mode === 'view' && $ENABLE_MANAGE && in_array($status, [0, 2, 6]) && ($isBA || $picById === $uid)): ?>
+        <div class="card-footer mb-0">
+            <div class="d-flex gap-2 flex-wrap align-items-center">
                 <?php
-                $separator = (!empty($back_params)) ? '&' : '?';
-                $src_param = (isset($source) && $source == 'management') ? $separator . 'src=management' : '';
-                $edit_link = site_url('ticket/edit_ticket/' . $helpdesk->id) . $back_params . $src_param;
+                $final_back_link = $back_url;
+                if (strpos($back_url, 'ticket_management') === false) {
+                    $final_back_link .= $back_params;
+                }
                 ?>
-                <a href="<?= $edit_link ?>" class="btn btn-warning">
-                    <i class="fa-solid fa-pen-to-square"></i> Edit Ticket
+
+                <a href="<?= $final_back_link ?>" class="btn btn-secondary">
+                    <i class="fa-solid fa-arrow-left"></i> Back
                 </a>
-            <?php endif; ?>
 
-            <!-- HISTORY -->
-            <button type="button" class="btn btn-outline-primary view-history"
-                data-id="<?= $helpdesk->id ?>"
-                data-ticket="<?= htmlspecialchars($no_ticket) ?>">
-                <i class="fa-solid fa-clock-rotate-left"></i> History
-            </button>
+                <?php if (!$is_readonly): ?>
+                    <button type="submit" form="form-helpdesk" class="btn btn-primary" id="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save
+                    </button>
+                <?php endif; ?>
 
-            <!-- PROCESS -->
-            <?php if ($picById === $uid && in_array($s, [0, 2, 6])): ?>
-                <button type="button" class="btn btn-primary process-status"
-                    data-id="<?= $helpdesk->id ?>"
-                    data-current-status="<?= $s ?>"
-                    data-causes="<?= htmlspecialchars($helpdesk->causes ?? '') ?>"
-                    data-action-plan="<?= htmlspecialchars($helpdesk->action_plan ?? '') ?>"
-                    data-man-hour-plan="<?= $manHourPlan ?>">
-                    <i class="fa-solid fa-angles-right"></i> Process
-                </button>
-            <?php endif; ?>
+                <?php if ($is_readonly && isset($enable_manage) && $enable_manage && isset($helpdesk->id)):
+                    $s              = (int) $helpdesk->status;
+                    $picById        = trim((string)($helpdesk->pic_id ?? ''));
+                    $createById     = trim((string)($helpdesk->create_by_id ?? ''));
+                    $approvalById   = trim((string)($helpdesk->approval_by_id ?? ''));
+                    $approvalLevel  = (int)($helpdesk->approval_level ?? 0);
+                    $currLevel      = (int)($helpdesk->current_approval_level ?? 0);
+                    $manHourPlan    = $helpdesk->man_hour_plan ?? 0;
+                    $uid            = (string)($login_user_id ?? '');
+                    $isBA       = isset($is_ba_user) && $is_ba_user;
+                ?>
 
-            <!-- PENDING -->
-            <?php if ($s === 1 && $picById === $uid): ?>
-                <button type="button" class="btn btn-warning pending-status"
-                    data-id="<?= $helpdesk->id ?>">
-                    <i class="fa-solid fa-hourglass-half"></i> Pending
-                </button>
-            <?php endif; ?>
+                    <!-- EDIT -->
+                    <?php if ($mode === 'view' && $ENABLE_MANAGE && in_array($status, [0, 2, 6]) && ($isBA || $picById === $uid)): ?>
+                        <?php
+                        $separator = (!empty($back_params)) ? '&' : '?';
+                        $src_param = (isset($source) && $source == 'management') ? $separator . 'src=management' : '';
+                        $edit_link = site_url('ticket/edit_ticket/' . $helpdesk->id) . $back_params . $src_param;
+                        ?>
+                        <a href="<?= $edit_link ?>" class="btn btn-warning">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit Ticket
+                        </a>
+                    <?php endif; ?>
 
-            <!-- DONE -->
-            <?php if ($s === 1 && $picById === $uid): ?>
-                <button type="button" class="btn btn-success done-status"
-                    data-id="<?= $helpdesk->id ?>"
-                    data-current-status="<?= $s ?>">
-                    <i class="fa-solid fa-clipboard-check"></i> Done
-                </button>
-            <?php endif; ?>
+                    <!-- HISTORY -->
+                    <button type="button" class="btn btn-outline-primary view-history"
+                        data-id="<?= $helpdesk->id ?>"
+                        data-ticket="<?= htmlspecialchars($no_ticket) ?>">
+                        <i class="fa-solid fa-clock-rotate-left"></i> History
+                    </button>
 
-            <!-- CANCEL -->
-            <?php if ($s === 0 && $createById === $uid): ?>
-                <button type="button" class="btn btn-danger cancel-status"
-                    data-id="<?= $helpdesk->id ?>">
-                    <i class="fa-solid fa-ban"></i> Cancel
-                </button>
-            <?php endif; ?>
+                    <!-- PROCESS -->
+                    <?php if ($picById === $uid && in_array($s, [0, 2, 6])): ?>
+                        <button type="button" class="btn btn-primary process-status"
+                            data-id="<?= $helpdesk->id ?>"
+                            data-current-status="<?= $s ?>"
+                            data-causes="<?= htmlspecialchars($helpdesk->causes ?? '') ?>"
+                            data-action-plan="<?= htmlspecialchars($helpdesk->action_plan ?? '') ?>"
+                            data-man-hour-plan="<?= $manHourPlan ?>">
+                            <i class="fa-solid fa-angles-right"></i> Process
+                        </button>
+                    <?php endif; ?>
 
-            <!-- REJECT -->
-            <?php if (
-                $s === 4 && $currLevel < $approvalLevel &&
-                (
-                    ($currLevel === 0 && $approvalById === $uid) ||
-                    ($currLevel === 1 && $createById === $uid)
-                )
-            ): ?>
-                <button type="button" class="btn btn-danger reject-status"
-                    data-id="<?= $helpdesk->id ?>">
-                    <i class="fa-solid fa-xmark"></i> Reject
-                </button>
-            <?php endif; ?>
+                    <!-- PENDING -->
+                    <?php if ($s === 1 && $picById === $uid): ?>
+                        <button type="button" class="btn btn-warning pending-status"
+                            data-id="<?= $helpdesk->id ?>">
+                            <i class="fa-solid fa-hourglass-half"></i> Pending
+                        </button>
+                    <?php endif; ?>
 
-            <!-- APPROVE LEVEL 1 -->
-            <?php if ($s === 4 && $approvalLevel >= 1 && $currLevel === 0 && $approvalById === $uid): ?>
-                <button type="button" class="btn btn-success approve-status"
-                    data-id="<?= $helpdesk->id ?>"
-                    data-level="1">
-                    <i class="fa-solid fa-check"></i> Approve
-                </button>
-            <?php endif; ?>
+                    <!-- DONE -->
+                    <?php if ($s === 1 && $picById === $uid): ?>
+                        <button type="button" class="btn btn-success done-status"
+                            data-id="<?= $helpdesk->id ?>"
+                            data-current-status="<?= $s ?>">
+                            <i class="fa-solid fa-clipboard-check"></i> Done
+                        </button>
+                    <?php endif; ?>
 
-            <!-- APPROVE LEVEL 2 -->
-            <?php if ($s === 4 && $approvalLevel >= 2 && $currLevel === 1 && $createById === $uid): ?>
-                <button type="button" class="btn btn-success approve-status"
-                    data-id="<?= $helpdesk->id ?>"
-                    data-level="2">
-                    <i class="fa-solid fa-check-double"></i> Approve
-                </button>
-            <?php endif; ?>
+                    <!-- CANCEL -->
+                    <?php if ($s === 0 && $createById === $uid): ?>
+                        <button type="button" class="btn btn-danger cancel-status"
+                            data-id="<?= $helpdesk->id ?>">
+                            <i class="fa-solid fa-ban"></i> Cancel
+                        </button>
+                    <?php endif; ?>
 
-        <?php endif; ?>
+                    <!-- REJECT -->
+                    <?php if (
+                        $s === 4 && $currLevel < $approvalLevel &&
+                        (
+                            ($currLevel === 0 && $approvalById === $uid) ||
+                            ($currLevel === 1 && $createById === $uid)
+                        )
+                    ): ?>
+                        <button type="button" class="btn btn-danger reject-status"
+                            data-id="<?= $helpdesk->id ?>">
+                            <i class="fa-solid fa-xmark"></i> Reject
+                        </button>
+                    <?php endif; ?>
+
+                    <!-- APPROVE LEVEL 1 -->
+                    <?php if ($s === 4 && $approvalLevel >= 1 && $currLevel === 0 && $approvalById === $uid): ?>
+                        <button type="button" class="btn btn-success approve-status"
+                            data-id="<?= $helpdesk->id ?>"
+                            data-level="1">
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                    <?php endif; ?>
+
+                    <!-- APPROVE LEVEL 2 -->
+                    <?php if ($s === 4 && $approvalLevel >= 2 && $currLevel === 1 && $createById === $uid): ?>
+                        <button type="button" class="btn btn-success approve-status"
+                            data-id="<?= $helpdesk->id ?>"
+                            data-level="2">
+                            <i class="fa-solid fa-check-double"></i> Approve
+                        </button>
+                    <?php endif; ?>
+
+                <?php endif; ?>
+            </div>
+        </div>
+</div>
+
+
+<!-- Card Bukti & Keterangan Penyelesaian -->
+<?php if ($is_readonly && $has_done_info): ?>
+    <div class="card mt-3">
+        <div class="card-header bg-success">
+            <h6 class="mb-0 text-white">
+                <i class="fa-solid fa-clipboard-check"></i> Bukti & Keterangan Penyelesaian
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="fa-solid fa-note-sticky text-success"></i> Keterangan Penyelesaian
+                </label>
+                <div class="view-textarea"><?= !empty(trim($keterangan_penyelesaian)) ? nl2br(htmlspecialchars(trim($keterangan_penyelesaian))) : '-' ?>
+                </div>
+            </div>
+
+            <div class="mb-0">
+                <label class="form-label">
+                    <i class="fa-solid fa-paperclip text-success"></i> Lampiran Bukti Penyelesaian
+                </label>
+
+                <?php if (!empty($file_done_hash_name)):
+                    $done_ext = strtolower(pathinfo($file_done_hash_name, PATHINFO_EXTENSION));
+                    $done_is_image = in_array($done_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                    $done_download_url = site_url('ticket/download_done_file/' . $id . '/' . $file_done_hash_name);
+                    $done_view_url = $done_download_url . '?view=1';
+                ?>
+                    <div class="attachment-item" style="max-width: 250px;">
+                        <?php if ($done_is_image): ?>
+                            <div id="done-file-gallery">
+                                <img src="<?= $done_view_url ?>"
+                                    class="img-thumbnail viewer-done-file"
+                                    style="height: 150px; width: 100%; object-fit: cover; cursor: pointer;"
+                                    alt="<?= htmlspecialchars($file_done_original_name) ?>"
+                                    data-original="<?= $done_view_url ?>">
+                            </div>
+                        <?php else: ?>
+                            <div class="file-icon text-center p-3 bg-light border rounded d-flex flex-column justify-content-center align-items-center"
+                                style="height: 150px; width: 100%;">
+                                <i class="fa-solid fa-file fa-3x text-secondary"></i>
+                                <p class="mb-0 mt-2 small"><?= strtoupper($done_ext) ?></p>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="mt-2">
+                            <small class="d-block text-truncate" title="<?= htmlspecialchars($file_done_original_name) ?>">
+                                <?= htmlspecialchars($file_done_original_name) ?>
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-1 mt-2">
+                            <?php if ($done_is_image): ?>
+                                <button type="button"
+                                    class="btn btn-sm btn-info flex-fill btn-view-done-file"
+                                    data-image-url="<?= $done_view_url ?>">
+                                    <i class="fa-solid fa-eye"></i> View
+                                </button>
+                            <?php endif; ?>
+                            <a href="<?= $done_download_url ?>"
+                                class="btn btn-sm btn-primary flex-fill"
+                                download>
+                                <i class="fa-solid fa-download"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="view-field">Tidak ada bukti penyelesaian yang dilampirkan</div>
+                <?php endif; ?>
+            </div>
+        </div>
+
     </div>
-</div>
-</div>
+<?php endif; ?>
 
 
 <!-- Modal Video Player -->
