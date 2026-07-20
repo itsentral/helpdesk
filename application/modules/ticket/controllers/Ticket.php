@@ -882,7 +882,7 @@ class Ticket extends Admin_Controller
         return;
       }
 
-      $upload_dir = FCPATH . 'uploads/bukti_penyelesaian_ticket/';
+      $upload_dir = FCPATH . 'uploads/evidance/';
       if (!is_dir($upload_dir)) {
         mkdir($upload_dir, 0755, true);
       }
@@ -1455,22 +1455,22 @@ class Ticket extends Admin_Controller
   }
 
   public function download_done_file($helpdesk_id, $hash_name)
-{
+  {
     if (!has_permission('Ticket.View') && !has_permission('Ticket.Manage')) {
-        show_error('Anda tidak memiliki izin untuk mengunduh file ini', 403);
-        return;
+      show_error('Anda tidak memiliki izin untuk mengunduh file ini', 403);
+      return;
     }
 
     $is_valid = $this->Ticket_model->is_valid_done_file($helpdesk_id, $hash_name);
     if (!$is_valid) {
-        show_error('File tidak ditemukan atau tidak valid', 404);
-        return;
+      show_error('File tidak ditemukan atau tidak valid', 404);
+      return;
     }
 
-    $file_path = FCPATH . 'uploads/bukti_penyelesaian_ticket/' . $hash_name;
+    $file_path = FCPATH . 'uploads/evidance/' . $hash_name;
     if (!file_exists($file_path)) {
-        show_error('File tidak ditemukan di server', 404);
-        return;
+      show_error('File tidak ditemukan di server', 404);
+      return;
     }
 
     $ext = strtolower(pathinfo($hash_name, PATHINFO_EXTENSION));
@@ -1478,22 +1478,22 @@ class Ticket extends Admin_Controller
 
     // Jika request untuk preview gambar (?view=1) dan filenya memang image, tampilkan inline
     if ($this->input->get('view') && in_array($ext, $image_ext)) {
-        $mime_types = [
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'png'  => 'image/png',
-            'gif'  => 'image/gif',
-            'webp' => 'image/webp',
-        ];
-        header('Content-Type: ' . $mime_types[$ext]);
-        header('Content-Length: ' . filesize($file_path));
-        header('Content-Disposition: inline; filename="' . basename($file_path) . '"');
-        readfile($file_path);
-        exit;
+      $mime_types = [
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png'  => 'image/png',
+        'gif'  => 'image/gif',
+        'webp' => 'image/webp',
+      ];
+      header('Content-Type: ' . $mime_types[$ext]);
+      header('Content-Length: ' . filesize($file_path));
+      header('Content-Disposition: inline; filename="' . basename($file_path) . '"');
+      readfile($file_path);
+      exit;
     }
 
     // Default: force download
     $this->load->helper('download');
     force_download($file_path, null, true);
-}
+  }
 }
