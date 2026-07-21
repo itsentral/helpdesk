@@ -1252,6 +1252,34 @@ $colCategory = ($mode === 'view') ? 'col-md-6' : 'col-md-4';
             }
         <?php endif; ?>
 
+         <?php if ($is_readonly && !empty($file_done_hash_name) && $done_is_image): ?>
+            const doneGallery = document.getElementById('done-file-gallery');
+            if (doneGallery) {
+                const viewerDone = new Viewer(doneGallery, {
+                    toolbar: {
+                        zoomIn: 4,
+                        zoomOut: 4,
+                        oneToOne: 4,
+                        reset: 4,
+                        prev: false,
+                        play: false,
+                        next: false,
+                        rotateLeft: 4,
+                        rotateRight: 4,
+                        flipHorizontal: 4,
+                        flipVertical: 4,
+                    },
+                    filter(image) {
+                        return image.classList.contains('viewer-done-file');
+                    }
+                });
+
+                $(document).on('click', '.btn-view-done-file', function() {
+                    viewerDone.view(0);
+                });
+            }
+        <?php endif; ?>
+        
         <?php if (!$is_readonly): ?>
             <?php if ($mode === 'edit' && !empty($attachments)): ?>
                 const editGallery = document.getElementById('existing-image-gallery');
