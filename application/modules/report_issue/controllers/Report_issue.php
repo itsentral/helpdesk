@@ -45,17 +45,28 @@ class Report_issue extends Admin_Controller
 
     public function get_dashboard_data()
     {
-        $client_id = $this->input->post('client_id');
-        $date_from = $this->input->post('date_from');
-        $date_to   = $this->input->post('date_to');
+        $client_id   = $this->input->post('client_id');
+        $date_from   = $this->input->post('date_from');
+        $date_to     = $this->input->post('date_to');
+        $report_type = $this->input->post('report_type');
 
-        $result = [
-            'status_data'   => $this->report_issue_model->get_status_data($client_id, $date_from, $date_to),
-            'category_data' => $this->report_issue_model->get_category_data($client_id, $date_from, $date_to),
-            'daily_data'    => $this->report_issue_model->get_daily_data($client_id, $date_from, $date_to),
-            'total_tickets' => $this->report_issue_model->get_total_tickets($client_id, $date_from, $date_to),
-            'manhour_data'  => $this->report_issue_model->get_manhour_data($client_id, $date_from, $date_to)
-        ];
+        if ($report_type === 'yearly') {
+            // Laporan Tahunan: data digroup per bulan, 4 kategori (bugs, issues, request, development)
+            $result = [
+                'total_tickets' => $this->report_issue_model->get_total_tickets_yearly($client_id, $date_from, $date_to),
+                'monthly_data'  => $this->report_issue_model->get_monthly_data($client_id, $date_from, $date_to),
+                'manhour_data'  => $this->report_issue_model->get_manhour_data_monthly($client_id, $date_from, $date_to),
+            ];
+        } else {
+            // Laporan Mingguan / Bulanan (perilaku lama, tidak berubah)
+            $result = [
+                'status_data'   => $this->report_issue_model->get_status_data($client_id, $date_from, $date_to),
+                'category_data' => $this->report_issue_model->get_category_data($client_id, $date_from, $date_to),
+                'daily_data'    => $this->report_issue_model->get_daily_data($client_id, $date_from, $date_to),
+                'total_tickets' => $this->report_issue_model->get_total_tickets($client_id, $date_from, $date_to),
+                'manhour_data'  => $this->report_issue_model->get_manhour_data($client_id, $date_from, $date_to)
+            ];
+        }
 
         echo json_encode($result);
     }
@@ -65,10 +76,13 @@ class Report_issue extends Admin_Controller
         $client_id  = $this->input->get('client_id');
         $date       = $this->input->get('date');
         $category   = $this->input->get('category') ?? 'all';
-        $date_from  = $this->input->get('date_from'); // ← tambah ini
+        $date_from  = $this->input->get('date_from');
+        $mode       = $this->input->get('mode') ?? 'day'; // 'day' (mingguan/bulanan) atau 'month' (tahunan)
+
+        $all_categories = ($mode === 'month'); // laporan tahunan pakai 4 kategori untuk opsi "all"
 
         $data = [
-            'tickets'   => $this->report_issue_model->get_tickets_by_date($client_id, $date, $category, $date_from),
+            'tickets'   => $this->report_issue_model->get_tickets_by_date($client_id, $date, $category, $date_from, $mode, $all_categories),
             'date'      => $date,
             'category'  => $category,
             'client_id' => $client_id,
@@ -228,6 +242,87 @@ class Report_issue extends Admin_Controller
         $this->load->view('print_monthly_report', $data);
     }
 
+    public function print_yearly_report()
+    {
+        $client_id  = $this->input->get('client_id');
+        $date_from  = $this->input->get('date_from');
+        $date_to    = $this->input->get('date_to');
+
+        $monthly_data  = $this->report_issue_model->get_monthly_data($client_id, $date_from, $date_to);
+        $total_tickets = $this->report_issue_model->get_total_tickets_yearly($client_id, $date_from, $date_to);
+        $manhour_data  = $this->report_issue_model->get_manhour_data_monthly($client_id, $date_from, $date_to);
+        $client_info   = $this->report_issue_model->get_client_info($client_id);
+
+        // Bangun daftar bulan dari date_from s/d date_to (Januari .. bulan berjalan jika tahun ini)
+        $months = [];
+        $first_date = new DateTime(date('Y-m-01', strtotime($date_from)));
+        $last_date  = new DateTime($date_to);
+
+        $current = clone $first_date;
+        while ($current <= $last_date) {
+            $months[] = [
+                'month_key'   => $current->format('Y-m'),
+                'month_label' => $current->format('M Y'),
+                'bugs'        => 0,
+                'bugs_open'   => 0,
+                'issues'      => 0,
+                'issues_open' => 0,
+                'request'         => 0,
+                'request_open'    => 0,
+                'development'     => 0,
+                'development_open' => 0,
+                'man_hour_plan'   => 0,
+                'man_hour_actual' => 0,
+            ];
+            $current->modify('+1 month');
+        }
+
+        // Mapping monthly_data & manhour_data ke map per bulan
+        $categories = ['bugs', 'issues', 'request', 'development'];
+        $maps = [];
+        foreach ($categories as $cat) {
+            $maps[$cat] = [];
+            $maps[$cat . '_open'] = [];
+            foreach ($monthly_data[$cat] as $row) {
+                $maps[$cat][$row->month] = (int) $row->total;
+            }
+            foreach ($monthly_data[$cat . '_open'] as $row) {
+                $maps[$cat . '_open'][$row->month] = (int) $row->total;
+            }
+        }
+
+        $mh_plan_map   = [];
+        $mh_actual_map = [];
+        foreach ($manhour_data['plan'] as $row) {
+            $mh_plan_map[$row->month] = (float) $row->total;
+        }
+        foreach ($manhour_data['actual'] as $row) {
+            $mh_actual_map[$row->month] = (float) $row->total;
+        }
+
+        foreach ($months as &$m) {
+            $key = $m['month_key'];
+            foreach ($categories as $cat) {
+                $m[$cat]            = $maps[$cat][$key] ?? 0;
+                $m[$cat . '_open']  = $maps[$cat . '_open'][$key] ?? 0;
+            }
+            $m['man_hour_plan']   = $mh_plan_map[$key] ?? 0;
+            $m['man_hour_actual'] = $mh_actual_map[$key] ?? 0;
+            $m['total'] = $m['bugs'] + $m['issues'] + $m['request'] + $m['development'];
+        }
+        unset($m);
+
+        $data = [
+            'client_info'   => $client_info,
+            'date_from'     => $date_from,
+            'date_to'       => $date_to,
+            'months'        => $months,
+            'total_tickets' => $total_tickets,
+        ];
+
+        $this->load->view('print_yearly_report', $data);
+    }
+
     public function get_my_priorities()
     {
         $user_id = $this->auth->user_id();
@@ -250,18 +345,6 @@ class Report_issue extends Admin_Controller
             ->where('h.is_delete', 0)
             ->where('h.status', 0)
             ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
-            ->where('DATE(h.create_date) >=', $extended_from)
-            ->where('DATE(h.create_date) <', $date_from)
-            ->count_all_results();
-
-        // Count issues carry over (open, sebelum date_from)
-        $issues_carry = $this->db
-            ->from('helpdesk h')
-            ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
-            ->where('h.client_id', $client_id)
-            ->where('h.is_delete', 0)
-            ->where('h.status', 0)
-            ->where('hsc.sub_name', 'user issue')
             ->where('DATE(h.create_date) >=', $extended_from)
             ->where('DATE(h.create_date) <', $date_from)
             ->count_all_results();

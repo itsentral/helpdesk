@@ -110,6 +110,16 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         color: #333 !important;
     }
 
+    .card-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        color: white !important;
+    }
+
+    .card-success {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+        color: white !important;
+    }
+
     .icon-primary {
         background-color: rgba(255, 255, 255, 0.2) !important;
         color: white !important;
@@ -123,6 +133,16 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
     .icon-warning {
         background-color: rgba(0, 0, 0, 0.1) !important;
         color: #333 !important;
+    }
+
+    .icon-info {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+
+    .icon-success {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
     }
 
     .card-warning .stats-subtitle {
@@ -397,6 +417,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                     <option value="">-- Pilih Tipe --</option>
                     <option value="weekly">Mingguan</option>
                     <option value="monthly">Bulanan</option>
+                    <option value="yearly">Tahunan</option>
                 </select>
             </div>
 
@@ -410,6 +431,13 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
             <div class="col-md-3" id="weekly_filter" style="display: none;">
                 <label class="form-label">Pilih Range</label>
                 <input type="text" class="form-control" id="date_weekly" placeholder="Pilih tanggal mulai">
+            </div>
+
+            <!-- Filter Tahunan -->
+            <div class="col-md-3" id="yearly_filter" style="display: none;">
+                <label class="form-label">Pilih Tahun</label>
+                <select class="form-select" id="date_yearly">
+                </select>
             </div>
 
             <!-- Filter Kategori Chart -->
@@ -433,6 +461,9 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                         <i class="ti ti-file-export"></i> Export PDF
                     </button>
                     <button type="button" class="btn btn-warning" id="btn_export_monthly_pdf" style="display: none;">
+                        <i class="ti ti-file-export"></i> Export PDF
+                    </button>
+                    <button type="button" class="btn btn-info text-white" id="btn_export_yearly_pdf" style="display: none;">
                         <i class="ti ti-file-export"></i> Export PDF
                     </button>
                 <?php endif; ?>
@@ -490,13 +521,13 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
     <div id="actual_content">
         <!-- Summary Cards -->
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-4" id="card_total_col">
                 <div class="card stats-card card-primary">
                     <div class="card-body">
                         <div class="stats-icon icon-primary">
                             <i class="fas fa-ticket-alt"></i>
                         </div>
-                        <div class="stats-title">Total Tickets Bugs & User Issue</div>
+                        <div class="stats-title" id="card_total_title">Total Tickets Bugs & User Issue</div>
                         <h2 class="stats-number" id="total_tickets">0</h2>
                         <div class="stats-subtitle">
                             <i class="fas fa-folder-open"></i>
@@ -537,6 +568,39 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                     </div>
                 </div>
             </div>
+
+            <!-- Kartu tambahan untuk laporan Tahunan: Request & Development -->
+            <div class="col-md-4" id="card_request_col" style="display: none;">
+                <div class="card stats-card card-info">
+                    <div class="card-body">
+                        <div class="stats-icon icon-info">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="stats-title">Request</div>
+                        <h2 class="stats-number" id="request_tickets">0</h2>
+                        <div class="stats-subtitle">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span id="open_request">0</span> Open Request
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4" id="card_development_col" style="display: none;">
+                <div class="card stats-card card-success">
+                    <div class="card-body">
+                        <div class="stats-icon icon-success">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="stats-title">Development</div>
+                        <h2 class="stats-number" id="development_tickets">0</h2>
+                        <div class="stats-subtitle">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span id="open_development">0</span> Open Development
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Chart Line -->
@@ -544,7 +608,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5>Tickets Per Day</h5>
+                        <h5 id="chart_title">Tickets Per Day</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="dailyChart"></canvas>
@@ -590,12 +654,12 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
 
 
 
-        <!-- Man Hour Chart (Monthly Only) -->
+        <!-- Man Hour Chart (Monthly & Yearly Only) -->
         <div class="row mb-4" id="manhour_chart_section" style="display: none;">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5>Man Hour Plan vs Actual per Minggu</h5>
+                        <h5 id="manhour_chart_title">Man Hour Plan vs Actual per Minggu</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="manhourChart"></canvas>
@@ -604,12 +668,12 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
             </div>
         </div>
 
-        <!-- Man Hour Table (Monthly Only) -->
+        <!-- Man Hour Table (Monthly & Yearly Only) -->
         <div class="row mb-4" id="manhour_table_section" style="display: none;">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5>Man Hour Plan vs Actual Per Minggu</h5>
+                        <h5 id="manhour_table_title">Man Hour Plan vs Actual Per Minggu</h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -674,6 +738,46 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
     let manhourData = {};
     let carryOverData = null;
 
+    // Kategori chart per tipe report
+    const CATEGORY_OPTIONS = {
+        default: [
+            { value: 'all', label: 'All Categories' },
+            { value: 'bugs', label: 'Bugs & Error Only' },
+            { value: 'issues', label: 'Issues Only' },
+        ],
+        yearly: [
+            { value: 'all', label: 'All Categories' },
+            { value: 'bugs', label: 'Bugs & Error Only' },
+            { value: 'issues', label: 'Issues Only' },
+            { value: 'request', label: 'Request Only' },
+            { value: 'development', label: 'Development Only' },
+        ]
+    };
+
+    function rebuildCategoryOptions(reportType) {
+        const opts = CATEGORY_OPTIONS[reportType] || CATEGORY_OPTIONS.default;
+        const $sel = $('#chart_category');
+        const currentVal = $sel.val();
+        $sel.empty();
+        opts.forEach(o => {
+            $sel.append(`<option value="${o.value}">${o.label}</option>`);
+        });
+        // Kalau value lama masih valid di opsi baru, pertahankan. Kalau tidak, reset ke 'all'.
+        const stillValid = opts.some(o => o.value === currentVal);
+        $sel.val(stillValid ? currentVal : 'all');
+    }
+
+    // Isi pilihan tahun untuk filter Tahunan (5 tahun ke belakang s/d tahun berjalan)
+    (function populateYearSelect() {
+        const $sel = $('#date_yearly');
+        const currentYear = new Date().getFullYear();
+        let optionsHtml = '';
+        for (let y = currentYear; y >= currentYear - 5; y--) {
+            optionsHtml += `<option value="${y}">${y}</option>`;
+        }
+        $sel.html(optionsHtml);
+    })();
+
     // Initialize Flatpickr for Monthly (Month picker)
     monthlyPicker = flatpickr("#date_monthly", {
         dateFormat: "F Y",
@@ -721,7 +825,10 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         const reportType = $(this).val();
         $('#monthly_filter').hide();
         $('#weekly_filter').hide();
+        $('#yearly_filter').hide();
         $('#btn_export_pdf').hide();
+        $('#btn_export_monthly_pdf').hide();
+        $('#btn_export_yearly_pdf').hide();
 
         if (monthlyPicker) monthlyPicker.clear();
         if (weeklyPicker) weeklyPicker.clear();
@@ -730,7 +837,11 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
             $('#monthly_filter').show();
         } else if (reportType === 'weekly') {
             $('#weekly_filter').show();
+        } else if (reportType === 'yearly') {
+            $('#yearly_filter').show();
         }
+
+        rebuildCategoryOptions(reportType);
     });
 
     // Filter Button Click
@@ -796,6 +907,29 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
 
             date_from = formatDate(selectedDates[0]);
             date_to = formatDate(selectedDates[1]);
+        } else if (report_type === 'yearly') {
+            const selectedYear = parseInt($('#date_yearly').val());
+
+            if (!selectedYear) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian!',
+                    text: 'Pilih tahun terlebih dahulu',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            const today = new Date();
+            date_from = formatDate(new Date(selectedYear, 0, 1));
+
+            // Kalau tahun yang dipilih = tahun berjalan, date_to = hari ini (jadi cuma Jan..bulan berjalan)
+            // Kalau tahun lampau, date_to = akhir Desember tahun tsb.
+            if (selectedYear === today.getFullYear()) {
+                date_to = formatDate(today);
+            } else {
+                date_to = formatDate(new Date(selectedYear, 11, 31));
+            }
         }
 
         currentReportType = report_type;
@@ -808,11 +942,13 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         const date = $(this).data('date');
         const category = $(this).data('category');
         const dateFrom = $(this).data('date-from') || ''; // ← tambah ini
+        const mode = $(this).data('mode') || 'day'; // 'day' (mingguan/bulanan) atau 'month' (tahunan)
 
         const isCarryOver = (date === 'carry_over');
+        const periodLabel = (mode === 'month') ? formatMonthLabel(date) : date;
         const titleLabel = isCarryOver ?
             'Carry Over Tickets (' + category.toUpperCase() + ')' :
-            'Detail Tickets - ' + date + ' (' + category.toUpperCase() + ')';
+            'Detail Tickets - ' + periodLabel + ' (' + category.toUpperCase() + ')';
 
         $('#modalTicketDetail').modal('show');
         $('#modalTicketDetailLabel').text(titleLabel);
@@ -831,7 +967,8 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                 client_id: clientId,
                 date: date,
                 category: category,
-                date_from: dateFrom // ← tambah ini
+                date_from: dateFrom, // ← tambah ini
+                mode: mode
             },
             success: function(response) {
                 $('#modalTicketDetailBody').html(response);
@@ -876,6 +1013,15 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         return `${day} ${month} ${year}`;
     }
 
+    // Format 'YYYY-MM' -> 'Mon YYYY' (dipakai untuk laporan Tahunan)
+    function formatMonthLabel(monthString) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const parts = monthString.split('-');
+        const year = parseInt(parts[0]);
+        const monthIndex = parseInt(parts[1]) - 1;
+        return `${months[monthIndex]} ${year}`;
+    }
+
     $('#chart_category').change(function() {
         const category = $(this).val();
         updateChart(category);
@@ -883,7 +1029,9 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
     });
 
     function updateTable(category) {
-        if (currentReportType === 'monthly') {
+        if (currentReportType === 'yearly') {
+            renderYearlyTable(chartData, category);
+        } else if (currentReportType === 'monthly') {
             renderMonthlyTable(chartData, category);
         } else {
             const data = chartData;
@@ -956,22 +1104,6 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         $('#loading_skeleton').hide();
         $('#actual_content').show();
     }
-
-    $('#report_type').change(function() {
-        const reportType = $(this).val();
-        $('#monthly_filter').hide();
-        $('#weekly_filter').hide();
-        $('#btn_export_pdf').hide();
-
-        if (monthlyPicker) monthlyPicker.clear();
-        if (weeklyPicker) weeklyPicker.clear();
-
-        if (reportType === 'monthly') {
-            $('#monthly_filter').show();
-        } else if (reportType === 'weekly') {
-            $('#weekly_filter').show();
-        }
-    });
 
     function renderManhourChart(data) {
         if (!data || !data.plan || !data.actual) return;
@@ -1154,7 +1286,6 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
             grandActual += actual;
 
             const color = selisih > 0 ? 'color:#dc3545;' : (selisih < 0 ? 'color:#28a745;' : '');
-            // const label = selisih > 0 ? 'Over' : (selisih < 0 ? 'Under' : 'On Track');
             const label = (plan === 0 && actual === 0) ? '-' : (selisih > 0 ? 'Over' : (selisih < 0 ? 'Under' : 'On Track'));
             const sign = selisih >= 0 ? '+' : '';
 
@@ -1181,8 +1312,210 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         const avgColor = avgSelisih > 0 ? 'color:#dc3545;' : (avgSelisih < 0 ? 'color:#28a745;' : '');
         const totalColor = grandSelisih > 0 ? 'color:#dc3545;' : (grandSelisih < 0 ? 'color:#28a745;' : '');
 
-        // const avgLabel = avgSelisih > 0 ? 'Over' : (avgSelisih < 0 ? 'Under' : 'On Track');
-        // const totalLabel = grandSelisih > 0 ? 'Over' : (grandSelisih < 0 ? 'Under' : 'On Track');
+        const avgLabel = (avgPlan === 0 && avgActual === 0) ? '-' : (avgSelisih > 0 ? 'Over' : (avgSelisih < 0 ? 'Under' : 'On Track'));
+        const totalLabel = (grandPlan === 0 && grandActual === 0) ? '-' : (grandSelisih > 0 ? 'Over' : (grandSelisih < 0 ? 'Under' : 'On Track'));
+
+        $('#manhour_tfoot').html(`
+            <tr style="background-color: #C4C4C4;">
+                <th>Average</th>
+                <th class="text-center">${avgPlan.toFixed(1)}</th>
+                <th class="text-center">${avgActual.toFixed(1)}</th>
+                <th class="text-center" style="${avgColor}">${(avgSelisih >= 0 ? '+' : '') + avgSelisih.toFixed(1)}</th>
+                <th class="text-center" style="${avgColor}">${avgLabel}</th>
+            </tr>
+            <tr style="background-color: #C4C4C4;">
+                <th>Total</th>
+                <th class="text-center">${grandPlan.toFixed(1)}</th>
+                <th class="text-center">${grandActual.toFixed(1)}</th>
+                <th class="text-center" style="${totalColor}">${(grandSelisih >= 0 ? '+' : '') + grandSelisih.toFixed(1)}</th>
+                <th class="text-center" style="${totalColor}">${totalLabel}</th>
+            </tr>
+        `);
+    }
+
+    // ===== Man Hour (Tahunan, per bulan) =====
+    function buildYearlyMonthKeys() {
+        const selectedYear = parseInt($('#date_yearly').val());
+        const today = new Date();
+        const lastMonthIndex = (selectedYear === today.getFullYear()) ? today.getMonth() : 11;
+
+        const keys = [];
+        const labels = [];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        for (let m = 0; m <= lastMonthIndex; m++) {
+            const key = `${selectedYear}-${String(m + 1).padStart(2, '0')}`;
+            keys.push(key);
+            labels.push(`${monthNames[m]} ${selectedYear}`);
+        }
+        return {
+            keys,
+            labels
+        };
+    }
+
+    function renderManhourChartYearly(data) {
+        if (!data || !data.plan || !data.actual) return;
+
+        const mhPlanMap = {};
+        const mhActualMap = {};
+        data.plan.forEach(i => {
+            mhPlanMap[i.month] = parseFloat(i.total);
+        });
+        data.actual.forEach(i => {
+            mhActualMap[i.month] = parseFloat(i.total);
+        });
+
+        const {
+            keys,
+            labels
+        } = buildYearlyMonthKeys();
+
+        if (manhourChart) manhourChart.destroy();
+
+        const ctx = document.getElementById('manhourChart').getContext('2d');
+        manhourChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                        label: 'Plan',
+                        data: keys.map(k => parseFloat((mhPlanMap[k] || 0).toFixed(1))),
+                        backgroundColor: 'rgba(111,66,193,0.6)',
+                        borderColor: '#6f42c1',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                    },
+                    {
+                        label: 'Actual',
+                        data: keys.map(k => parseFloat((mhActualMap[k] || 0).toFixed(1))),
+                        backgroundColor: 'rgba(32,201,151,0.6)',
+                        borderColor: '#20c997',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        enabled: true
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 2,
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        formatter: value => value > 0 ? value : ''
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Bulan',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 0
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Man Hour',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        beginAtZero: true,
+                        grace: '15%',
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+
+    function renderManhourTableYearly(data) {
+        if (!data || !data.plan || !data.actual) return;
+
+        const mhPlanMap = {};
+        const mhActualMap = {};
+        data.plan.forEach(i => {
+            mhPlanMap[i.month] = parseFloat(i.total);
+        });
+        data.actual.forEach(i => {
+            mhActualMap[i.month] = parseFloat(i.total);
+        });
+
+        const {
+            keys,
+            labels
+        } = buildYearlyMonthKeys();
+
+        let tbodyHtml = '';
+        let grandPlan = 0;
+        let grandActual = 0;
+
+        keys.forEach((key, index) => {
+            const plan = parseFloat((mhPlanMap[key] || 0).toFixed(1));
+            const actual = parseFloat((mhActualMap[key] || 0).toFixed(1));
+            const selisih = parseFloat((actual - plan).toFixed(1));
+
+            grandPlan += plan;
+            grandActual += actual;
+
+            const color = selisih > 0 ? 'color:#dc3545;' : (selisih < 0 ? 'color:#28a745;' : '');
+            const label = (plan === 0 && actual === 0) ? '-' : (selisih > 0 ? 'Over' : (selisih < 0 ? 'Under' : 'On Track'));
+            const sign = selisih >= 0 ? '+' : '';
+
+            tbodyHtml += `
+            <tr>
+                <td>${labels[index]}</td>
+                <td class="text-center"><strong>${plan.toFixed(1)}</strong></td>
+                <td class="text-center"><strong>${actual.toFixed(1)}</strong></td>
+                <td class="text-center" style="${color}"><strong>${sign}${selisih.toFixed(1)}</strong></td>
+                <td class="text-center" style="${color}"><strong>${label}</strong></td>
+            </tr>
+        `;
+        });
+
+        $('#manhour_tbody').html(tbodyHtml);
+
+        const monthCount = keys.length || 1;
+        const avgPlan = parseFloat((grandPlan / monthCount).toFixed(1));
+        const avgActual = parseFloat((grandActual / monthCount).toFixed(1));
+        const avgSelisih = parseFloat((avgActual - avgPlan).toFixed(1));
+        const grandSelisih = parseFloat((grandActual - grandPlan).toFixed(1));
+
+        const avgColor = avgSelisih > 0 ? 'color:#dc3545;' : (avgSelisih < 0 ? 'color:#28a745;' : '');
+        const totalColor = grandSelisih > 0 ? 'color:#dc3545;' : (grandSelisih < 0 ? 'color:#28a745;' : '');
+
         const avgLabel = (avgPlan === 0 && avgActual === 0) ? '-' : (avgSelisih > 0 ? 'Over' : (avgSelisih < 0 ? 'Under' : 'On Track'));
         const totalLabel = (grandPlan === 0 && grandActual === 0) ? '-' : (grandSelisih > 0 ? 'Over' : (grandSelisih < 0 ? 'Under' : 'On Track'));
 
@@ -1205,10 +1538,24 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
     }
 
     function loadDashboard(client_id, date_from, date_to) {
-        carryOverData = null; 
+        carryOverData = null;
         $('#dashboard_content').show();
         $('#chart_category_filter').show();
         showLoadingSkeleton();
+
+        // Toggle kartu summary sesuai tipe report
+        if (currentReportType === 'yearly') {
+            $('#card_request_col').show();
+            $('#card_development_col').show();
+            $('#card_total_col').removeClass('col-md-4').addClass('col-md-4');
+            $('#card_total_title').text('Total Tickets (Semua Kategori)');
+            $('#chart_title').text('Tickets Per Bulan');
+        } else {
+            $('#card_request_col').hide();
+            $('#card_development_col').hide();
+            $('#card_total_title').text('Total Tickets Bugs & User Issue');
+            $('#chart_title').text('Tickets Per Day');
+        }
 
         $.ajax({
             url: siteurl + 'report_issue' + '/get_dashboard_data',
@@ -1216,11 +1563,46 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
             data: {
                 client_id: client_id,
                 date_from: date_from,
-                date_to: date_to
+                date_to: date_to,
+                report_type: currentReportType
             },
             dataType: 'json',
             success: function(response) {
                 hideLoadingSkeleton();
+
+                if (currentReportType === 'yearly') {
+                    const t = response.total_tickets;
+                    $('#total_tickets').text(t.total);
+                    $('#bugs_tickets').text(t.bugs);
+                    $('#issues_tickets').text(t.issues);
+                    $('#request_tickets').text(t.request);
+                    $('#development_tickets').text(t.development);
+                    $('#total_open').text(t.total_open);
+                    $('#open_bugs').text(t.open_bugs);
+                    $('#open_issues').text(t.open_issues);
+                    $('#open_request').text(t.open_request);
+                    $('#open_development').text(t.open_development);
+
+                    chartData = response.monthly_data;
+
+                    $('#chart_category').val('all');
+                    renderYearlyChart('all');
+                    renderYearlyTable(response.monthly_data, 'all');
+
+                    manhourData = response.manhour_data;
+                    $('#manhour_chart_section').show();
+                    $('#manhour_table_section').show();
+                    $('#manhour_chart_title').text('Man Hour Plan vs Actual per Bulan');
+                    $('#manhour_table_title').text('Man Hour Plan vs Actual Per Bulan');
+                    renderManhourChartYearly(response.manhour_data);
+                    renderManhourTableYearly(response.manhour_data);
+
+                    $('#btn_export_pdf').hide();
+                    $('#btn_export_monthly_pdf').hide();
+                    $('#btn_export_yearly_pdf').show();
+
+                    return;
+                }
 
                 $('#total_tickets').text(response.total_tickets.total);
                 $('#bugs_tickets').text(response.total_tickets.bugs);
@@ -1262,6 +1644,8 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                 if (currentReportType === 'monthly') {
                     $('#manhour_chart_section').show();
                     $('#manhour_table_section').show();
+                    $('#manhour_chart_title').text('Man Hour Plan vs Actual per Minggu');
+                    $('#manhour_table_title').text('Man Hour Plan vs Actual Per Minggu');
                     renderManhourChart(response.manhour_data);
                     renderManhourTable(response.manhour_data);
                 } else {
@@ -1273,9 +1657,11 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                 if (currentReportType === 'weekly') {
                     $('#btn_export_pdf').show();
                     $('#btn_export_monthly_pdf').hide();
+                    $('#btn_export_yearly_pdf').hide();
                 } else {
                     $('#btn_export_pdf').hide();
                     $('#btn_export_monthly_pdf').show();
+                    $('#btn_export_yearly_pdf').hide();
                 }
             },
             error: function(xhr, status, error) {
@@ -1316,7 +1702,317 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
     });
 
     function updateChart(category) {
-        renderDailyChart(category);
+        if (currentReportType === 'yearly') {
+            renderYearlyChart(category);
+        } else {
+            renderDailyChart(category);
+        }
+    }
+
+    // ===== Chart Tahunan (per bulan, 4 kategori) =====
+    function renderYearlyChart(category) {
+        const data = chartData;
+        const {
+            keys,
+            labels
+        } = buildYearlyMonthKeys();
+
+        function mapOf(arr) {
+            const m = {};
+            (arr || []).forEach(i => {
+                m[i.month] = parseInt(i.total);
+            });
+            return m;
+        }
+
+        const maps = {
+            bugs: mapOf(data.bugs),
+            issues: mapOf(data.issues),
+            request: mapOf(data.request),
+            development: mapOf(data.development),
+        };
+
+        const seriesDefs = {
+            bugs: {
+                label: 'Bugs & Error',
+                color: '#dc3545',
+                bg: 'rgba(220, 53, 69, 0.1)'
+            },
+            issues: {
+                label: 'User Issues',
+                color: '#ffc107',
+                bg: 'rgba(255, 193, 7, 0.1)'
+            },
+            request: {
+                label: 'Request',
+                color: '#0dcaf0',
+                bg: 'rgba(13, 202, 240, 0.1)'
+            },
+            development: {
+                label: 'Development',
+                color: '#198754',
+                bg: 'rgba(25, 135, 84, 0.1)'
+            },
+        };
+
+        const activeKeys = (category === 'all') ? ['bugs', 'issues', 'request', 'development'] : [category];
+
+        const datasets = activeKeys.map(key => {
+            const def = seriesDefs[key];
+            return {
+                label: def.label,
+                data: keys.map(k => maps[key][k] || 0),
+                borderColor: def.color,
+                backgroundColor: def.bg,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: def.color,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            };
+        });
+
+        if (dailyChart) dailyChart.destroy();
+
+        const ctx = document.getElementById('dailyChart').getContext('2d');
+        dailyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        anchor: 'end',
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        formatter: function(value) {
+                            return value > 0 ? value : '';
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Bulan',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 0
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Jumlah Tickets',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        beginAtZero: true,
+                        grace: '20%',
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                if (Number.isInteger(value)) return value;
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+
+    // Tabel summary Tahunan (per bulan, 4 kategori + Open)
+    function renderYearlyTable(data, category = 'all') {
+        $('#summary_title').text('Summary Per Bulan');
+
+        const {
+            keys,
+            labels
+        } = buildYearlyMonthKeys();
+
+        function mapOf(arr) {
+            const m = {};
+            (arr || []).forEach(i => {
+                m[i.month] = parseInt(i.total);
+            });
+            return m;
+        }
+
+        const maps = {
+            bugs: mapOf(data.bugs),
+            bugs_open: mapOf(data.bugs_open),
+            issues: mapOf(data.issues),
+            issues_open: mapOf(data.issues_open),
+            request: mapOf(data.request),
+            request_open: mapOf(data.request_open),
+            development: mapOf(data.development),
+            development_open: mapOf(data.development_open),
+        };
+
+        const catLabels = {
+            bugs: 'Bugs & Error',
+            issues: 'User Issues',
+            request: 'Request',
+            development: 'Development'
+        };
+
+        let headerHtml = '<tr><th>Bulan</th>';
+        if (category === 'all') {
+            headerHtml += `
+            <th class="text-center">Bugs & Error</th>
+            <th class="text-center">User Issues</th>
+            <th class="text-center">Request</th>
+            <th class="text-center">Development</th>
+            <th class="text-center">Total</th>
+            <th class="text-center">Action</th>`;
+        } else {
+            headerHtml += `
+            <th class="text-center">${catLabels[category]} - Total</th>
+            <th class="text-center">${catLabels[category]} - Open</th>
+            <th class="text-center">Action</th>`;
+        }
+        headerHtml += '</tr>';
+        $('#summary_thead').html(headerHtml);
+
+        const currentClientId = $('#client_id').val();
+        const selectedYear = $('#date_yearly').val();
+        const dateFrom = formatDate(new Date(parseInt(selectedYear), 0, 1));
+
+        let tableHtml = '';
+        let totals = {
+            bugs: 0,
+            issues: 0,
+            request: 0,
+            development: 0,
+            bugs_open: 0,
+            issues_open: 0,
+            request_open: 0,
+            development_open: 0
+        };
+
+        keys.forEach((key, index) => {
+            const bugs = maps.bugs[key] || 0;
+            const issues = maps.issues[key] || 0;
+            const request = maps.request[key] || 0;
+            const development = maps.development[key] || 0;
+            const bugsOpen = maps.bugs_open[key] || 0;
+            const issuesOpen = maps.issues_open[key] || 0;
+            const requestOpen = maps.request_open[key] || 0;
+            const developmentOpen = maps.development_open[key] || 0;
+
+            totals.bugs += bugs;
+            totals.issues += issues;
+            totals.request += request;
+            totals.development += development;
+            totals.bugs_open += bugsOpen;
+            totals.issues_open += issuesOpen;
+            totals.request_open += requestOpen;
+            totals.development_open += developmentOpen;
+
+            const total = bugs + issues + request + development;
+
+            let rowHtml = `<tr><td>${labels[index]}</td>`;
+
+            if (category === 'all') {
+                rowHtml += `
+                <td class="text-center">${bugs}</td>
+                <td class="text-center">${issues}</td>
+                <td class="text-center">${request}</td>
+                <td class="text-center">${development}</td>
+                <td class="text-center"><strong>${total}</strong></td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-info btn-view-detail"
+                            data-client-id="${currentClientId}"
+                            data-date="${key}"
+                            data-category="all"
+                            data-date-from="${dateFrom}"
+                            data-mode="month">
+                        <i class="ti ti-eye"></i> View
+                    </button>
+                </td>`;
+            } else {
+                const catTotal = maps[category][key] || 0;
+                const catOpen = maps[category + '_open'][key] || 0;
+                rowHtml += `
+                <td class="text-center"><strong>${catTotal}</strong></td>
+                <td class="text-center">${catOpen}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-info btn-view-detail"
+                            data-client-id="${currentClientId}"
+                            data-date="${key}"
+                            data-category="${category}"
+                            data-date-from="${dateFrom}"
+                            data-mode="month">
+                        <i class="ti ti-eye"></i> View
+                    </button>
+                </td>`;
+            }
+
+            rowHtml += '</tr>';
+            tableHtml += rowHtml;
+        });
+
+        if (keys.length === 0) {
+            const colspan = category === 'all' ? 6 : 3;
+            tableHtml = `<tr><td colspan="${colspan}" class="text-center">Tidak ada data</td></tr>`;
+        }
+
+        $('#summary_tbody').html(tableHtml);
+
+        let footerHtml = '<tr><th>Total</th>';
+        if (category === 'all') {
+            const grandTotal = totals.bugs + totals.issues + totals.request + totals.development;
+            footerHtml += `
+            <th class="text-center">${totals.bugs}</th>
+            <th class="text-center">${totals.issues}</th>
+            <th class="text-center">${totals.request}</th>
+            <th class="text-center">${totals.development}</th>
+            <th class="text-center">${grandTotal}</th>
+            <th></th>`;
+        } else {
+            footerHtml += `
+            <th class="text-center">${totals[category]}</th>
+            <th class="text-center">${totals[category + '_open']}</th>
+            <th></th>`;
+        }
+        footerHtml += '</tr>';
+        $('#summary_table tfoot').html(footerHtml);
     }
 
     function renderDailyChart(category) {
@@ -1826,7 +2522,7 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                 },
                 dataType: 'json',
                 success: function(carry) {
-                    carryOverData = carry; 
+                    carryOverData = carry;
                     _buildWeeklyTableBody(
                         sortedDates, bugsMap, bugsOpenMap, issuesMap, issuesOpenMap,
                         category, currentClientId, dateFrom, carry
@@ -1866,7 +2562,8 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                     data-client-id="${currentClientId}"
                     data-date="carry_over"
                     data-category="${cat}"
-                    data-date-from="${dateFrom}">
+                    data-date-from="${dateFrom}"
+                    data-mode="day">
                 <i class="ti ti-eye"></i> View
             </button>`;
 
@@ -1940,7 +2637,8 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                             data-client-id="${currentClientId}"
                             data-date="${date}"
                             data-category="${category}"
-                            data-date-from="${dateFrom}">
+                            data-date-from="${dateFrom}"
+                            data-mode="day">
                         <i class="ti ti-eye"></i> View
                     </button>
                 </td>`;
@@ -1953,7 +2651,8 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                             data-client-id="${currentClientId}"
                             data-date="${date}"
                             data-category="${category}"
-                            data-date-from="${dateFrom}">
+                            data-date-from="${dateFrom}"
+                            data-mode="day">
                         <i class="ti ti-eye"></i> View
                     </button>
                 </td>`;
@@ -1966,7 +2665,8 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
                             data-client-id="${currentClientId}"
                             data-date="${date}"
                             data-category="${category}"
-                            data-date-from="${dateFrom}">
+                            data-date-from="${dateFrom}"
+                            data-mode="day">
                         <i class="ti ti-eye"></i> View
                     </button>
                 </td>`;
@@ -2228,6 +2928,33 @@ $ENABLE_DELETE  = has_permission('Report_issue.Delete');
         const date_to = formatDate(new Date(year, month + 1, 0));
 
         const url = siteurl + 'report_issue/print_monthly_report?client_id=' + client_id +
+            '&date_from=' + date_from + '&date_to=' + date_to;
+
+        window.open(url, '_blank');
+    });
+
+    // Handle Export PDF Button Click (Tahunan)
+    $('#btn_export_yearly_pdf').click(function() {
+        const client_id = $('#client_id').val();
+        const selectedYear = parseInt($('#date_yearly').val());
+
+        if (!selectedYear) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian!',
+                text: 'Data belum tersedia.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        const today = new Date();
+        const date_from = formatDate(new Date(selectedYear, 0, 1));
+        const date_to = (selectedYear === today.getFullYear()) ?
+            formatDate(today) :
+            formatDate(new Date(selectedYear, 11, 31));
+
+        const url = siteurl + 'report_issue/print_yearly_report?client_id=' + client_id +
             '&date_from=' + date_from + '&date_to=' + date_to;
 
         window.open(url, '_blank');

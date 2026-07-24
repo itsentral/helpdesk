@@ -1496,4 +1496,73 @@ class Ticket extends Admin_Controller
     $this->load->helper('download');
     force_download($file_path, null, true);
   }
+
+  public function convert_to_project_task()
+  {
+    $ticket_id   = $this->input->post('ticket_id');
+    $project_id  = $this->input->post('project_id');
+    $priority    = $this->input->post('priority');
+    $due_date    = $this->input->post('due_date');
+
+    if (empty($ticket_id) || empty($project_id)) {
+      echo json_encode(['status' => 0, 'message' => 'Pilih Project tujuan!']);
+      return;
+    }
+
+    $ticket = $this->db->get_where('helpdesk', ['id' => $ticket_id])->row_array();
+    if (!$ticket) {
+      echo json_encode(['status' => 0, 'message' => 'Tiket tidak ditemukan!']);
+      return;
+    }
+
+    // Check if task already linked
+    $existing = $this->db->get_where('pm_tasks', ['ticket_id' => $ticket_id, 'deleted' => 0])->row_array();
+    if ($existing) {
+      echo json_encode(['status' => 0, 'message' => 'Tiket ini sudah terhubung ke Project Task ID #' . $existing['id']]);
+      return;
+    }
+
+    $task_name = '[' . $ticket['no_ticket'] . '] ' . mb_strimwidth(strip_tags($ticket['report']), 0, 100, '...');
+    $description = "Dikonversi dari Tiket Helpdesk #" . $ticket['no_ticket'] . "\nClient: " . $ticket['client_name'] . "\nReport:\n" . $ticket['report'];
+
+    $insert_data = [
+      'project_id'  => $project_id,
+      'ticket_id'   => $ticket_id,
+      'task_name'   => $task_name,
+      'assignee_id' => !empty($ticket['pic_id']) ? (int)$ticket['pic_id'] : NULL,
+      'priority'    => $priority ? $priority : 'High',
+      'due_date'    => !empty($due_date) ? $due_date : $ticket['due_date'],
+      'status'      => 'To Do',
+      'progress'    => 0,
+      'description' => htmlspecialchars($description, ENT_QUOTES, 'UTF-8'),
+      'created_by'  => $this->id_user,
+      'created_at'  => date('Y-m-d H:i:s')
+    ];
+
+    $insert = $this->db->insert('pm_tasks', $insert_data);
+    if ($insert) {
+      $task_id = $this->db->insert_id();
+      echo json_encode(['status' => 1, 'message' => 'Berhasil dikonversi menjadi Project Task #' . $task_id, 'task_id' => $task_id]);
+    } else {
+      echo json_encode(['status' => 0, 'message' => 'Gagal membuat task project.']);
+    }
+  }
+
+  public function get_linked_project_task()
+  {
+    $ticket_id = $this->input->get('ticket_id');
+    $this->db->select('t.*, p.project_code, p.project_name');
+    $this->db->from('pm_tasks t');
+    $this->db->join('pm_projects p', 'p.id = t.project_id', 'left');
+    $this->db->where('t.ticket_id', $ticket_id);
+    $this->db->where('t.deleted', 0);
+    $task = $this->db->get()->row_array();
+
+    if ($task) {
+      echo json_encode(['status' => 1, 'task' => $task]);
+    } else {
+      echo json_encode(['status' => 0, 'message' => 'Belum terhubung ke project task']);
+    }
+  }
 }
+

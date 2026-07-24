@@ -79,6 +79,10 @@
   <script src="<?= base_url('assets/js/scripts.js'); ?>" type="text/javascript"></script>
 
   <style>
+    .swal2-container {
+      z-index: 9999 !important;
+    }
+
     .notif-item:hover {
       background: #d0e8ff !important;
       cursor: pointer;
@@ -425,11 +429,11 @@
                         </div>
                     </div>
                 `;
-          }); 
+          });
 
           $('#online_users_list').html(html);
-        } 
-      }); 
+        }
+      });
     }
 
     // Load saat dropdown dibuka

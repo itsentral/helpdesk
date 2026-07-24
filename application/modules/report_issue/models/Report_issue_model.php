@@ -62,6 +62,20 @@ class Report_issue_model extends BF_Model
     protected $log_user = true;
 
     /**
+     * Mapping kategori chart/report ke sub_name di helpdesk_sub_category.
+     * Dipakai bareng oleh laporan mingguan/bulanan (2 kategori: bugs & issues)
+     * dan laporan tahunan (4 kategori: bugs, issues, request, development).
+     *
+     * @var array
+     */
+    protected $category_sub_map = [
+        'bugs'        => ['bugs program', 'bugs konsep'],
+        'issues'      => ['user issue'],
+        'request'     => ['request'],
+        'development' => ['development'],
+    ];
+
+    /**
      * Function construct used to load some library, do some actions, etc.
      */
     public function __construct()
@@ -187,6 +201,49 @@ class Report_issue_model extends BF_Model
         ];
     }
 
+    /**
+     * Versi bulanan dari get_daily_data(), dipakai untuk laporan Tahunan.
+     * Data digroup per bulan (YYYY-MM) untuk 4 kategori: bugs, issues, request, development.
+     * Masing-masing kategori mengembalikan total & open (8 array total).
+     */
+    public function get_monthly_data($client_id, $date_from, $date_to)
+    {
+        $result = [];
+
+        foreach ($this->category_sub_map as $key => $subs) {
+            $result[$key] = $this->db
+                ->select("DATE_FORMAT(h.create_date, '%Y-%m') as month, COUNT(*) as total")
+                ->from('helpdesk h')
+                ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+                ->where('h.client_id', $client_id)
+                ->where('h.is_delete', 0)
+                ->where_in('hsc.sub_name', $subs)
+                ->where('DATE(h.create_date) >=', $date_from)
+                ->where('DATE(h.create_date) <=', $date_to)
+                ->group_by("DATE_FORMAT(h.create_date, '%Y-%m')")
+                ->order_by('month', 'ASC')
+                ->get()
+                ->result();
+
+            $result[$key . '_open'] = $this->db
+                ->select("DATE_FORMAT(h.create_date, '%Y-%m') as month, COUNT(*) as total")
+                ->from('helpdesk h')
+                ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+                ->where('h.client_id', $client_id)
+                ->where('h.is_delete', 0)
+                ->where('h.status', 0)
+                ->where_in('hsc.sub_name', $subs)
+                ->where('DATE(h.create_date) >=', $date_from)
+                ->where('DATE(h.create_date) <=', $date_to)
+                ->group_by("DATE_FORMAT(h.create_date, '%Y-%m')")
+                ->order_by('month', 'ASC')
+                ->get()
+                ->result();
+        }
+
+        return $result;
+    }
+
     public function get_total_tickets($client_id, $date_from, $date_to)
     {
         // Total bugs & error
@@ -245,8 +302,58 @@ class Report_issue_model extends BF_Model
         ];
     }
 
-    public function get_tickets_by_date_range($client_id, $date_from, $date_to)
+    /**
+     * Versi 4 kategori dari get_total_tickets(), dipakai untuk laporan Tahunan.
+     * Mengembalikan total & open per kategori (bugs, issues, request, development)
+     * plus grand total & grand total open.
+     */
+    public function get_total_tickets_yearly($client_id, $date_from, $date_to)
     {
+        $totals      = [];
+        $grand_total = 0;
+        $grand_open  = 0;
+
+        foreach ($this->category_sub_map as $key => $subs) {
+            $total = $this->db
+                ->from('helpdesk h')
+                ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+                ->where('h.client_id', $client_id)
+                ->where('h.is_delete', 0)
+                ->where_in('hsc.sub_name', $subs)
+                ->where('DATE(h.create_date) >=', $date_from)
+                ->where('DATE(h.create_date) <=', $date_to)
+                ->count_all_results();
+
+            $open = $this->db
+                ->from('helpdesk h')
+                ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
+                ->where('h.client_id', $client_id)
+                ->where('h.is_delete', 0)
+                ->where('h.status', 0)
+                ->where_in('hsc.sub_name', $subs)
+                ->where('DATE(h.create_date) >=', $date_from)
+                ->where('DATE(h.create_date) <=', $date_to)
+                ->count_all_results();
+
+            $totals[$key]            = $total;
+            $totals['open_' . $key]  = $open;
+
+            $grand_total += $total;
+            $grand_open  += $open;
+        }
+
+        $totals['total']      = $grand_total;
+        $totals['total_open'] = $grand_open;
+
+        return $totals;
+    }
+
+    public function get_tickets_by_date_range($client_id, $date_from, $date_to, $all_categories = false)
+    {
+        $subs = $all_categories
+            ? ['bugs program', 'bugs konsep', 'user issue', 'request', 'development']
+            : ['bugs program', 'bugs konsep', 'user issue'];
+
         return $this->db
             ->select('h.*, hc.category_name, hsc.sub_name as sub_category_name')
             ->from('helpdesk h')
@@ -254,7 +361,7 @@ class Report_issue_model extends BF_Model
             ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
             ->where('h.client_id', $client_id)
             ->where('h.is_delete', 0)
-            ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep', 'user issue'])
+            ->where_in('hsc.sub_name', $subs)
             ->where('DATE(h.create_date) >=', $date_from)
             ->where('DATE(h.create_date) <=', $date_to)
             ->order_by('h.create_date', 'ASC')
@@ -272,34 +379,14 @@ class Report_issue_model extends BF_Model
             ->row();
     }
 
-    // public function get_tickets_by_date($client_id, $date, $category = 'all')
-    // {
-    //     $this->db
-    //         ->select('h.*, hc.category_name, hsc.sub_name as sub_category_name')
-    //         ->from('helpdesk h')
-    //         ->join('helpdesk_category hc', 'hc.id = h.category_id', 'left')
-    //         ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
-    //         ->where('h.client_id', $client_id)
-    //         ->where('h.is_delete', 0)
-    //         ->where('DATE(h.create_date)', $date);
-
-    //     // Filter by sub category
-    //     if ($category === 'bugs') {
-    //         $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep']);
-    //     } else if ($category === 'issues') {
-    //         $this->db->where('hsc.sub_name', 'user issue');
-    //     } else {
-    //         // 'all' = tetap harus filter hanya bugs & user issue
-    //         $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep', 'user issue']);
-    //     }
-
-    //     return $this->db
-    //         ->order_by('h.create_date', 'DESC')
-    //         ->get()
-    //         ->result();
-    // }
-
-    public function get_tickets_by_date($client_id, $date, $category = 'all', $date_from = null)
+    /**
+     * @param string $mode 'day' (default, $date = 'YYYY-MM-DD') atau 'month' ($date = 'YYYY-MM').
+     *                     Tidak berlaku ketika $date === 'carry_over'.
+     * @param bool $all_categories Jika true, opsi kategori 'all' mencakup 4 kategori
+     *                             (bugs, issues, request, development) - dipakai laporan Tahunan.
+     *                             Jika false (default), 'all' hanya bugs & issues (perilaku lama).
+     */
+    public function get_tickets_by_date($client_id, $date, $category = 'all', $date_from = null, $mode = 'day', $all_categories = false)
     {
         if ($date === 'carry_over' && $date_from) {
             $extended_from = date('Y-m-d', strtotime($date_from . ' -90 days'));
@@ -315,109 +402,48 @@ class Report_issue_model extends BF_Model
                 ->where('DATE(h.create_date) >=', $extended_from)
                 ->where('DATE(h.create_date) <', $date_from);
 
-            if ($category === 'bugs') {
-                $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep']);
-            } elseif ($category === 'issues') {
-                $this->db->where('hsc.sub_name', 'user issue');
-            } else {
-                $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep', 'user issue']);
-            }
+            $this->_apply_category_filter($category, $all_categories);
 
             return $this->db->order_by('h.create_date', 'ASC')->get()->result();
         }
 
-        // Logic normal (tidak berubah)
         $this->db
             ->select('h.*, hc.category_name, hsc.sub_name as sub_category_name')
             ->from('helpdesk h')
             ->join('helpdesk_category hc', 'hc.id = h.category_id', 'left')
             ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
             ->where('h.client_id', $client_id)
-            ->where('h.is_delete', 0)
-            ->where('DATE(h.create_date)', $date);
+            ->where('h.is_delete', 0);
 
-        if ($category === 'bugs') {
-            $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep']);
-        } elseif ($category === 'issues') {
-            $this->db->where('hsc.sub_name', 'user issue');
+        if ($mode === 'month') {
+            $this->db->where("DATE_FORMAT(h.create_date, '%Y-%m') =", $date);
         } else {
-            $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep', 'user issue']);
+            $this->db->where('DATE(h.create_date)', $date);
         }
+
+        $this->_apply_category_filter($category, $all_categories);
 
         return $this->db->order_by('h.create_date', 'DESC')->get()->result();
     }
 
-    // public function get_daily_data_with_status($client_id, $date_from, $date_to)
-    // {
-    //     // Get bugs & error data (total)
-    //     $bugs_data = $this->db
-    //         ->select('DATE(h.create_date) as date, COUNT(*) as total')
-    //         ->from('helpdesk h')
-    //         ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
-    //         ->where('h.client_id', $client_id)
-    //         ->where('h.is_delete', 0)
-    //         ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
-    //         ->where('DATE(h.create_date) >=', $date_from)
-    //         ->where('DATE(h.create_date) <=', $date_to)
-    //         ->group_by('DATE(h.create_date)')
-    //         ->order_by('date', 'ASC')
-    //         ->get()
-    //         ->result();
+    /**
+     * Helper: apply where_in hsc.sub_name berdasarkan kategori yang diminta.
+     * Dipakai bareng oleh get_tickets_by_date().
+     */
+    private function _apply_category_filter($category, $all_categories = false)
+    {
+        if (isset($this->category_sub_map[$category])) {
+            $this->db->where_in('hsc.sub_name', $this->category_sub_map[$category]);
+            return;
+        }
 
-    //     // Get bugs & error data (open only - status = 0)
-    //     $bugs_open_data = $this->db
-    //         ->select('DATE(h.create_date) as date, COUNT(*) as total')
-    //         ->from('helpdesk h')
-    //         ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
-    //         ->where('h.client_id', $client_id)
-    //         ->where('h.is_delete', 0)
-    //         ->where('h.status', 0)
-    //         ->where_in('hsc.sub_name', ['bugs program', 'bugs konsep'])
-    //         ->where('DATE(h.create_date) >=', $date_from)
-    //         ->where('DATE(h.create_date) <=', $date_to)
-    //         ->group_by('DATE(h.create_date)')
-    //         ->order_by('date', 'ASC')
-    //         ->get()
-    //         ->result();
-
-    //     // Get issues data (total)
-    //     $issues_data = $this->db
-    //         ->select('DATE(h.create_date) as date, COUNT(*) as total')
-    //         ->from('helpdesk h')
-    //         ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
-    //         ->where('h.client_id', $client_id)
-    //         ->where('h.is_delete', 0)
-    //         ->where('hsc.sub_name', 'user issue')
-    //         ->where('DATE(h.create_date) >=', $date_from)
-    //         ->where('DATE(h.create_date) <=', $date_to)
-    //         ->group_by('DATE(h.create_date)')
-    //         ->order_by('date', 'ASC')
-    //         ->get()
-    //         ->result();
-
-    //     // Get issues data (open only - status = 0)
-    //     $issues_open_data = $this->db
-    //         ->select('DATE(h.create_date) as date, COUNT(*) as total')
-    //         ->from('helpdesk h')
-    //         ->join('helpdesk_sub_category hsc', 'hsc.id = h.sub_category_id', 'left')
-    //         ->where('h.client_id', $client_id)
-    //         ->where('h.is_delete', 0)
-    //         ->where('h.status', 0)
-    //         ->where('hsc.sub_name', 'user issue')
-    //         ->where('DATE(h.create_date) >=', $date_from)
-    //         ->where('DATE(h.create_date) <=', $date_to)
-    //         ->group_by('DATE(h.create_date)')
-    //         ->order_by('date', 'ASC')
-    //         ->get()
-    //         ->result();
-
-    //     return [
-    //         'bugs' => $bugs_data,
-    //         'bugs_open' => $bugs_open_data,
-    //         'issues' => $issues_data,
-    //         'issues_open' => $issues_open_data
-    //     ];
-    // }
+        if ($all_categories) {
+            $all_subs = call_user_func_array('array_merge', array_values($this->category_sub_map));
+            $this->db->where_in('hsc.sub_name', $all_subs);
+        } else {
+            $this->db->where_in('hsc.sub_name', ['bugs program', 'bugs konsep', 'user issue']);
+        }
+    }
 
     public function get_manhour_data($client_id, $date_from, $date_to)
     {
@@ -444,6 +470,41 @@ class Report_issue_model extends BF_Model
             ->where('DATE(h.create_date) <=', $date_to)
             ->group_by('DATE(h.create_date)')
             ->order_by('date', 'ASC')
+            ->get()
+            ->result();
+
+        return [
+            'plan'   => $plan_data,
+            'actual' => $actual_data,
+        ];
+    }
+
+    /**
+     * Versi bulanan dari get_manhour_data(), dipakai untuk laporan Tahunan.
+     */
+    public function get_manhour_data_monthly($client_id, $date_from, $date_to)
+    {
+        $plan_data = $this->db
+            ->select("DATE_FORMAT(h.create_date, '%Y-%m') as month, SUM(h.man_hour_plan) as total")
+            ->from('helpdesk h')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by("DATE_FORMAT(h.create_date, '%Y-%m')")
+            ->order_by('month', 'ASC')
+            ->get()
+            ->result();
+
+        $actual_data = $this->db
+            ->select("DATE_FORMAT(h.create_date, '%Y-%m') as month, SUM(h.man_hour_actual) as total")
+            ->from('helpdesk h')
+            ->where('h.client_id', $client_id)
+            ->where('h.is_delete', 0)
+            ->where('DATE(h.create_date) >=', $date_from)
+            ->where('DATE(h.create_date) <=', $date_to)
+            ->group_by("DATE_FORMAT(h.create_date, '%Y-%m')")
+            ->order_by('month', 'ASC')
             ->get()
             ->result();
 
