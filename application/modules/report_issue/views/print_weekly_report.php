@@ -697,12 +697,13 @@
                     data: labels.map(date => bugsMap[date] || 0),
                     borderColor: '#dc3545',
                     backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.4,
+                    borderwidth: 3,
+                    tension: 0.1,
                     fill: true,
                     pointRadius: 4,
                     pointBackgroundColor: '#dc3545',
                     pointBorderColor: '#fff',
-                    pointBorderWidth: 2
+                    pointBorderWidth: 3
                 }]
             }
         });
@@ -718,12 +719,13 @@
                     data: labels.map(date => issuesMap[date] || 0),
                     borderColor: '#ffc107',
                     backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    tension: 0.4,
+                    borderwidth: 3,
+                    tension: 0.1,
                     fill: true,
                     pointRadius: 4,
                     pointBackgroundColor: '#ffc107',
                     pointBorderColor: '#fff',
-                    pointBorderWidth: 2
+                    pointBorderWidth: 3
                 }]
             }
         });
@@ -739,12 +741,13 @@
                     data: labels.map(date => bugsCumulative[date] || 0),
                     borderColor: '#fd7e14',
                     backgroundColor: 'rgba(253, 126, 20, 0.1)',
-                    tension: 0.4,
+                    borderwidth: 3,
+                    tension: 0.1,
                     fill: true,
                     pointRadius: 4,
                     pointBackgroundColor: '#fd7e14',
                     pointBorderColor: '#fff',
-                    pointBorderWidth: 2
+                    pointBorderWidth: 3
                 }]
             }
         });
@@ -760,12 +763,13 @@
                     data: labels.map(date => issuesCumulative[date] || 0),
                     borderColor: '#20c997',
                     backgroundColor: 'rgba(32, 201, 151, 0.1)',
-                    tension: 0.4,
+                    borderwidth: 3,
+                    tension: 0.1,
                     fill: true,
                     pointRadius: 4,
                     pointBackgroundColor: '#20c997',
                     pointBorderColor: '#fff',
-                    pointBorderWidth: 2
+                    pointBorderWidth: 3
                 }]
             }
         });

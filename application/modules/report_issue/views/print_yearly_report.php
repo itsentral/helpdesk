@@ -531,12 +531,13 @@
                         data: data,
                         borderColor: color,
                         backgroundColor: bg,
-                        tension: 0.4,
+                        borderwidth: 3,
+                        tension: 0.1,
                         fill: true,
                         pointRadius: 4,
                         pointBackgroundColor: color,
                         pointBorderColor: '#fff',
-                        pointBorderWidth: 2
+                        pointBorderWidth: 3
                     }]
                 }
             });
