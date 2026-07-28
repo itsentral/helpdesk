@@ -162,7 +162,7 @@ foreach ($ticket as $row) {
 
                                             <!-- No Ticket -->
                                             <div style="flex:2; min-width:120px; padding-right:8px; overflow:hidden;">
-                                                <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
+                                                <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1 || $user['id_user'] == 7) : ?>
                                                     <a href="<?= site_url('ticket/view_ticket/' . $t->id) ?>"
                                                         class="fw-semibold text-primary small d-block text-truncate text-decoration-none"
                                                         title="<?= htmlspecialchars($t->no_ticket) ?>">
