@@ -112,7 +112,7 @@ foreach ($ticket as $row) {
                                     <div style="width:40px; flex-shrink:0;">No.</div>
                                     <div style="flex:2; min-width:120px; padding-right:8px;">No Ticket</div>
                                     <div style="flex:2; min-width:120px; padding-right:8px;">Client</div>
-                                    <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
+                                    <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1 || $user['id_user'] == 7) : ?>
                                         <div style="flex:3; min-width:120px; padding-right:8px;">Report</div>
                                     <?php endif; ?>
                                     <div style="flex:3; min-width:140px; padding-right:8px;">Category</div>
@@ -181,7 +181,7 @@ foreach ($ticket as $row) {
                                                 <?= htmlspecialchars($t->client_name) ?>
                                             </div>
 
-                                            <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1) : ?>
+                                            <?php if ($user['is_programmer'] == 1 || $user['is_ba'] == 1 || $user['id_user'] == 7) : ?>
                                                 <div style="flex:3; min-width:140px; padding-right:8px; overflow:hidden;"
                                                     class="small text-truncate me-3"
                                                     title="<?= htmlspecialchars($t->report) ?>">
