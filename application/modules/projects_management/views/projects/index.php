@@ -133,11 +133,9 @@
                                         $is_admin_user = isset($is_admin) && $is_admin;
                                         $is_project_pm = $is_admin_user || ($current_user_id == $p['pm_id']);
                                         ?>
-                                        <?php if ($p['status'] === 'Planning' && $is_project_pm): ?>
                                             <a href="<?= site_url('projects_management/edit/' . $p['id']); ?>" class="btn btn-sm btn-outline-secondary" title="Edit Data" style="width: 100px;">
                                                 <i class="fa fa-cog me-1"></i> Edit
                                             </a>
-                                        <?php endif; ?>
                                         <?php if ($p['status'] === 'Planning' && $is_project_pm): ?>
                                             <button type="button" class="btn btn-sm btn-outline-danger btn-delete-project" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Delete" style="width: 100px;">
                                                 <i class="fa fa-trash me-1"></i> Delete
