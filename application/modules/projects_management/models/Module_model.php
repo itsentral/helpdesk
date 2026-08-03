@@ -80,6 +80,10 @@ class Module_model extends BF_Model
             $mod['finished_tahapan'] = $finished;
             $mod['all_finished'] = ($total > 0 && $finished >= $total);
 
+            // Check if module has any finished tahapan
+            $finished_count = $this->db->where('module_id', $mod['id'])->where('status', 'finish')->count_all_results('pm_module_tahapan');
+            $mod['has_finished_tahapan'] = ($finished_count > 0);
+
             // Get meetings
             $mod['meetings'] = $this->get_module_meetings($mod['id']);
             $mod['meeting_manhour'] = $this->get_module_meeting_manhour($mod['id']);

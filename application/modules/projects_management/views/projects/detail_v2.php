@@ -6,6 +6,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
 
+<!-- SortableJS for drag & drop modules -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
 <style>
     .tahapan-finish {
         background-color: #d4edda !important;
@@ -452,12 +455,16 @@
 
         <!-- ========== MODULES & TAHAPAN ========== -->
         <?php if (!empty($modules)): ?>
+            <div id="modules-sortable-container">
             <?php foreach ($modules as $mod_idx => $mod): ?>
-                <div class="card border mb-3">
+                <div class="card border mb-3 module-sortable-item" data-module-id="<?= $mod['id']; ?>">
                     <div class="card-header toggle-header module-header <?= ($mod['status'] === 'finish') ? 'is-finish' : ''; ?> d-flex justify-content-between align-items-center"
                         data-bs-toggle="collapse" data-bs-target="#module-collapse-<?= $mod['id']; ?>"
                         aria-expanded="<?= ($mod['status'] !== 'finish') ? 'true' : 'false'; ?>">
                         <div class="d-flex align-items-center">
+                            <?php if (!$is_readonly && $is_pm): ?>
+                                <span class="drag-handle me-2 text-muted" style="cursor:grab;" onclick="event.stopPropagation();"><i class="fa fa-grip-vertical"></i></span>
+                            <?php endif; ?>
                             <i class="fa fa-chevron-down toggle-chevron me-2 text-muted"></i>
                             <span class="module-icon"><i class="fa fa-cube"></i></span>
                             <strong class="text-dark"><?= html_escape($mod['module_name']); ?></strong>
@@ -480,7 +487,7 @@
                             <?php endif; ?>
                         </div>
                     </div>
-                    <div class="collapse <?= ($mod['status'] !== 'finish') ? 'show' : ''; ?>" id="module-collapse-<?= $mod['id']; ?>">
+                    <div class="collapse <?= ($is_readonly && $mod['status'] !== 'finish') ? 'show' : ''; ?>" id="module-collapse-<?= $mod['id']; ?>">
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table class="table table-bordered table-sm align-middle mb-0">
@@ -490,7 +497,7 @@
                                             <th>Tahapan</th>
                                             <th width="110">PIC</th>
                                             <th width="55">Plan MH</th>
-                                            <th width="85">Due Date</th>
+                                            <th width="95">Due Date</th>
                                             <th width="55">Aktual MH</th>
                                             <th width="85">Aktual Date</th>
                                             <th width="65">Status</th>
@@ -508,8 +515,20 @@
                                                 <td class="text-center small"><?= $t['tahapan_order']; ?></td>
                                                 <td class="small"><?= html_escape($t['tahapan_name']); ?></td>
                                                 <td class="text-center small fw-bold"><?= html_escape($t['pic_name'] ? $t['pic_name'] : '-'); ?></td>
-                                                <td class="text-center fw-bold"><?= $t['plan_manhour'] > 0 ? $t['plan_manhour'] : '-'; ?></td>
-                                                <td class="text-center small"><?= $t['plan_due_date'] ? date('d-M-y', strtotime($t['plan_due_date'])) : '-'; ?></td>
+                                                <td class="text-center fw-bold">
+                                                    <?php if (!$is_readonly && !$mod['has_finished_tahapan'] && $is_pm): ?>
+                                                        <input type="number" step="0.5" min="0" class="form-control form-control-sm text-center input-plan-mh" data-tahapan-id="<?= $t['id']; ?>" value="<?= $t['plan_manhour']; ?>" style="font-size:11px; width:70px; margin:0 auto;" />
+                                                    <?php else: ?>
+                                                        <?= $t['plan_manhour'] > 0 ? $t['plan_manhour'] : '-'; ?>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="text-center small">
+                                                    <?php if (!$is_readonly && !$mod['has_finished_tahapan'] && $is_pm): ?>
+                                                        <input type="text" class="form-control form-control-sm flatpickr-duedate text-center" data-tahapan-id="<?= $t['id']; ?>" value="<?= $t['plan_due_date'] ? $t['plan_due_date'] : ''; ?>" placeholder="Pilih" style="font-size:11px;" />
+                                                    <?php else: ?>
+                                                        <?= $t['plan_due_date'] ? date('d-M-y', strtotime($t['plan_due_date'])) : '-'; ?>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td class="text-center fw-bold text-primary"><?= $t['actual_manhour'] > 0 ? $t['actual_manhour'] : '0'; ?></td>
                                                 <td class="text-center small"><?= $t['actual_finish_date'] ? date('d-M-y', strtotime($t['actual_finish_date'])) : ''; ?></td>
                                                 <td class="text-center">
@@ -603,6 +622,7 @@
                     </div>
                 </div>
             <?php endforeach; ?>
+            </div><!-- end modules-sortable-container -->
         <?php else: ?>
             <div class="text-center text-muted py-4">Belum ada modul. Klik "Add Modul" untuk menambahkan.</div>
         <?php endif; ?>
@@ -624,10 +644,56 @@
 
 <script>
     $(document).ready(function() {
+        // Init Sortable for module drag & drop (only in update mode for PM/admin)
+        var sortableContainer = document.getElementById('modules-sortable-container');
+        if (sortableContainer && typeof Sortable !== 'undefined') {
+            Sortable.create(sortableContainer, {
+                handle: '.drag-handle',
+                animation: 200,
+                ghostClass: 'bg-light',
+                onEnd: function() {
+                    // Collect new order
+                    var order = [];
+                    $(sortableContainer).find('.module-sortable-item').each(function(i) {
+                        order.push({ module_id: $(this).data('module-id'), position: i + 1 });
+                    });
+                    // Save to server
+                    $.post('<?= site_url("projects_management/reorder_modules"); ?>', { order: JSON.stringify(order) });
+                }
+            });
+        }
+
         // Init Select2 for add member dropdown
         $('#select-add-member').select2({
             width: '100%',
             placeholder: '-- Cari & pilih user --'
+        });
+
+        // Init Flatpickr for editable due dates + auto-save on change
+        flatpickr('.flatpickr-duedate', {
+            dateFormat: 'Y-m-d',
+            allowInput: true,
+            onChange: function(selectedDates, dateStr, instance) {
+                var tahapanId = $(instance.element).data('tahapan-id');
+                if (tahapanId && dateStr) {
+                    $.post('<?= site_url("projects_management/update_due_date"); ?>', {
+                        tahapan_id: tahapanId,
+                        due_date: dateStr
+                    });
+                }
+            }
+        });
+
+        // Auto-save plan manhour on change
+        $(document).on('change', '.input-plan-mh', function() {
+            var tahapanId = $(this).data('tahapan-id');
+            var manhour = $(this).val();
+            if (tahapanId) {
+                $.post('<?= site_url("projects_management/update_plan_manhour"); ?>', {
+                    tahapan_id: tahapanId,
+                    plan_manhour: manhour
+                });
+            }
         });
 
         // === TEAM ===

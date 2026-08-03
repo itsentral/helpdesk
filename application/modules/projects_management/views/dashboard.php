@@ -82,29 +82,33 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!empty($projects)): $no = 1; foreach ($projects as $p): ?>
+                        <?php if (!empty($projects)): $no = 1;
+                            foreach ($projects as $p): ?>
+                                <tr>
+                                    <td class="ps-3"><?= $no++; ?></td>
+                                    <td><?= html_escape($p['client_name'] ? $p['client_name'] : '-'); ?></td>
+                                    <td><strong><?= html_escape($p['project_name']); ?></strong><br><small class="text-muted"><?= $p['project_code']; ?></small></td>
+                                    <td><?= html_escape($p['pm_name'] ? $p['pm_name'] : '-'); ?></td>
+                                    <td><small><?= date('d M Y', strtotime($p['end_date'])); ?></small></td>
+                                    <td class="text-center fw-bold"><?= $p['total_modules']; ?></td>
+                                    <td class="text-center fw-bold text-success"><?= $p['finished_modules']; ?></td>
+                                    <td>
+                                        <?php
+                                        $lbl = 'bg-secondary';
+                                        if ($p['status'] == 'In Progress') $lbl = 'bg-warning text-dark';
+                                        elseif ($p['status'] == 'Completed') $lbl = 'bg-success';
+                                        ?>
+                                        <span class="badge <?= $lbl; ?>"><?= html_escape($p['status']); ?></span>
+                                    </td>
+                                    <td class="pe-3">
+                                        <a href="<?= site_url('projects_management/detail/' . $p['id']); ?>" class="btn btn-sm btn-outline-primary"><i class="fa fa-eye"></i></a>
+                                    </td>
+                                </tr>
+                            <?php endforeach;
+                        else: ?>
                             <tr>
-                                <td class="ps-3"><?= $no++; ?></td>
-                                <td><?= html_escape($p['client_name'] ? $p['client_name'] : '-'); ?></td>
-                                <td><strong><?= html_escape($p['project_name']); ?></strong><br><small class="text-muted"><?= $p['project_code']; ?></small></td>
-                                <td><?= html_escape($p['pm_name'] ? $p['pm_name'] : '-'); ?></td>
-                                <td><small><?= date('d M Y', strtotime($p['end_date'])); ?></small></td>
-                                <td class="text-center fw-bold"><?= $p['total_modules']; ?></td>
-                                <td class="text-center fw-bold text-success"><?= $p['finished_modules']; ?></td>
-                                <td>
-                                    <?php
-                                    $lbl = 'bg-secondary';
-                                    if ($p['status'] == 'In Progress') $lbl = 'bg-warning text-dark';
-                                    elseif ($p['status'] == 'Completed') $lbl = 'bg-success';
-                                    ?>
-                                    <span class="badge <?= $lbl; ?>"><?= html_escape($p['status']); ?></span>
-                                </td>
-                                <td class="pe-3">
-                                    <a href="<?= site_url('projects_management/detail/' . $p['id']); ?>" class="btn btn-sm btn-outline-primary"><i class="fa fa-eye"></i></a>
-                                </td>
+                                <td colspan="9" class="text-center p-4 text-muted">Belum ada project.</td>
                             </tr>
-                        <?php endforeach; else: ?>
-                            <tr><td colspan="9" class="text-center p-4 text-muted">Belum ada project.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

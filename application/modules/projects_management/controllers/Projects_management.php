@@ -30,7 +30,7 @@ class Projects_management extends Admin_Controller
         $this->template->page_icon('fa fa-cubes');
 
         $data['kpi']          = $this->Project_model->get_kpi_summary();
-        $data['projects']     = $this->Project_model->get_projects(null, null, $this->auth->is_admin() ? null : $this->id_user);
+        $data['projects']     = $this->Project_model->get_projects(null, null, null);
 
         $this->template->set($data);
         $this->template->render('dashboard');
@@ -52,6 +52,108 @@ class Projects_management extends Admin_Controller
 
         $this->template->set($data);
         $this->template->render('projects/index');
+    }
+
+    /**
+     * Edit project header (hanya status Planning)
+     */
+    public function edit($id)
+    {
+        $project = $this->Project_model->get_project_by_id($id);
+        if (!$project) {
+            show_404();
+            return;
+        }
+
+        if ($project['status'] !== 'Planning') {
+            redirect('projects_management/master');
+            return;
+        }
+
+        $this->template->title('Edit Project - ' . $project['project_name']);
+        $this->template->page_icon('fa fa-pencil');
+
+        $data['project']    = $project;
+        $data['clients']    = $this->db->get_where('helpdesk_client', array('is_delete' => 0))->result_array();
+        $data['users']      = $this->db->get_where('users', array('st_aktif' => 1))->result_array();
+        $data['ba_users']   = $this->Project_model->get_role_user_ids($id, 'ba');
+        $data['prog_users'] = $this->Project_model->get_role_user_ids($id, 'programmer');
+        $data['qa_users']   = $this->Project_model->get_role_user_ids($id, 'qa');
+
+        $this->template->set($data);
+        $this->template->render('projects/edit');
+    }
+
+    /**
+     * AJAX: Update project header data
+     */
+    public function update_project()
+    {
+        $project_id            = $this->input->post('project_id');
+        $project_name          = trim($this->input->post('project_name'));
+        $client_id             = $this->input->post('client_id');
+        $pm_id                 = $this->input->post('pm_id');
+        $ba_ids                = $this->input->post('ba_ids');
+        $programmer_ids        = $this->input->post('programmer_ids');
+        $qa_id                 = $this->input->post('qa_id');
+        $end_date              = $this->input->post('end_date');
+        $target_mh_pm          = $this->input->post('target_mh_pm');
+        $target_mh_qa          = $this->input->post('target_mh_qa');
+        $target_mh_ba          = $this->input->post('target_mh_ba');
+        $target_mh_programmer  = $this->input->post('target_mh_programmer');
+
+        if (empty($project_id) || empty($project_name) || empty($client_id) || empty($pm_id) || empty($end_date)) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Field wajib (Client, Project, PM, Target date) harus diisi!'));
+            return;
+        }
+
+        // Verify project is still Planning
+        $project = $this->Project_model->get_project_by_id($project_id);
+        if (!$project || $project['status'] !== 'Planning') {
+            echo json_encode(array('status' => 0, 'pesan' => 'Hanya project dengan status Planning yang bisa diedit.'));
+            return;
+        }
+
+        $this->db->trans_start();
+
+        // Update project
+        $this->db->where('id', $project_id);
+        $this->db->update('pm_projects', array(
+            'project_name'         => $project_name,
+            'client_id'            => $client_id,
+            'pm_id'                => $pm_id,
+            'end_date'             => $end_date,
+            'target_mh_pm'         => $target_mh_pm ? (float)$target_mh_pm : 0,
+            'target_mh_qa'         => $target_mh_qa ? (float)$target_mh_qa : 0,
+            'target_mh_ba'         => $target_mh_ba ? (float)$target_mh_ba : 0,
+            'target_mh_programmer' => $target_mh_programmer ? (float)$target_mh_programmer : 0,
+        ));
+
+        // Re-sync roles: delete old, insert new
+        $this->db->where('project_id', $project_id)->delete('pm_project_roles');
+
+        if (!empty($ba_ids) && is_array($ba_ids)) {
+            foreach ($ba_ids as $uid) {
+                if (!empty($uid)) $this->db->insert('pm_project_roles', array('project_id' => $project_id, 'user_id' => $uid, 'role' => 'ba', 'created_at' => $this->datetime));
+            }
+        }
+        if (!empty($programmer_ids) && is_array($programmer_ids)) {
+            foreach ($programmer_ids as $uid) {
+                if (!empty($uid)) $this->db->insert('pm_project_roles', array('project_id' => $project_id, 'user_id' => $uid, 'role' => 'programmer', 'created_at' => $this->datetime));
+            }
+        }
+        if (!empty($qa_id)) {
+            $this->db->insert('pm_project_roles', array('project_id' => $project_id, 'user_id' => $qa_id, 'role' => 'qa', 'created_at' => $this->datetime));
+        }
+        $this->db->insert('pm_project_roles', array('project_id' => $project_id, 'user_id' => $pm_id, 'role' => 'pm', 'created_at' => $this->datetime));
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === FALSE) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Gagal menyimpan perubahan.'));
+        } else {
+            echo json_encode(array('status' => 1, 'pesan' => 'Project berhasil diupdate.'));
+        }
     }
 
     public function create()
@@ -552,6 +654,96 @@ class Projects_management extends Admin_Controller
     }
 
     /**
+     * AJAX: Reorder modules (from drag & drop)
+     */
+    public function reorder_modules()
+    {
+        $order_json = $this->input->post('order');
+        if (empty($order_json)) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Data order kosong.'));
+            return;
+        }
+
+        $order = json_decode($order_json, true);
+        if (!is_array($order)) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Format tidak valid.'));
+            return;
+        }
+
+        foreach ($order as $item) {
+            if (!empty($item['module_id']) && !empty($item['position'])) {
+                $this->db->where('id', (int)$item['module_id']);
+                $this->db->update('pm_modules', array('module_order' => (int)$item['position']));
+            }
+        }
+
+        echo json_encode(array('status' => 1, 'pesan' => 'Urutan modul berhasil disimpan.'));
+    }
+
+    /**
+     * AJAX: Update due date tahapan (hanya jika modul belum punya task)
+     */
+    public function update_due_date()
+    {
+        $tahapan_id = $this->input->post('tahapan_id');
+        $due_date   = $this->input->post('due_date');
+
+        if (empty($tahapan_id) || empty($due_date)) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Parameter tidak valid.'));
+            return;
+        }
+
+        // Get tahapan & verify module has no tasks
+        $tahapan = $this->Module_model->get_tahapan_by_id($tahapan_id);
+        if (!$tahapan) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Tahapan tidak ditemukan.'));
+            return;
+        }
+
+        $task_count = $this->db->where('module_id', $tahapan['module_id'])->where('status', 'finish')->count_all_results('pm_module_tahapan');
+        if ($task_count > 0) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Due date tidak bisa diubah karena sudah ada tahapan yang finish.'));
+            return;
+        }
+
+        $this->db->where('id', $tahapan_id);
+        $this->db->update('pm_module_tahapan', array('plan_due_date' => $due_date));
+
+        echo json_encode(array('status' => 1, 'pesan' => 'Due date berhasil diupdate.'));
+    }
+
+    /**
+     * AJAX: Update plan manhour tahapan (hanya jika modul belum ada tahapan finish)
+     */
+    public function update_plan_manhour()
+    {
+        $tahapan_id   = $this->input->post('tahapan_id');
+        $plan_manhour = $this->input->post('plan_manhour');
+
+        if (empty($tahapan_id)) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Parameter tidak valid.'));
+            return;
+        }
+
+        $tahapan = $this->Module_model->get_tahapan_by_id($tahapan_id);
+        if (!$tahapan) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Tahapan tidak ditemukan.'));
+            return;
+        }
+
+        $finished_count = $this->db->where('module_id', $tahapan['module_id'])->where('status', 'finish')->count_all_results('pm_module_tahapan');
+        if ($finished_count > 0) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Plan manhour tidak bisa diubah karena sudah ada tahapan yang finish.'));
+            return;
+        }
+
+        $this->db->where('id', $tahapan_id);
+        $this->db->update('pm_module_tahapan', array('plan_manhour' => (float)$plan_manhour));
+
+        echo json_encode(array('status' => 1, 'pesan' => 'Plan manhour berhasil diupdate.'));
+    }
+
+    /**
      * AJAX: Rollback tahapan ke step sebelumnya
      */
     public function rollback_tahapan()
@@ -742,8 +934,8 @@ class Projects_management extends Admin_Controller
             return;
         }
 
-        // Check duplicate module name in same project
-        $exists = $this->db->get_where('pm_modules', array('project_id' => $project_id, 'module_name' => $module_name))->num_rows();
+        // Check duplicate module name in same project (exclude soft deleted)
+        $exists = $this->db->get_where('pm_modules', array('project_id' => $project_id, 'module_name' => $module_name, 'is_deleted' => 0))->num_rows();
         if ($exists > 0) {
             echo json_encode(array('status' => 0, 'pesan' => 'Modul dengan nama "' . $module_name . '" sudah ada di project ini.'));
             return;
