@@ -129,6 +129,11 @@
                                                 <i class="fa fa-pencil me-1"></i> Update
                                             </a>
                                         <?php endif; ?>
+                                        <?php if ($p['status'] === 'Planning' && $is_project_pm): ?>
+                                            <a href="<?= site_url('projects_management/edit/' . $p['id']); ?>" class="btn btn-sm btn-outline-secondary" title="Edit Data" style="width: 100px;">
+                                                <i class="fa fa-cog me-1"></i> Edit
+                                            </a>
+                                        <?php endif; ?>
                                         <?php
                                         $is_admin_user = isset($is_admin) && $is_admin;
                                         $is_project_pm = $is_admin_user || ($current_user_id == $p['pm_id']);
