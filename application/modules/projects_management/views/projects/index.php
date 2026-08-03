@@ -131,27 +131,26 @@
                                         <?php endif; ?>
                                         <?php
                                         $is_admin_user = isset($is_admin) && $is_admin;
-                                        $is_project_pm = $is_admin_user || ($current_user_id == $p['pm_id']);
                                         ?>
                                             <a href="<?= site_url('projects_management/edit/' . $p['id']); ?>" class="btn btn-sm btn-outline-secondary" title="Edit Data" style="width: 100px;">
                                                 <i class="fa fa-cog me-1"></i> Edit
                                             </a>
-                                        <?php if ($p['status'] === 'Planning' && $is_project_pm): ?>
+                                        <?php if ($p['status'] === 'Planning'): ?>
                                             <button type="button" class="btn btn-sm btn-outline-danger btn-delete-project" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Delete" style="width: 100px;">
                                                 <i class="fa fa-trash me-1"></i> Delete
                                             </button>
                                         <?php endif; ?>
-                                        <?php if ($p['total_modules'] > 0 && $p['finished_modules'] >= $p['total_modules'] && $p['status'] !== 'Completed' && $is_project_pm): ?>
+                                        <?php if ($p['total_modules'] > 0 && $p['finished_modules'] >= $p['total_modules'] && $p['status'] !== 'Completed'): ?>
                                             <button type="button" class="btn btn-sm btn-success btn-finish-project-list" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Finish Project" style="width: 100px;">
                                                 <i class="fa fa-check-circle me-1"></i> Finish
                                             </button>
                                         <?php endif; ?>
-                                        <?php if ($p['status'] !== 'Completed' && $p['status'] !== 'On Hold' && $is_project_pm): ?>
+                                        <?php if ($p['status'] !== 'Completed' && $p['status'] !== 'On Hold'): ?>
                                             <button type="button" class="btn btn-sm btn-outline-warning btn-hold-project-list" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="On Hold" style="width: 100px;">
                                                 <i class="fa fa-pause me-1"></i> Hold
                                             </button>
                                         <?php endif; ?>
-                                        <?php if ($p['status'] === 'On Hold' && $is_project_pm): ?>
+                                        <?php if ($p['status'] === 'On Hold'): ?>
                                             <button type="button" class="btn btn-sm btn-outline-info btn-resume-project-list" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Resume" style="width: 100px;">
                                                 <i class="fa fa-play me-1"></i> Resume
                                             </button>
