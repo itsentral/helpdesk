@@ -30,7 +30,7 @@ class Projects_management extends Admin_Controller
         $this->template->page_icon('fa fa-cubes');
 
         $data['kpi']          = $this->Project_model->get_kpi_summary();
-        $data['projects']     = $this->Project_model->get_projects(null, null, $this->auth->is_admin() ? null : $this->id_user);
+        $data['projects']     = $this->Project_model->get_projects(null, null, null);
 
         $this->template->set($data);
         $this->template->render('dashboard');
