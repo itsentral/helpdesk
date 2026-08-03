@@ -68,44 +68,44 @@
                                 </td>
                                 <td><?= html_escape($p['pm_name'] ? $p['pm_name'] : '-'); ?></td>
                                 <!-- Kolom Bisnis Analis -->
-<td>
-    <?php 
-    if (!empty($p['ba_names'])) {
-        $ba_list = array_map('trim', explode(',', $p['ba_names']));
-        if (count($ba_list) > 1) {
-            echo '<ul class="mb-0 ps-3">';
-            foreach ($ba_list as $ba) {
-                echo '<li>' . html_escape($ba) . '</li>';
-            }
-            echo '</ul>';
-        } else {
-            echo html_escape($ba_list[0]);
-        }
-    } else {
-        echo '-';
-    }
-    ?>
-</td>
+                                <td>
+                                    <?php
+                                    if (!empty($p['ba_names'])) {
+                                        $ba_list = array_map('trim', explode(',', $p['ba_names']));
+                                        if (count($ba_list) > 1) {
+                                            echo '<ul class="mb-0 ps-3">';
+                                            foreach ($ba_list as $ba) {
+                                                echo '<li>' . html_escape($ba) . '</li>';
+                                            }
+                                            echo '</ul>';
+                                        } else {
+                                            echo html_escape($ba_list[0]);
+                                        }
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </td>
 
-<!-- Kolom Programmer -->
-<td>
-    <?php 
-    if (!empty($p['programmer_names'])) {
-        $prog_list = array_map('trim', explode(',', $p['programmer_names']));
-        if (count($prog_list) > 1) {
-            echo '<ul class="mb-0 ps-3">';
-            foreach ($prog_list as $prog) {
-                echo '<li>' . html_escape($prog) . '</li>';
-            }
-            echo '</ul>';
-        } else {
-            echo html_escape($prog_list[0]);
-        }
-    } else {
-        echo '-';
-    }
-    ?>
-</td>
+                                <!-- Kolom Programmer -->
+                                <td>
+                                    <?php
+                                    if (!empty($p['programmer_names'])) {
+                                        $prog_list = array_map('trim', explode(',', $p['programmer_names']));
+                                        if (count($prog_list) > 1) {
+                                            echo '<ul class="mb-0 ps-3">';
+                                            foreach ($prog_list as $prog) {
+                                                echo '<li>' . html_escape($prog) . '</li>';
+                                            }
+                                            echo '</ul>';
+                                        } else {
+                                            echo html_escape($prog_list[0]);
+                                        }
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </td>
                                 <td><?= html_escape(isset($p['qa_names']) && $p['qa_names'] ? $p['qa_names'] : '-'); ?></td>
                                 <td class="text-center fw-bold"><?= $p['total_modules']; ?></td>
                                 <td class="text-center fw-bold text-success"><?= $p['finished_modules']; ?></td>
@@ -129,15 +129,15 @@
                                                 <i class="fa fa-pencil me-1"></i> Update
                                             </a>
                                         <?php endif; ?>
+                                        <?php
+                                        $is_admin_user = isset($is_admin) && $is_admin;
+                                        $is_project_pm = $is_admin_user || ($current_user_id == $p['pm_id']);
+                                        ?>
                                         <?php if ($p['status'] === 'Planning' && $is_project_pm): ?>
                                             <a href="<?= site_url('projects_management/edit/' . $p['id']); ?>" class="btn btn-sm btn-outline-secondary" title="Edit Data" style="width: 100px;">
                                                 <i class="fa fa-cog me-1"></i> Edit
                                             </a>
                                         <?php endif; ?>
-                                        <?php
-                                        $is_admin_user = isset($is_admin) && $is_admin;
-                                        $is_project_pm = $is_admin_user || ($current_user_id == $p['pm_id']);
-                                        ?>
                                         <?php if ($p['status'] === 'Planning' && $is_project_pm): ?>
                                             <button type="button" class="btn btn-sm btn-outline-danger btn-delete-project" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Delete" style="width: 100px;">
                                                 <i class="fa fa-trash me-1"></i> Delete
@@ -242,7 +242,15 @@
                         status: 'Completed'
                     }, function(res) {
                         if (res.status === 1) {
-                            Swal.fire({ icon: 'success', title: 'Project Completed!', text: res.pesan, timer: 2000, showConfirmButton: false }).then(function() { location.reload(); });
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Project Completed!',
+                                text: res.pesan,
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(function() {
+                                location.reload();
+                            });
                         } else {
                             Swal.fire('Gagal', res.pesan, 'error');
                         }
@@ -265,9 +273,23 @@
                 cancelButtonText: 'Batal'
             }).then(function(result) {
                 if (result.isConfirmed) {
-                    $.post('<?= site_url("projects_management/set_project_status"); ?>', { project_id: id, status: 'On Hold' }, function(res) {
-                        if (res.status === 1) { Swal.fire({ icon:'success', title:'On Hold', text:res.pesan, timer:1500, showConfirmButton:false }).then(function(){ location.reload(); }); }
-                        else { Swal.fire('Gagal', res.pesan, 'error'); }
+                    $.post('<?= site_url("projects_management/set_project_status"); ?>', {
+                        project_id: id,
+                        status: 'On Hold'
+                    }, function(res) {
+                        if (res.status === 1) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'On Hold',
+                                text: res.pesan,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(function() {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.pesan, 'error');
+                        }
                     }, 'json');
                 }
             });
@@ -286,9 +308,23 @@
                 cancelButtonText: 'Batal'
             }).then(function(result) {
                 if (result.isConfirmed) {
-                    $.post('<?= site_url("projects_management/set_project_status"); ?>', { project_id: id, status: 'In Progress' }, function(res) {
-                        if (res.status === 1) { Swal.fire({ icon:'success', title:'Resumed', text:res.pesan, timer:1500, showConfirmButton:false }).then(function(){ location.reload(); }); }
-                        else { Swal.fire('Gagal', res.pesan, 'error'); }
+                    $.post('<?= site_url("projects_management/set_project_status"); ?>', {
+                        project_id: id,
+                        status: 'In Progress'
+                    }, function(res) {
+                        if (res.status === 1) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Resumed',
+                                text: res.pesan,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(function() {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.pesan, 'error');
+                        }
                     }, 'json');
                 }
             });
