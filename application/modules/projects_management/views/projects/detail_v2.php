@@ -595,6 +595,7 @@
                                                 <th width="50">MH</th>
                                                 <th>Oleh</th>
                                                 <th>Ket</th>
+                                                <th width="100">File</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -605,12 +606,21 @@
                                                     <td class="text-center fw-bold"><?= $mt['manhour']; ?></td>
                                                     <td class="small"><?= html_escape($mt['user_name']); ?></td>
                                                     <td class="small"><?= html_escape($mt['remarks'] ? $mt['remarks'] : '-'); ?></td>
+                                                    <td class="text-center small">
+                                                        <?php if (!empty($mt['file_name_hash'])): ?>
+                                                            <a href="<?= base_url('uploads/projects_management/' . $mt['file_name_hash']); ?>" target="_blank" class="btn btn-sm btn-outline-primary" title="<?= html_escape($mt['file_name_original']); ?>">
+                                                                <i class="fa fa-paperclip me-1"></i> <?= html_escape(strlen($mt['file_name_original']) > 15 ? substr($mt['file_name_original'], 0, 12) . '...' : $mt['file_name_original']); ?>
+                                                            </a>
+                                                        <?php else: ?>
+                                                            -
+                                                        <?php endif; ?>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                             <tr class="table">
                                                 <td colspan="2" class="text-end fw-bold small">Total MH Meeting:</td>
                                                 <td class="text-center fw-bold"><?= $mod['meeting_manhour']; ?></td>
-                                                <td colspan="2"></td>
+                                                <td colspan="3"></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1034,6 +1044,7 @@
                     '<div class="mb-2"><label class="form-label small fw-bold">Aktivitas <span class="text-danger">*</span></label><textarea id="swal-meeting-desc" class="form-control form-control-sm" rows="3" placeholder="Deskripsi kegiatan..."></textarea></div>' +
                     '<div class="mb-2"><label class="form-label small fw-bold">Manhour <span class="text-danger">*</span></label><input id="swal-meeting-mh" type="number" step="0.5" min="0.5" class="form-control form-control-sm" placeholder="0" /></div>' +
                     '<div class="mb-2"><label class="form-label small fw-bold">Keterangan</label><textarea id="swal-meeting-remarks" class="form-control form-control-sm" rows="2" placeholder="Opsional"></textarea></div>' +
+                    '<div class="mb-2"><label class="form-label small fw-bold">Lampiran</label><input id="swal-meeting-file" type="file" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" /><small class="text-muted">Format: pdf, doc, xls, jpg, png (max 10MB)</small></div>' +
                     '</div>',
                 showCancelButton: true,
                 confirmButtonText: '<i class="fa fa-save me-1"></i> Simpan',
@@ -1048,32 +1059,48 @@
                     return {
                         desc: desc,
                         mh: mh,
-                        remarks: document.getElementById('swal-meeting-remarks').value
+                        remarks: document.getElementById('swal-meeting-remarks').value,
+                        file: document.getElementById('swal-meeting-file').files[0] || null
                     };
                 }
             }).then(function(result) {
                 if (result.isConfirmed) {
-                    $.post('<?= site_url("projects_management/save_meeting"); ?>', {
-                        module_id: moduleId,
-                        project_id: projectId,
-                        task_description: result.value.desc,
-                        manhour: result.value.mh,
-                        remarks: result.value.remarks
-                    }, function(res) {
-                        if (res.status === 1) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: res.pesan,
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(function() {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Gagal', res.pesan, 'error');
+                    var formData = new FormData();
+                    formData.append('module_id', moduleId);
+                    formData.append('project_id', projectId);
+                    formData.append('task_description', result.value.desc);
+                    formData.append('manhour', result.value.mh);
+                    formData.append('remarks', result.value.remarks);
+                    if (result.value.file) {
+                        formData.append('meeting_file', result.value.file);
+                    }
+
+                    $.ajax({
+                        url: '<?= site_url("projects_management/save_meeting"); ?>',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.status === 1) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: res.pesan,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(function() {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Gagal', res.pesan, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Terjadi kesalahan saat menyimpan.', 'error');
                         }
-                    }, 'json');
+                    });
                 }
             });
         });

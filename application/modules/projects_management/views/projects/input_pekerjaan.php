@@ -8,11 +8,11 @@
     <div class="card border mb-3">
         <div class="card-body p-3">
             <div class="row g-2">
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3">
                     <small class="text-muted d-block">Modul</small>
                     <strong class="text-primary"><?= html_escape($tahapan['module_name']); ?></strong>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                     <small class="text-muted d-block">Tahapan</small>
                     <strong><?= html_escape($tahapan['tahapan_name']); ?></strong>
                 </div>
@@ -35,6 +35,20 @@
             </div>
         </div>
     </div>
+
+    <!-- Tombol Task -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong class="small text-primary"><i class="fa fa-list me-1"></i> Task Baru</strong>
+        <button type="button" class="btn btn-sm btn-dark" id="btn-add-task-row"><i class="fa fa-plus me-1"></i> Task</button>
+    </div>
+
+    <!-- Container task rows (dynamic) -->
+    <form id="form-save-tasks">
+        <input type="hidden" name="tahapan_id" value="<?= $tahapan['id']; ?>">
+        <input type="hidden" name="module_id" value="<?= $tahapan['module_id']; ?>">
+        <input type="hidden" name="project_id" value="<?= $tahapan['project_id']; ?>">
+        <div id="task-rows-container"></div>
+    </form>
 
     <!-- Riwayat Task (grouped by version) -->
     <?php if (!empty($tasks_by_version)): ?>
@@ -97,7 +111,7 @@
     <!-- Rollback History -->
     <?php if (!empty($rollback_history)): ?>
     <div class="card border border-warning mb-3">
-        <div class="card-header bg-warning bg-opacity-10 py-2">
+        <div class="card-header bg-warning bg-opacity-10 pt-2">
             <strong class="small text-warning"><i class="fa fa-undo me-1"></i> Riwayat Rollback</strong>
         </div>
         <div class="card-body p-2">
@@ -119,19 +133,6 @@
     </div>
     <?php endif; ?>
 
-    <!-- Tombol Task -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong class="small text-primary"><i class="fa fa-list me-1"></i> Task Baru</strong>
-        <button type="button" class="btn btn-sm btn-dark" id="btn-add-task-row"><i class="fa fa-plus me-1"></i> Task</button>
-    </div>
-
-    <!-- Container task rows (dynamic) -->
-    <form id="form-save-tasks">
-        <input type="hidden" name="tahapan_id" value="<?= $tahapan['id']; ?>">
-        <input type="hidden" name="module_id" value="<?= $tahapan['module_id']; ?>">
-        <input type="hidden" name="project_id" value="<?= $tahapan['project_id']; ?>">
-        <div id="task-rows-container"></div>
-    </form>
 </div>
 
 <div class="modal-footer py-2 bg-light">

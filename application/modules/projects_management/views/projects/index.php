@@ -5,7 +5,7 @@
             <a href="<?= site_url('projects_management/create'); ?>" class="btn btn-success btn-sm"><i class="fa fa-plus me-1"></i> New Project</a>
         </div>
     </div>
-    <div class="card-body">
+    <div class="card-body" style="overflow: visible;">
         <!-- Filter Bar -->
         <form method="GET" action="<?= site_url('projects_management/master'); ?>" class="row g-2 align-items-center mb-4">
             <div class="col-auto">
@@ -38,8 +38,8 @@
             </div>
         </form>
 
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered align-middle mb-0" id="table-projects">
+        <div class="table-responsive" style="overflow: visible;">
+            <table class="table table-hover table-bordered align-middle mb-0" id="table-projects" style="min-height: 200px;">
                 <thead class="table text-center">
                     <tr>
                         <th width="40">No</th>
@@ -52,7 +52,7 @@
                         <th width="80">Total Modul</th>
                         <th width="80">Modul Finish</th>
                         <th width="90">Status</th>
-                        <th width="180">Action</th>
+                        <th width="60">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -120,41 +120,56 @@
                                     <span class="badge <?= $lbl; ?>"><?= html_escape($p['status']); ?></span>
                                 </td>
                                 <td class="text-center align-middle">
-                                    <div class="d-inline-flex flex-wrap align-items-center justify-content-center gap-1">
-                                        <a href="<?= site_url('projects_management/detail/' . $p['id']); ?>" class="btn btn-sm btn-outline-info" title="View" style="width: 100px;">
-                                            <i class="fa fa-eye me-1"></i> View
-                                        </a>
-                                        <?php if ($p['status'] !== 'Completed'): ?>
-                                            <a href="<?= site_url('projects_management/update/' . $p['id']); ?>" class="btn btn-sm btn-outline-primary" title="Update" style="width: 100px;">
-                                                <i class="fa fa-pencil me-1"></i> Update
+                                    <?php
+                                    $is_admin_user = isset($is_admin) && $is_admin;
+                                    $is_project_pm = $is_admin_user || (isset($current_user_id) && $current_user_id == $p['pm_id']);
+                                    ?>
+                                    <div class="action-btn-wrapper position-relative">
+                                        <button class="btn btn-sm btn-light border btn-action-toggle" type="button" title="Aksi">
+                                            <i class="fa fa-ellipsis-v"></i>
+                                        </button>
+                                        <div class="action-popover shadow-lg">
+                                            <a class="action-popover-item" href="<?= site_url('projects_management/detail/' . $p['id']); ?>" title="View">
+                                                <span class="action-icon bg-info text-white"><i class="fa fa-eye"></i></span>
+                                                <span class="action-label">View</span>
                                             </a>
-                                        <?php endif; ?>
-                                        <?php
-                                        $is_admin_user = isset($is_admin) && $is_admin;
-                                        ?>
-                                            <a href="<?= site_url('projects_management/edit/' . $p['id']); ?>" class="btn btn-sm btn-outline-secondary" title="Edit Data" style="width: 100px;">
-                                                <i class="fa fa-cog me-1"></i> Edit
-                                            </a>
-                                        <?php if ($p['status'] === 'Planning'): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-project" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Delete" style="width: 100px;">
-                                                <i class="fa fa-trash me-1"></i> Delete
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($p['total_modules'] > 0 && $p['finished_modules'] >= $p['total_modules'] && $p['status'] !== 'Completed'): ?>
-                                            <button type="button" class="btn btn-sm btn-success btn-finish-project-list" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Finish Project" style="width: 100px;">
-                                                <i class="fa fa-check-circle me-1"></i> Finish
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($p['status'] !== 'Completed' && $p['status'] !== 'On Hold'): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-warning btn-hold-project-list" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="On Hold" style="width: 100px;">
-                                                <i class="fa fa-pause me-1"></i> Hold
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($p['status'] === 'On Hold'): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-info btn-resume-project-list" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Resume" style="width: 100px;">
-                                                <i class="fa fa-play me-1"></i> Resume
-                                            </button>
-                                        <?php endif; ?>
+                                            <?php if ($p['status'] !== 'Completed'): ?>
+                                                <a class="action-popover-item" href="<?= site_url('projects_management/update/' . $p['id']); ?>" title="Isi Task">
+                                                    <span class="action-icon bg-primary text-white"><i class="fa fa-pencil"></i></span>
+                                                    <span class="action-label">Isi Task</span>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($p['status'] === 'Planning' && $is_project_pm): ?>
+                                                <a class="action-popover-item" href="<?= site_url('projects_management/edit/' . $p['id']); ?>" title="Edit Data">
+                                                    <span class="action-icon bg-secondary text-white"><i class="fa fa-cog"></i></span>
+                                                    <span class="action-label">Edit</span>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($p['total_modules'] > 0 && $p['finished_modules'] >= $p['total_modules'] && $p['status'] !== 'Completed' && $is_project_pm): ?>
+                                                <a class="action-popover-item btn-finish-project-list" href="javascript:void(0)" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Finish Project">
+                                                    <span class="action-icon bg-success text-white"><i class="fa fa-check-circle"></i></span>
+                                                    <span class="action-label">Finish</span>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($p['status'] !== 'Completed' && $p['status'] !== 'On Hold' && $is_project_pm): ?>
+                                                <a class="action-popover-item btn-hold-project-list" href="javascript:void(0)" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="On Hold">
+                                                    <span class="action-icon bg-warning text-dark"><i class="fa fa-pause"></i></span>
+                                                    <span class="action-label">Hold</span>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($p['status'] === 'On Hold' && $is_project_pm): ?>
+                                                <a class="action-popover-item btn-resume-project-list" href="javascript:void(0)" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Resume">
+                                                    <span class="action-icon bg-info text-white"><i class="fa fa-play"></i></span>
+                                                    <span class="action-label">Resume</span>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($p['status'] === 'Planning' && $is_project_pm): ?>
+                                                <a class="action-popover-item text-danger btn-delete-project" href="javascript:void(0)" data-id="<?= $p['id']; ?>" data-name="<?= html_escape($p['project_name']); ?>" title="Delete">
+                                                    <span class="action-icon bg-danger text-white"><i class="fa fa-trash"></i></span>
+                                                    <span class="action-label">Delete</span>
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -167,6 +182,116 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Action Popover Styles */
+    .action-btn-wrapper {
+        display: inline-block;
+    }
+    .btn-action-toggle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s ease;
+    }
+    .btn-action-toggle:hover,
+    .btn-action-toggle.active {
+        background: #e3e8f0;
+        transform: rotate(90deg);
+    }
+
+    .action-popover {
+        position: absolute;
+        top: 50%;
+        right: 100%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: #fff;
+        border-radius: 30px;
+        border: 1px solid #e0e0e0;
+        white-space: nowrap;
+        z-index: 2000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        margin-right: 8px;
+    }
+    .action-popover.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .action-popover-item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        text-decoration: none !important;
+        transition: all 0.2s cubic-bezier(.4,2,.6,1);
+        opacity: 0;
+        transform: scale(0.3);
+        position: relative;
+    }
+    .action-popover.show .action-popover-item {
+        opacity: 1;
+        transform: scale(1);
+    }
+    /* Staggered animation delays */
+    .action-popover.show .action-popover-item:nth-child(1) { transition-delay: 0.03s; }
+    .action-popover.show .action-popover-item:nth-child(2) { transition-delay: 0.06s; }
+    .action-popover.show .action-popover-item:nth-child(3) { transition-delay: 0.09s; }
+    .action-popover.show .action-popover-item:nth-child(4) { transition-delay: 0.12s; }
+    .action-popover.show .action-popover-item:nth-child(5) { transition-delay: 0.15s; }
+    .action-popover.show .action-popover-item:nth-child(6) { transition-delay: 0.18s; }
+    .action-popover.show .action-popover-item:nth-child(7) { transition-delay: 0.21s; }
+
+    .action-popover-item:hover {
+        transform: scale(1.25) !important;
+        z-index: 2;
+    }
+    .action-popover-item .action-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .action-popover-item .action-label {
+        display: none;
+    }
+
+    /* Tooltip on hover */
+    .action-popover-item::after {
+        content: attr(title);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s;
+    }
+    .action-popover-item:hover::after {
+        opacity: 1;
+    }
+</style>
 
 <script>
     $(document).ready(function() {
@@ -185,10 +310,37 @@
             }
         });
 
+        // Toggle action popover
+        $(document).on('click', '.btn-action-toggle', function(e) {
+            e.stopPropagation();
+            var $wrapper = $(this).closest('.action-btn-wrapper');
+            var $popover = $wrapper.find('.action-popover');
+            var isOpen = $popover.hasClass('show');
+
+            // Close all other popovers
+            $('.action-popover.show').removeClass('show');
+            $('.btn-action-toggle.active').removeClass('active');
+
+            if (!isOpen) {
+                $popover.addClass('show');
+                $(this).addClass('active');
+            }
+        });
+
+        // Close popover when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.action-btn-wrapper').length) {
+                $('.action-popover.show').removeClass('show');
+                $('.btn-action-toggle.active').removeClass('active');
+            }
+        });
+
         // Delete project (soft delete, hanya Planning)
         $(document).on('click', '.btn-delete-project', function() {
             var id = $(this).data('id');
             var name = $(this).data('name');
+            $('.action-popover.show').removeClass('show');
+            $('.btn-action-toggle.active').removeClass('active');
             Swal.fire({
                 title: 'Hapus Project?',
                 html: 'Project <strong>"' + name + '"</strong> akan dihapus.',
@@ -224,6 +376,8 @@
         $(document).on('click', '.btn-finish-project-list', function() {
             var id = $(this).data('id');
             var name = $(this).data('name');
+            $('.action-popover.show').removeClass('show');
+            $('.btn-action-toggle.active').removeClass('active');
             Swal.fire({
                 title: 'Finish Project?',
                 html: 'Semua modul pada project <strong>"' + name + '"</strong> sudah selesai.<br>Tandai project sebagai <strong>Completed</strong>?',
@@ -260,6 +414,8 @@
         $(document).on('click', '.btn-hold-project-list', function() {
             var id = $(this).data('id');
             var name = $(this).data('name');
+            $('.action-popover.show').removeClass('show');
+            $('.btn-action-toggle.active').removeClass('active');
             Swal.fire({
                 title: 'On Hold Project?',
                 html: 'Project <strong>"' + name + '"</strong> akan di-pause.',
@@ -295,6 +451,8 @@
         // Resume project
         $(document).on('click', '.btn-resume-project-list', function() {
             var id = $(this).data('id');
+            $('.action-popover.show').removeClass('show');
+            $('.btn-action-toggle.active').removeClass('active');
             Swal.fire({
                 title: 'Resume Project?',
                 text: 'Project akan dilanjutkan kembali.',

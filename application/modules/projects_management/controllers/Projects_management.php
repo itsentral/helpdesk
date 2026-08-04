@@ -73,12 +73,14 @@ class Projects_management extends Admin_Controller
         $this->template->title('Edit Project - ' . $project['project_name']);
         $this->template->page_icon('fa fa-pencil');
 
-        $data['project']    = $project;
-        $data['clients']    = $this->db->get_where('helpdesk_client', array('is_delete' => 0))->result_array();
-        $data['users']      = $this->db->get_where('users', array('st_aktif' => 1))->result_array();
-        $data['ba_users']   = $this->Project_model->get_role_user_ids($id, 'ba');
-        $data['prog_users'] = $this->Project_model->get_role_user_ids($id, 'programmer');
-        $data['qa_users']   = $this->Project_model->get_role_user_ids($id, 'qa');
+        $data['project']        = $project;
+        $data['clients']        = $this->db->get_where('helpdesk_client', array('is_delete' => 0))->result_array();
+        $data['users']          = $this->db->get_where('users', array('st_aktif' => 1))->result_array();
+        $data['ba_users']       = $this->Project_model->get_role_user_ids($id, 'ba');
+        $data['prog_users']     = $this->Project_model->get_role_user_ids($id, 'programmer');
+        $data['qa_users']       = $this->Project_model->get_role_user_ids($id, 'qa');
+        $data['modules']        = $this->Module_model->get_modules_with_tahapan($id);
+        $data['master_tahapan'] = $this->Module_model->get_master_tahapan();
 
         $this->template->set($data);
         $this->template->render('projects/edit');
@@ -146,6 +148,50 @@ class Projects_management extends Admin_Controller
             $this->db->insert('pm_project_roles', array('project_id' => $project_id, 'user_id' => $qa_id, 'role' => 'qa', 'created_at' => $this->datetime));
         }
         $this->db->insert('pm_project_roles', array('project_id' => $project_id, 'user_id' => $pm_id, 'role' => 'pm', 'created_at' => $this->datetime));
+
+        // Save new modules if any
+        $module_names    = $this->input->post('module_names');
+        $tahapan_pic     = $this->input->post('tahapan_pic');
+        $tahapan_manhour = $this->input->post('tahapan_manhour');
+        $tahapan_duedate = $this->input->post('tahapan_duedate');
+
+        if (!empty($module_names) && is_array($module_names)) {
+            foreach ($module_names as $idx => $mod_name) {
+                if (empty(trim($mod_name))) continue;
+
+                $pic_data = array();
+                $plan_data = array();
+
+                if (isset($tahapan_pic[$idx]) && is_array($tahapan_pic[$idx])) {
+                    foreach ($tahapan_pic[$idx] as $order => $uid) {
+                        if (!empty($uid)) $pic_data[(int)$order] = (int)$uid;
+                    }
+                }
+                if (isset($tahapan_manhour[$idx]) && is_array($tahapan_manhour[$idx])) {
+                    foreach ($tahapan_manhour[$idx] as $order => $mh) {
+                        $plan_data[(int)$order]['manhour'] = (float)$mh;
+                    }
+                }
+                if (isset($tahapan_duedate[$idx]) && is_array($tahapan_duedate[$idx])) {
+                    foreach ($tahapan_duedate[$idx] as $order => $dd) {
+                        $plan_data[(int)$order]['due_date'] = $dd;
+                    }
+                }
+
+                // Get next module order
+                $this->db->select_max('module_order');
+                $this->db->where('project_id', $project_id);
+                $max = $this->db->get('pm_modules')->row();
+                $next_order = ($max && $max->module_order) ? $max->module_order + 1 : 1;
+
+                $this->Module_model->create_module_with_tahapan($project_id, trim($mod_name), $next_order, $pic_data, $plan_data);
+            }
+
+            // Update total_modules
+            $total_mod = $this->db->where('project_id', $project_id)->where('is_deleted', 0)->count_all_results('pm_modules');
+            $this->db->where('id', $project_id);
+            $this->db->update('pm_projects', array('total_modules' => $total_mod));
+        }
 
         $this->db->trans_complete();
 
@@ -519,18 +565,13 @@ class Projects_management extends Admin_Controller
         $upload_dir = FCPATH . 'uploads/projects_management/';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
-        $config['upload_path']   = $upload_dir;
-        $config['allowed_types'] = 'pdf|doc|docx|xls|xlsx|jpg|jpeg|png';
-        $config['max_size']      = 10240;
-        $config['encrypt_name']  = TRUE;
+        $tmp_name = $_FILES[$field_name]['tmp_name'];
+        $new_name = md5(uniqid(mt_rand())) . '.' . $ext;
+        $dest     = $upload_dir . $new_name;
 
-        $this->load->library('upload', $config, 'task_upload');
-        $this->task_upload->initialize($config);
-
-        if ($this->task_upload->do_upload($field_name)) {
-            $upload_data = $this->task_upload->data();
+        if (move_uploaded_file($tmp_name, $dest)) {
             return array(
-                'file_name_hash'     => $upload_data['file_name'],
+                'file_name_hash'     => $new_name,
                 'file_name_original' => htmlspecialchars($original_filename, ENT_QUOTES, 'UTF-8')
             );
         }
