@@ -28,9 +28,127 @@ $loginUserId = $this->auth->user_id();
         border-left: 4px solid #ffc107 !important;
     }
 
-    .btn:hover {
-        transform: scale(1.05);
-        animation-duration: 0.1s;
+    /* Action Popover Styles */
+    .action-btn-wrapper {
+        display: inline-block;
+    }
+    .btn-action-toggle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s ease;
+        border: 1px solid #dee2e6;
+        background: #f8f9fa;
+    }
+    .btn-action-toggle:hover,
+    .btn-action-toggle.active {
+        background: #e3e8f0;
+        transform: rotate(90deg);
+    }
+
+    .action-popover {
+        position: absolute;
+        top: 50%;
+        right: 100%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: #fff;
+        border-radius: 30px;
+        border: 1px solid #e0e0e0;
+        white-space: nowrap;
+        z-index: 2000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        margin-right: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .action-popover.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .action-popover-item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        text-decoration: none !important;
+        transition: all 0.2s cubic-bezier(.4,2,.6,1);
+        opacity: 0;
+        transform: scale(0.3);
+        position: relative;
+        cursor: pointer;
+        border: none;
+        padding: 0;
+    }
+    .action-popover.show .action-popover-item {
+        opacity: 1;
+        transform: scale(1);
+    }
+    .action-popover.show .action-popover-item:nth-child(1) { transition-delay: 0.03s; }
+    .action-popover.show .action-popover-item:nth-child(2) { transition-delay: 0.06s; }
+    .action-popover.show .action-popover-item:nth-child(3) { transition-delay: 0.09s; }
+    .action-popover.show .action-popover-item:nth-child(4) { transition-delay: 0.12s; }
+    .action-popover.show .action-popover-item:nth-child(5) { transition-delay: 0.15s; }
+    .action-popover.show .action-popover-item:nth-child(6) { transition-delay: 0.18s; }
+    .action-popover.show .action-popover-item:nth-child(7) { transition-delay: 0.21s; }
+    .action-popover.show .action-popover-item:nth-child(8) { transition-delay: 0.24s; }
+    .action-popover.show .action-popover-item:nth-child(9) { transition-delay: 0.27s; }
+
+    .action-popover-item:hover {
+        transform: scale(1.25) !important;
+        z-index: 2;
+    }
+    .action-popover-item .action-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* Tooltip on hover */
+    .action-popover-item::after {
+        content: attr(title);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s;
+    }
+    .action-popover-item:hover::after {
+        opacity: 1;
+    }
+
+    /* Chat badge in popover */
+    .action-popover-item .popover-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        font-size: 9px;
+        padding: 1px 4px;
+        border-radius: 10px;
+        z-index: 3;
     }
 </style>
 
@@ -43,7 +161,7 @@ $loginUserId = $this->auth->user_id();
                 <th style="min-width: 200px;">Report</th>
                 <th style="min-width: 150px;">Create By</th>
                 <th style="min-width: 110px;">Due Date</th>
-                <th style="min-width: 100px; max-width: 260px;" class="text-center">Action</th>
+                <th style="min-width: 60px;" class="text-center">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -228,160 +346,156 @@ $loginUserId = $this->auth->user_id();
                             <?php endif; ?>
                         </td>
 
-                        <td class="text-center" style="max-width: 260px;">
-                            <div class="d-inline-flex gap-1 flex-wrap justify-content-center align-items-center" style="max-width: 260px;">
-                                <!-- CHAT -->
-                                <button type="button"
-                                    class="btn btn-primary btn-sm px-2 py-1 open-chat position-relative"
-                                    style="width: 120px"
-                                    data-id="<?= $row['id'] ?>"
-                                    data-ticket="<?= $row['no_ticket'] ?>"
-                                    title="Chat Room">
-                                    <i class="fa-solid fa-comments"></i> Chat Room
-                                    <span class="chat-unread-badge-<?= $row['id'] ?> position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                        style="<?= $unread_count > 0 ? '' : 'display:none;' ?> font-size:9px;padding:2px 5px;">
-                                        <?= $unread_count > 99 ? '99+' : $unread_count ?>
-                                    </span>
+                        <td class="text-center align-middle">
+                            <div class="action-btn-wrapper position-relative">
+                                <button class="btn btn-sm btn-action-toggle" type="button" title="Aksi">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
+                                <div class="action-popover">
+                                    <!-- CHAT -->
+                                    <button type="button"
+                                        class="action-popover-item open-chat position-relative"
+                                        data-id="<?= $row['id'] ?>"
+                                        data-ticket="<?= $row['no_ticket'] ?>"
+                                        title="Chat Room">
+                                        <span class="action-icon bg-primary text-white"><i class="fa-solid fa-comments"></i></span>
+                                        <?php if ($unread_count > 0): ?>
+                                            <span class="popover-badge badge bg-danger chat-unread-badge-<?= $row['id'] ?>">
+                                                <?= $unread_count > 99 ? '99+' : $unread_count ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="popover-badge badge bg-danger chat-unread-badge-<?= $row['id'] ?>" style="display:none;">0</span>
+                                        <?php endif; ?>
+                                    </button>
 
-                                <!-- HISTORY -->
-                                <button type="button"
-                                    class="btn btn-secondary btn-sm px-2 py-1 view-history"
-                                    style="width: 120px"
-                                    data-id="<?= $row['id'] ?>"
-                                    data-ticket="<?= $row['no_ticket'] ?>"
-                                    title="View History">
-                                    <i class="fa-solid fa-clock-rotate-left"></i> History
-                                </button>
+                                    <!-- HISTORY -->
+                                    <button type="button"
+                                        class="action-popover-item view-history"
+                                        data-id="<?= $row['id'] ?>"
+                                        data-ticket="<?= $row['no_ticket'] ?>"
+                                        title="History">
+                                        <span class="action-icon bg-secondary text-white"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                                    </button>
 
-                                <?php if ($ENABLE_MANAGE): ?>
-                                    <!-- PROCESS -->
-                                    <?php if ($picById == $loginUserId && in_array($status, [0, 2, 6])): ?>
+                                    <?php if ($ENABLE_MANAGE): ?>
+                                        <!-- PROCESS -->
+                                        <?php if ($picById == $loginUserId && in_array($status, [0, 2, 6])): ?>
+                                            <button type="button"
+                                                class="action-popover-item process-status"
+                                                data-id="<?= $row['id'] ?>"
+                                                data-current-status="<?= $status ?>"
+                                                data-man-hour-plan="<?= $row['man_hour_plan'] ?? 0 ?>"
+                                                data-causes="<?= htmlspecialchars($row['causes'] ?? '') ?>"
+                                                data-action-plan="<?= htmlspecialchars($row['action_plan'] ?? '') ?>"
+                                                title="Process">
+                                                <span class="action-icon bg-primary text-white"><i class="fa-solid fa-angles-right"></i></span>
+                                            </button>
+                                        <?php endif; ?>
+
+                                        <!-- PENDING -->
+                                        <?php if ($status === 1 && $picById == $loginUserId): ?>
+                                            <button type="button"
+                                                class="action-popover-item pending-status"
+                                                data-id="<?= $row['id'] ?>"
+                                                title="Pending">
+                                                <span class="action-icon bg-secondary text-white"><i class="fa-solid fa-hourglass-half"></i></span>
+                                            </button>
+                                        <?php endif; ?>
+
+                                        <!-- CANCEL -->
+                                        <?php if ($status === 0 && $createById == $loginUserId): ?>
+                                            <button type="button"
+                                                class="action-popover-item cancel-status"
+                                                data-id="<?= $row['id'] ?>"
+                                                title="Cancel">
+                                                <span class="action-icon bg-danger text-white"><i class="fa-solid fa-ban"></i></span>
+                                            </button>
+                                        <?php endif; ?>
+
+                                        <!-- DONE -->
+                                        <?php if ($status === 1 && $picById == $loginUserId): ?>
+                                            <button type="button"
+                                                class="action-popover-item done-status"
+                                                data-id="<?= $row['id'] ?>"
+                                                data-current-status="<?= $status ?>"
+                                                title="Done">
+                                                <span class="action-icon bg-success text-white"><i class="fa-solid fa-clipboard-check"></i></span>
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+
+                                    <!-- VIEW -->
+                                    <?php if ($ENABLE_VIEW): ?>
                                         <button type="button"
-                                            class="btn btn-primary btn-sm px-2 py-1 process-status"
-                                            style="width: 120px"
+                                            class="action-popover-item view-ticket"
                                             data-id="<?= $row['id'] ?>"
-                                            data-current-status="<?= $status ?>"
-                                            data-man-hour-plan="<?= $row['man_hour_plan'] ?? 0 ?>"
-                                            data-causes="<?= htmlspecialchars($row['causes'] ?? '') ?>"
-                                            data-action-plan="<?= htmlspecialchars($row['action_plan'] ?? '') ?>"
-                                            title="Process Ticket">
-                                            <i class="fa-solid fa-angles-right"></i> Process
+                                            title="View">
+                                            <span class="action-icon bg-info text-white"><i class="fa-solid fa-eye"></i></span>
                                         </button>
                                     <?php endif; ?>
 
-                                    <!-- PENDING -->
-                                    <?php if ($status === 1 && $picById == $loginUserId): ?>
+                                    <!-- EDIT -->
+                                    <?php if ($ENABLE_MANAGE && in_array($status, [0, 2, 6], true)): ?>
                                         <button type="button"
-                                            class="btn btn-secondary btn-sm px-2 py-1 pending-status"
-                                            style="width: 120px"
+                                            class="action-popover-item edit-ticket"
                                             data-id="<?= $row['id'] ?>"
-                                            title="Pending Ticket">
-                                            <i class="fa-solid fa-hourglass-half"></i> Pending
+                                            title="Edit">
+                                            <span class="action-icon bg-warning text-dark"><i class="fa-solid fa-pen-to-square"></i></span>
                                         </button>
                                     <?php endif; ?>
 
-                                    <!-- CANCEL -->
-                                    <?php if ($status === 0 && $createById == $loginUserId): ?>
+                                    <!-- REJECT -->
+                                    <?php if (
+                                        $ENABLE_MANAGE &&
+                                        $status === 4 &&
+                                        $currentApprovalLevel < $approvalLevel &&
+                                        (
+                                            ($currentApprovalLevel === 0 && $approvalById == $loginUserId) ||
+                                            ($currentApprovalLevel === 1 && $createById == $loginUserId)
+                                        )
+                                    ): ?>
                                         <button type="button"
-                                            class="btn btn-danger btn-sm px-2 py-1 cancel-status"
-                                            style="width: 120px"
+                                            class="action-popover-item reject-status"
                                             data-id="<?= $row['id'] ?>"
-                                            title="Cancel Ticket">
-                                            <i class="fa-solid fa-ban"></i> Cancel
+                                            title="Reject">
+                                            <span class="action-icon bg-danger text-white"><i class="fa-solid fa-xmark"></i></span>
                                         </button>
                                     <?php endif; ?>
 
-                                    <!-- DONE -->
-                                    <?php if ($status === 1 && $picById == $loginUserId): ?>
+                                    <!-- APPROVE LEVEL 1 -->
+                                    <?php if (
+                                        $ENABLE_MANAGE &&
+                                        $status === 4 &&
+                                        $approvalLevel >= 1 &&
+                                        $currentApprovalLevel === 0 &&
+                                        $approvalById == $loginUserId
+                                    ): ?>
                                         <button type="button"
-                                            class="btn btn-success btn-sm px-2 py-1 done-status"
-                                            style="width: 120px"
+                                            class="action-popover-item approve-status"
                                             data-id="<?= $row['id'] ?>"
-                                            data-current-status="<?= $status ?>"
-                                            title="Done Ticket">
-                                            <i class="fa-solid fa-clipboard-check"></i> Done
+                                            data-level="1"
+                                            title="Approve">
+                                            <span class="action-icon bg-success text-white"><i class="fa-solid fa-check"></i></span>
                                         </button>
                                     <?php endif; ?>
-                                <?php endif; ?>
 
-                                <!-- VIEW -->
-                                <?php if ($ENABLE_VIEW): ?>
-                                    <button type="button"
-                                        class="btn btn-info btn-sm px-2 py-1 view-ticket"
-                                        style="width: 120px"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="View Details">
-                                        <i class="fa-solid fa-eye"></i> View
-                                    </button>
-                                <?php endif; ?>
-
-                                <!-- EDIT -->
-                                <?php if ($ENABLE_MANAGE && in_array($status, [0, 2, 6], true)): ?>
-                                    <button type="button"
-                                        class="btn btn-warning btn-sm px-2 py-1 edit-ticket"
-                                        style="width: 120px"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="Edit Ticket">
-                                        <i class="fa-solid fa-pen-to-square"></i> Edit
-                                    </button>
-                                <?php endif; ?>
-
-                                <!-- REJECT (SEMUA LEVEL) -->
-                                <?php if (
-                                    $ENABLE_MANAGE &&
-                                    $status === 4 &&
-                                    $currentApprovalLevel < $approvalLevel &&
-                                    (
-                                        ($currentApprovalLevel === 0 && $approvalById == $loginUserId) ||
-                                        ($currentApprovalLevel === 1 && $createById == $loginUserId)
-                                    )
-                                ): ?>
-                                    <button type="button"
-                                        class="btn btn-danger btn-sm px-2 py-1 reject-status"
-                                        style="width: 120px"
-                                        data-id="<?= $row['id'] ?>"
-                                        title="Reject Ticket">
-                                        <i class="fa-solid fa-xmark"></i> Reject
-                                    </button>
-                                <?php endif; ?>
-
-                                <!-- APPROVE LEVEL 1 -->
-                                <?php if (
-                                    $ENABLE_MANAGE &&
-                                    $status === 4 &&
-                                    $approvalLevel >= 1 &&
-                                    $currentApprovalLevel === 0 &&
-                                    $approvalById == $loginUserId
-                                ): ?>
-                                    <button type="button"
-                                        class="btn btn-success btn-sm px-2 py-1 approve-status"
-                                        style="width: 120px"
-                                        data-id="<?= $row['id'] ?>"
-                                        data-level="1"
-                                        title="Approve Level 1">
-                                        <i class="fa-solid fa-check"></i> Approve
-                                    </button>
-                                <?php endif; ?>
-
-                                <!-- APPROVE LEVEL 2 -->
-                                <?php if (
-                                    $ENABLE_MANAGE &&
-                                    $status === 4 &&
-                                    $approvalLevel >= 2 &&
-                                    $currentApprovalLevel === 1 &&
-                                    $createById == $loginUserId
-                                ): ?>
-                                    <button type="button"
-                                        class="btn btn-success btn-sm px-2 py-1 approve-status"
-                                        style="width: 120px"
-                                        data-id="<?= $row['id'] ?>"
-                                        data-level="2"
-                                        title="Approve Level 2">
-                                        <i class="fa-solid fa-check-double"></i> Approve
-                                    </button>
-                                <?php endif; ?>
-
+                                    <!-- APPROVE LEVEL 2 -->
+                                    <?php if (
+                                        $ENABLE_MANAGE &&
+                                        $status === 4 &&
+                                        $approvalLevel >= 2 &&
+                                        $currentApprovalLevel === 1 &&
+                                        $createById == $loginUserId
+                                    ): ?>
+                                        <button type="button"
+                                            class="action-popover-item approve-status"
+                                            data-id="<?= $row['id'] ?>"
+                                            data-level="2"
+                                            title="Approve Lv2">
+                                            <span class="action-icon bg-success text-white"><i class="fa-solid fa-check-double"></i></span>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </td>
 

@@ -822,6 +822,38 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
 <script src="<?= base_url('assets/js/ticket_actions.js') ?>"></script>
 
+<!-- Action Popover Toggle (single binding for all AJAX-loaded tabs) -->
+<script>
+$(function() {
+    $(document).on('click', '.btn-action-toggle', function(e) {
+        e.stopPropagation();
+        var $wrapper = $(this).closest('.action-btn-wrapper');
+        var $popover = $wrapper.find('.action-popover');
+        var isOpen = $popover.hasClass('show');
+
+        $('.action-popover.show').removeClass('show');
+        $('.btn-action-toggle.active').removeClass('active');
+
+        if (!isOpen) {
+            $popover.addClass('show');
+            $(this).addClass('active');
+        }
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.action-btn-wrapper').length) {
+            $('.action-popover.show').removeClass('show');
+            $('.btn-action-toggle.active').removeClass('active');
+        }
+    });
+
+    $(document).on('click', '.action-popover-item', function() {
+        $('.action-popover.show').removeClass('show');
+        $('.btn-action-toggle.active').removeClass('active');
+    });
+});
+</script>
+
 <script>
 	let currentHelpdeskId = null;
 	let chatRefreshInterval = null;
