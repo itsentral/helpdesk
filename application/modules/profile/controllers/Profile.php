@@ -296,12 +296,17 @@ class Profile extends Admin_Controller
     // $this->auth->restrict($this->managePermission);
 
     $id_user = $this->auth->user_id();
+    $current_user = $this->Profile_model->get_user_by_id($id_user);
 
     $this->form_validation->set_rules('nm_lengkap', 'Nama Lengkap', 'required');
-    $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
     $this->form_validation->set_rules('hp', 'No. HP', 'required');
     $this->form_validation->set_rules('alamat', 'Alamat', 'required');
     $this->form_validation->set_rules('kota', 'Kota', 'required');
+
+    $post_email = trim((string) $this->input->post('email'));
+    if (!empty($post_email)) {
+      $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
+    }
 
     if ($this->form_validation->run() == FALSE) {
       $response = [
@@ -309,51 +314,217 @@ class Profile extends Admin_Controller
         'message' => validation_errors()
       ];
     } else {
-      $this->db->where('email', $this->input->post('email'));
-      $this->db->where('id_user !=', $id_user);
-      $check = $this->db->get('users')->num_rows();
+      $email_changed = false;
+      if (!empty($post_email) && $current_user) {
+        $email_changed = (strtolower($current_user->email) !== strtolower($post_email));
+      }
 
-      if ($check > 0) {
-        $response = [
-          'status' => 0,
-          'message' => 'Email sudah digunakan'
-        ];
-      } else {
-        $data = [
-          'nm_lengkap' => $this->input->post('nm_lengkap'),
-          'email' => $this->input->post('email'),
-          'hp' => $this->input->post('hp'),
-          'alamat' => $this->input->post('alamat'),
-          'kota' => $this->input->post('kota')
-        ];
+      if ($email_changed) {
+        $this->db->where('email', $post_email);
+        $this->db->where('id_user !=', $id_user);
+        $check = $this->db->get('users')->num_rows();
 
-        $this->db->where('id_user', $id_user);
-        $result = $this->db->update('users', $data);
+        if ($check > 0) {
+          echo json_encode([
+            'status'  => 0,
+            'message' => 'Email sudah digunakan oleh pengguna lain.'
+          ]);
+          return;
+        }
+      }
 
-        if ($result) {
-          $keterangan = "SUKSES, update informasi profile user ID: $id_user";
-          $status = 1;
+      $data = [
+        'nm_lengkap' => $this->input->post('nm_lengkap'),
+        'hp'         => $this->input->post('hp'),
+        'alamat'     => $this->input->post('alamat'),
+        'kota'       => $this->input->post('kota')
+      ];
 
-          $response = [
-            'status' => 1,
-            'message' => 'Informasi profile berhasil diupdate'
-          ];
-        } else {
-          $keterangan = "GAGAL, update informasi profile user ID: $id_user";
-          $status = 0;
+      if (!empty($post_email) && !$email_changed) {
+        $data['email'] = $post_email;
+      }
 
-          $response = [
-            'status' => 0,
-            'message' => 'Gagal mengupdate informasi profile'
-          ];
+      $this->db->where('id_user', $id_user);
+      $result = $this->db->update('users', $data);
+
+      if ($result) {
+        $keterangan = "SUKSES, update informasi profile user ID: $id_user";
+        $status = 1;
+
+        $msg = 'Informasi profile berhasil diupdate.';
+        if ($email_changed) {
+          $msg .= ' Catatan: Untuk memperbarui alamat email ke (' . htmlspecialchars($post_email) . '), silakan klik tombol Verifikasi / OTP.';
         }
 
-        $sql = $this->db->last_query();
-        simpan_aktifitas($this->managePermission, $id_user, $keterangan, 1, $sql, $status);
+        $response = [
+          'status'  => 1,
+          'message' => $msg
+        ];
+      } else {
+        $keterangan = "GAGAL, update informasi profile user ID: $id_user";
+        $status = 0;
+
+        $response = [
+          'status'  => 0,
+          'message' => 'Gagal mengupdate informasi profile'
+        ];
       }
+
+      $sql = $this->db->last_query();
+      simpan_aktifitas($this->managePermission, $id_user, $keterangan, 1, $sql, $status);
     }
 
     echo json_encode($response);
+  }
+
+  /**
+   * Kirim Kode OTP Verifikasi Email (AJAX)
+   */
+  public function send_email_otp()
+  {
+    $id_user = $this->auth->user_id();
+    if (!$id_user) {
+      echo json_encode(['status' => 0, 'message' => 'Sesi login telah berakhir.']);
+      return;
+    }
+
+    $email = trim($this->input->post('email'));
+
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      echo json_encode(['status' => 0, 'message' => 'Alamat email tidak valid.']);
+      return;
+    }
+
+    // Cek apakah email sudah terverifikasi sebelumnya dan sama dengan yang lama
+    $current_user = $this->Profile_model->get_user_by_id($id_user);
+    if ($current_user && isset($current_user->is_email_verified) && $current_user->is_email_verified == 1) {
+      if (strtolower(trim($current_user->email)) === strtolower($email)) {
+        echo json_encode([
+          'status'  => 0,
+          'message' => 'Email ini sudah terverifikasi sebelumnya. Jika ingin mengganti email, silakan masukkan alamat email yang berbeda.'
+        ]);
+        return;
+      }
+    }
+
+    // Cek apakah email sudah digunakan oleh user lain
+    $this->db->where('email', $email);
+    $this->db->where('id_user !=', $id_user);
+    $check = $this->db->get('users')->num_rows();
+
+    if ($check > 0) {
+      echo json_encode(['status' => 0, 'message' => 'Email ini sudah digunakan oleh akun lain.']);
+      return;
+    }
+
+    // Cek rate limiting (minimal 60 detik sebelum minta OTP baru)
+    $last_otp = $this->Profile_model->get_last_otp($id_user, $email);
+    if ($last_otp) {
+      $created_time = strtotime($last_otp->created_at);
+      $time_diff = time() - $created_time;
+      if ($time_diff < 60) {
+        $remaining = 60 - $time_diff;
+        echo json_encode([
+          'status'  => 0,
+          'message' => 'Harap tunggu ' . $remaining . ' detik sebelum meminta kode OTP kembali.'
+        ]);
+        return;
+      }
+    }
+
+    // Generate OTP 6-digit angka
+    $otp_code   = sprintf("%06d", mt_rand(1, 999999));
+    $expires_at = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+
+    // Simpan ke database
+    $saved = $this->Profile_model->save_otp($id_user, $email, $otp_code, $expires_at);
+    if (!$saved) {
+      echo json_encode(['status' => 0, 'message' => 'Gagal membuat kode OTP. Silakan coba lagi.']);
+      return;
+    }
+
+    // Load model email setting & kirim email OTP
+    $this->load->model('email_setting/Email_configuration_model', 'email_cfg');
+
+    $user_data = $this->Profile_model->get_user_by_id($id_user);
+    $user_name = $user_data ? $user_data->nm_lengkap : 'Pengguna';
+
+    $subject = "Kode OTP Verifikasi Email - Helpdesk System";
+    $htmlMessage = '
+    <div style="font-family: Arial, sans-serif; padding: 25px; border: 1px solid #e0e0e0; border-radius: 8px; max-width: 550px; margin: 0 auto; background-color: #ffffff;">
+        <h2 style="color: #2563eb; margin-top: 0;">Verifikasi Email Anda</h2>
+        <p>Halo <strong>' . htmlspecialchars($user_name) . '</strong>,</p>
+        <p>Anda telah meminta kode OTP untuk verifikasi alamat email (<strong>' . htmlspecialchars($email) . '</strong>) pada akun Helpdesk System.</p>
+        <div style="background-color: #f1f5f9; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1e293b;">' . $otp_code . '</span>
+        </div>
+        <p style="color: #64748b; font-size: 14px;">Kode OTP ini berlaku selama <strong>5 menit</strong>. Harap tidak membagikan kode ini kepada siapapun demi keamanan akun Anda.</p>
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+        <p style="font-size: 12px; color: #94a3b8;">Email ini dikirim secara otomatis oleh Helpdesk System. Jika Anda tidak merasa melakukan permintaan ini, silakan abaikan email ini.</p>
+    </div>';
+
+    $send_res = $this->email_cfg->send_email_active($email, $subject, $htmlMessage);
+
+    if ($send_res['status']) {
+      echo json_encode([
+        'status'     => 1,
+        'message'    => 'Kode OTP berhasil dikirim ke <strong>' . htmlspecialchars($email) . '</strong>. Silakan periksa inbox/spam email Anda.',
+        'expires_in' => 300
+      ]);
+    } else {
+      echo json_encode([
+        'status'  => 0,
+        'message' => 'Gagal mengirim email OTP: ' . $send_res['message']
+      ]);
+    }
+  }
+
+  /**
+   * Verifikasi Kode OTP Email (AJAX)
+   */
+  public function verify_email_otp()
+  {
+    $id_user = $this->auth->user_id();
+    if (!$id_user) {
+      echo json_encode(['status' => 0, 'message' => 'Sesi login telah berakhir.']);
+      return;
+    }
+
+    $email    = trim($this->input->post('email'));
+    $otp_code = trim($this->input->post('otp_code'));
+
+    if (empty($email) || empty($otp_code)) {
+      echo json_encode(['status' => 0, 'message' => 'Email dan Kode OTP wajib diisi.']);
+      return;
+    }
+
+    $valid_otp = $this->Profile_model->get_valid_otp($id_user, $email, $otp_code);
+
+    if (!$valid_otp) {
+      echo json_encode(['status' => 0, 'message' => 'Kode OTP salah atau telah kadaluarsa. Silakan minta kode baru.']);
+      return;
+    }
+
+    // Tandai OTP terpakai
+    $this->Profile_model->mark_otp_used($valid_otp->id);
+
+    // Update email & flag is_email_verified di tabel users
+    $update_res = $this->Profile_model->update_user_email_verified($id_user, $email);
+
+    if ($update_res) {
+      $keterangan = "SUKSES, verifikasi email OTP user ID: $id_user dengan email: $email";
+      simpan_aktifitas($this->managePermission, $id_user, $keterangan, 1, $this->db->last_query(), 1);
+
+      echo json_encode([
+        'status'  => 1,
+        'message' => 'Email berhasil diverifikasi!'
+      ]);
+    } else {
+      echo json_encode([
+        'status'  => 0,
+        'message' => 'Gagal memperbarui status verifikasi email di database.'
+      ]);
+    }
   }
 
   public function delete_photo()
@@ -422,5 +593,51 @@ class Profile extends Admin_Controller
     }
 
     echo json_encode($response);
+  }
+
+  /**
+   * Update preferensi notifikasi email (AJAX)
+   */
+  public function update_notification_setting()
+  {
+    $id_user = $this->auth->user_id();
+    if (!$id_user) {
+      echo json_encode(['status' => 0, 'message' => 'Sesi login telah berakhir.']);
+      return;
+    }
+
+    $user = $this->Profile_model->get_user_by_id($id_user);
+    if (!$user || (isset($user->is_email_verified) && $user->is_email_verified != 1)) {
+      echo json_encode([
+        'status'  => 0,
+        'message' => 'Anda harus memverifikasi email terlebih dahulu untuk mengatur notifikasi email.'
+      ]);
+      return;
+    }
+
+    $field = trim((string)$this->input->post('field'));
+    $val   = intval($this->input->post('value'));
+
+    if (!in_array($field, ['notif_email_ticket', 'notif_email_pm'])) {
+      echo json_encode(['status' => 0, 'message' => 'Pengaturan tidak valid.']);
+      return;
+    }
+
+    $result = $this->Profile_model->update_email_notifications($id_user, $field, $val);
+
+    if ($result) {
+      $field_label = ($field === 'notif_email_ticket') ? 'Notifikasi Email Ticket' : 'Notifikasi Email Project Management';
+      $status_label = ($val == 1) ? 'diaktifkan' : 'dinonaktifkan';
+
+      echo json_encode([
+        'status'  => 1,
+        'message' => $field_label . ' berhasil ' . $status_label . '.'
+      ]);
+    } else {
+      echo json_encode([
+        'status'  => 0,
+        'message' => 'Gagal memperbarui pengaturan notifikasi.'
+      ]);
+    }
   }
 }

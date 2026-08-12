@@ -26,3 +26,6 @@ application/config/constants.php
 /assets/confirm_sj/*
 /assets/pr/*
 /assets/bayar_rutin/*
+
+#/artifacts/
+.artifacts/*

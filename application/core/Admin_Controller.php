@@ -35,7 +35,34 @@ class Admin_Controller extends Base_Controller
             redirect('login');
         }
 
-        $idt         = $this->identitas_model->find(1);
+        $login_time   = $this->session->userdata('login_time');
+        $max_lifetime = 14400; // 4 jam dalam detik (4 * 3600)
+
+        if ($login_time && (time() - $login_time) > $max_lifetime) {
+            // Hapus session / logout
+            if (method_exists($this->auth, 'logout')) {
+                $this->auth->logout();
+            } else {
+                $this->session->sess_destroy();
+            }
+
+            // Respon jika request via AJAX
+            if ($this->input->is_ajax_request()) {
+                echo json_encode([
+                    'status'   => 0,
+                    'message'  => 'Masa sesi 4 jam telah habis. Silakan login kembali.',
+                    'redirect' => base_url('login')
+                ]);
+                exit;
+            }
+
+            // Respon jika request biasa
+            redirect('login');
+            exit;
+        }
+        /* ------------------------------------------------------------- */
+
+        $idt = $this->identitas_model->find(1);
 
         $this->user_data = $this->auth->userdata();
 
@@ -48,6 +75,9 @@ class Admin_Controller extends Base_Controller
             if (!$this->session->userdata('login_at_set')) {
                 $this->db->where('id_user', $id_user);
                 $this->db->update('users', ['login_at' => date('Y-m-d H:i:s')]);
+                
+                // SIMPAN TIMESTAMP DETIK SAAT LOGIN PERTAMA KALI
+                $this->session->set_userdata('login_time', time());
                 $this->session->set_userdata('login_at_set', true);
             }
         }

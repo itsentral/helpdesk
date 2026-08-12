@@ -1,11 +1,42 @@
+<style>
+    .table-overdue-row {
+        background-color: #fdeceb !important;
+        animation: blink-overdue 1.5s ease-in-out infinite;
+    }
+
+    .table-overdue-row:hover {
+        animation-play-state: paused;
+        background-color: #fbdedb !important;
+    }
+
+    .bg-overdue-soft {
+        background-color: #f5b7b1;
+        color: #7b241c;
+    }
+
+    .table-overdue-row>td {
+        animation: blink-overdue 1.5s ease-in-out infinite;
+    }
+
+    .table-overdue-row:hover>td {
+        animation-play-state: paused;
+        background-color: #f5b7b1 !important;
+    }
+
+    @keyframes blink-overdue {
+
+        0%,
+        100% {
+            background-color: #fdeceb;
+        }
+
+        50% {
+            background-color: #f8c9c4;
+        }
+    }
+</style>
+
 <div class="card border-0 shadow-sm mb-4">
-    <!-- <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h5 class="card-title m-0 fw-bold text-primary"><i class="fa fa-dashboard me-2"></i> Dashboard Project Management</h5>
-        <div>
-            <a href="<?= site_url('projects_management/master'); ?>" class="btn btn-sm btn-primary"><i class="fa fa-list me-1"></i> Master Project</a>
-            <a href="<?= site_url('projects_management/create'); ?>" class="btn btn-sm btn-success"><i class="fa fa-plus me-1"></i> New Project</a>
-        </div>
-    </div> -->
     <div class="card-body">
         <!-- KPI Cards -->
         <div class="row g-3 mb-4">
@@ -83,13 +114,20 @@
                     </thead>
                     <tbody>
                         <?php if (!empty($projects)): $no = 1;
-                            foreach ($projects as $p): ?>
-                                <tr>
+                            foreach ($projects as $p):
+                                $is_overdue = ($p['status'] != 'Completed' && strtotime($p['end_date']) < strtotime('today'));
+                        ?>
+                                <tr class="<?= $is_overdue ? 'table-overdue-row' : ''; ?>">
                                     <td class="ps-3"><?= $no++; ?></td>
                                     <td><?= html_escape($p['client_name'] ? $p['client_name'] : '-'); ?></td>
                                     <td><strong><?= html_escape($p['project_name']); ?></strong><br><small class="text-muted"><?= $p['project_code']; ?></small></td>
                                     <td><?= html_escape($p['pm_name'] ? $p['pm_name'] : '-'); ?></td>
-                                    <td><small><?= date('d M Y', strtotime($p['end_date'])); ?></small></td>
+                                    <td>
+                                        <small><?= date('d M Y', strtotime($p['end_date'])); ?></small>
+                                        <?php if ($is_overdue): ?>
+                                            <br><span class="badge bg-overdue-soft mt-1">Overdue</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="text-center fw-bold"><?= $p['total_modules']; ?></td>
                                     <td class="text-center fw-bold text-success"><?= $p['finished_modules']; ?></td>
                                     <td>

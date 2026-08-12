@@ -468,8 +468,30 @@
                             <i class="fa fa-chevron-down toggle-chevron me-2 text-muted"></i>
                             <span class="module-icon"><i class="fa fa-cube"></i></span>
                             <strong class="text-dark"><?= html_escape($mod['module_name']); ?></strong>
+                            <?php if (!$is_readonly && $is_pm && $mod['status'] !== 'finish'): ?>
+                                <button type="button" class="btn btn-sm btn-link text-warning p-0 btn-rename-module" data-id="<?= $mod['id']; ?>" data-name="<?= html_escape($mod['module_name']); ?>" title="Rename Modul">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                            <?php endif; ?>
                             <?php if ($mod['status'] === 'finish'): ?>
                                 <span class="badge bg-success ms-2"><i class="fa fa-check me-1"></i> Finish</span>
+                                <?php
+                                    // Hitung plan MH & aktual MH tahapan 1-10
+                                    $plan_mh_1_10 = 0;
+                                    $actual_mh_1_10 = 0;
+                                    foreach ($mod['tahapan'] as $_t) {
+                                        if ($_t['tahapan_order'] >= 1 && $_t['tahapan_order'] <= 10) {
+                                            $plan_mh_1_10 += (float)$_t['plan_manhour'];
+                                            $actual_mh_1_10 += (float)$_t['actual_manhour'];
+                                        }
+                                    }
+                                ?>
+                                <span class="badge bg-light text-dark border" title="Plan MH (Tahapan 1-10)">
+                                    <i class="fa fa-clock text-muted me-1"></i>Plan: <?= $plan_mh_1_10; ?>
+                                </span>
+                                <span class="badge bg-light text-primary border ms-1" title="Aktual MH (Tahapan 1-10)">
+                                    <i class="fa fa-check-circle text-primary me-1"></i>Aktual: <?= $actual_mh_1_10; ?>
+                                </span>
                             <?php else: ?>
                                 <span class="badge bg-warning text-dark ms-2"><?= $mod['finished_tahapan']; ?>/<?= $mod['total_tahapan']; ?> tahapan</span>
                             <?php endif; ?>
@@ -668,7 +690,15 @@
                         order.push({ module_id: $(this).data('module-id'), position: i + 1 });
                     });
                     // Save to server
-                    $.post('<?= site_url("projects_management/reorder_modules"); ?>', { order: JSON.stringify(order) });
+                    $.post('<?= site_url("projects_management/reorder_modules"); ?>', { order: JSON.stringify(order) }, function(res) {
+                        if (res && res.status === 1) {
+                            Swal.fire({ icon:'success', title:'Tersimpan', text:'Urutan modul berhasil diubah.', timer:1200, showConfirmButton:false, toast:true, position:'top-end' });
+                        } else {
+                            Swal.fire({ icon:'error', title:'Gagal', text:(res && res.pesan) ? res.pesan : 'Gagal menyimpan urutan.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                        }
+                    }, 'json').fail(function() {
+                        Swal.fire({ icon:'error', title:'Error', text:'Gagal menyimpan urutan.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                    });
                 }
             });
         }
@@ -686,22 +716,46 @@
             onChange: function(selectedDates, dateStr, instance) {
                 var tahapanId = $(instance.element).data('tahapan-id');
                 if (tahapanId && dateStr) {
+                    var $el = $(instance.element);
+                    $el.css('opacity', '0.5');
                     $.post('<?= site_url("projects_management/update_due_date"); ?>', {
                         tahapan_id: tahapanId,
                         due_date: dateStr
+                    }, function(res) {
+                        $el.css('opacity', '1');
+                        if (res.status === 1) {
+                            Swal.fire({ icon:'success', title:'Tersimpan', text:'Due date berhasil diupdate.', timer:1200, showConfirmButton:false, toast:true, position:'top-end' });
+                        } else {
+                            Swal.fire({ icon:'error', title:'Gagal', text:res.pesan, timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                        }
+                    }, 'json').fail(function() {
+                        $el.css('opacity', '1');
+                        Swal.fire({ icon:'error', title:'Error', text:'Gagal menyimpan.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
                     });
                 }
             }
         });
 
-        // Auto-save plan manhour on change
+        // Auto-save plan manhour on change with loading + toast
         $(document).on('change', '.input-plan-mh', function() {
             var tahapanId = $(this).data('tahapan-id');
             var manhour = $(this).val();
+            var $el = $(this);
             if (tahapanId) {
+                $el.css('opacity', '0.5');
                 $.post('<?= site_url("projects_management/update_plan_manhour"); ?>', {
                     tahapan_id: tahapanId,
                     plan_manhour: manhour
+                }, function(res) {
+                    $el.css('opacity', '1');
+                    if (res.status === 1) {
+                        Swal.fire({ icon:'success', title:'Tersimpan', text:'Plan manhour berhasil diupdate.', timer:1200, showConfirmButton:false, toast:true, position:'top-end' });
+                    } else {
+                        Swal.fire({ icon:'error', title:'Gagal', text:res.pesan, timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                    }
+                }, 'json').fail(function() {
+                    $el.css('opacity', '1');
+                    Swal.fire({ icon:'error', title:'Error', text:'Gagal menyimpan.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
                 });
             }
         });
@@ -1028,6 +1082,47 @@
                         if (res.status === 1) {
                             Swal.fire({ icon:'success', title:'Dihapus!', text:res.pesan, timer:1500, showConfirmButton:false }).then(function(){ location.reload(); });
                         } else { Swal.fire('Gagal', res.pesan, 'error'); }
+                    }, 'json');
+                }
+            });
+        });
+
+        // === RENAME MODULE ===
+        $(document).on('click', '.btn-rename-module', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var id = $(this).data('id');
+            var currentName = $(this).data('name');
+            Swal.fire({
+                title: 'Rename Modul',
+                input: 'textarea',
+                inputValue: currentName,
+                inputPlaceholder: 'Masukkan nama modul baru...',
+                inputValidator: function(value) {
+                    if (!value || !value.trim()) return 'Nama modul tidak boleh kosong!';
+                },
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa fa-save me-1"></i> Simpan',
+                cancelButtonText: 'Batal'
+            }).then(function(r) {
+                if (r.isConfirmed) {
+                    $.post('<?= site_url("projects_management/rename_module"); ?>', {
+                        module_id: id,
+                        module_name: r.value.trim()
+                    }, function(res) {
+                        if (res.status === 1) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: res.pesan,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(function() {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.pesan, 'error');
+                        }
                     }, 'json');
                 }
             });

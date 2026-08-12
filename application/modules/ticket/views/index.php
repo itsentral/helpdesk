@@ -557,6 +557,33 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 		background: rgba(0, 0, 0, 0.2);
 		color: white;
 	}
+
+	.btn-action-toggle {
+		position: relative;
+	}
+
+	.toggle-unread-badge {
+		position: absolute;
+		top: -4px;
+		right: -4px;
+		font-size: 9px;
+		padding: 2px 5px;
+		border-radius: 10px;
+		z-index: 5;
+		animation: badgePulse 1.5s ease-in-out infinite;
+	}
+
+	@keyframes badgePulse {
+
+		0%,
+		100% {
+			transform: scale(1);
+		}
+
+		50% {
+			transform: scale(1.2);
+		}
+	}
 </style>
 
 <!-- Berry Card -->
@@ -824,34 +851,34 @@ $ENABLE_DELETE  = has_permission('Ticket.Delete');
 
 <!-- Action Popover Toggle (single binding for all AJAX-loaded tabs) -->
 <script>
-$(function() {
-    $(document).on('click', '.btn-action-toggle', function(e) {
-        e.stopPropagation();
-        var $wrapper = $(this).closest('.action-btn-wrapper');
-        var $popover = $wrapper.find('.action-popover');
-        var isOpen = $popover.hasClass('show');
+	$(function() {
+		$(document).on('click', '.btn-action-toggle', function(e) {
+			e.stopPropagation();
+			var $wrapper = $(this).closest('.action-btn-wrapper');
+			var $popover = $wrapper.find('.action-popover');
+			var isOpen = $popover.hasClass('show');
 
-        $('.action-popover.show').removeClass('show');
-        $('.btn-action-toggle.active').removeClass('active');
+			$('.action-popover.show').removeClass('show');
+			$('.btn-action-toggle.active').removeClass('active');
 
-        if (!isOpen) {
-            $popover.addClass('show');
-            $(this).addClass('active');
-        }
-    });
+			if (!isOpen) {
+				$popover.addClass('show');
+				$(this).addClass('active');
+			}
+		});
 
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.action-btn-wrapper').length) {
-            $('.action-popover.show').removeClass('show');
-            $('.btn-action-toggle.active').removeClass('active');
-        }
-    });
+		$(document).on('click', function(e) {
+			if (!$(e.target).closest('.action-btn-wrapper').length) {
+				$('.action-popover.show').removeClass('show');
+				$('.btn-action-toggle.active').removeClass('active');
+			}
+		});
 
-    $(document).on('click', '.action-popover-item', function() {
-        $('.action-popover.show').removeClass('show');
-        $('.btn-action-toggle.active').removeClass('active');
-    });
-});
+		$(document).on('click', '.action-popover-item', function() {
+			$('.action-popover.show').removeClass('show');
+			$('.btn-action-toggle.active').removeClass('active');
+		});
+	});
 </script>
 
 <script>
@@ -1350,13 +1377,19 @@ $(function() {
 
 	function updateUnreadBadges(unreadCounts) {
 		$('[class*="chat-unread-badge-"]').hide().text('0');
+		$('[class*="toggle-unread-badge-"]').hide().text('0');
 
 		$.each(unreadCounts, function(helpdeskId, count) {
 			const badge = $('.chat-unread-badge-' + helpdeskId);
+			const toggleBadge = $('.toggle-unread-badge-' + helpdeskId);
+			const displayCount = count > 99 ? '99+' : count;
+
 			if (count > 0) {
-				badge.text(count > 99 ? '99+' : count).show();
+				badge.text(displayCount).show();
+				toggleBadge.text(displayCount).show();
 			} else {
 				badge.hide();
+				toggleBadge.hide();
 			}
 		});
 	}
@@ -1372,6 +1405,7 @@ $(function() {
 			success: function(response) {
 				if (response.status == 1) {
 					$('.chat-unread-badge-' + helpdeskId).hide().text('0');
+					$('.toggle-unread-badge-' + helpdeskId).hide().text('0');
 				}
 			}
 		});
@@ -1388,6 +1422,7 @@ $(function() {
 
 		markChatAsRead(helpdeskId);
 		$('.chat-unread-badge-' + helpdeskId).hide().text('0');
+		$('.toggle-unread-badge-' + helpdeskId).hide().text('0'); // tambahan
 		$('#modalChatRoom').modal('show');
 		loadChatMessages(helpdeskId);
 		stopChatRefresh();

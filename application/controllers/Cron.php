@@ -22,7 +22,7 @@ class Cron extends CI_Controller
     {
         // Abaikan koneksi user yang terputus (cURL timeout 1 detik dari runner) agar proses terus berjalan.
         ignore_user_abort(true);
-        set_time_limit(0); 
+        set_time_limit(0);
 
         // Otomatis buat/perbarui skema tabel email_queues saat pertama kali dijalankan di server live
         $this->_check_table_and_migrate();
@@ -72,9 +72,9 @@ class Cron extends CI_Controller
 
         // Ambil hanya antrean yang berhasil diklaim secara atomik oleh worker ini
         $queues = $this->db->where_in('id', $candidate_ids)
-                           ->where('status', 'PRG')
-                           ->get('email_queues')
-                           ->result();
+            ->where('status', 'PRG')
+            ->get('email_queues')
+            ->result();
 
         if (empty($queues)) {
             if ($fp) {
@@ -93,7 +93,7 @@ class Cron extends CI_Controller
         $smtp_user    = '';
         $smtp_pass    = '';
         $smtp_crypto  = 'ssl';
-        $sender_name  = 'E-Library System';
+        $sender_name  = 'Helpdesk System';
         $sender_email = '';
         $reply_to_name  = null;
         $reply_to_email = null;
@@ -113,34 +113,11 @@ class Cron extends CI_Controller
                 $decrypted        = $this->encryption->decrypt($active_config->smtp_pass);
                 $smtp_pass        = ($decrypted !== FALSE && $decrypted !== '') ? $decrypted : $active_config->smtp_pass;
                 $smtp_crypto      = $active_config->smtp_crypto;
-                $sender_name      = !empty($active_config->sender_name) ? $active_config->sender_name : 'E-Library System';
+                $sender_name      = !empty($active_config->sender_name) ? $active_config->sender_name : 'Helpdesk System';
                 $sender_email     = !empty($active_config->sender_email) ? $active_config->sender_email : $smtp_user;
                 $reply_to_name    = $active_config->reply_to_name;
                 $reply_to_email   = $active_config->reply_to_email;
             }
-        }
-
-        // Fallback ke tabel settings jika email_configurations belum diset / kosong
-        if (empty($smtp_host) || empty($smtp_user)) {
-            $this->db->like('setting_name', 'smtp_');
-            $smtp_data = $this->db->get('settings')->result();
-
-            $settings = [];
-            foreach ($smtp_data as $dt) {
-                if ($dt->setting_name == 'smtp_pass' && !empty($dt->value)) {
-                    $decrypted = $this->encryption->decrypt($dt->value);
-                    $settings[$dt->setting_name] = ($decrypted !== FALSE && $decrypted !== '') ? $decrypted : $dt->value;
-                } else {
-                    $settings[$dt->setting_name] = $dt->value;
-                }
-            }
-
-            $smtp_host   = isset($settings['smtp_host']) ? $settings['smtp_host'] : '';
-            $smtp_port   = isset($settings['smtp_port']) ? $settings['smtp_port'] : 465;
-            $smtp_user   = isset($settings['smtp_user']) ? $settings['smtp_user'] : '';
-            $smtp_pass   = isset($settings['smtp_pass']) ? $settings['smtp_pass'] : '';
-            $smtp_crypto = isset($settings['smtp_crypto']) ? $settings['smtp_crypto'] : 'ssl';
-            $sender_email = $smtp_user;
         }
 
         if (empty($smtp_host) || empty($smtp_user) || empty($smtp_pass)) {
@@ -178,23 +155,15 @@ class Cron extends CI_Controller
         $this->email->initialize($config);
 
         // 4. Looping Pengiriman
-        $body_db = $this->db->get_where('settings', ['setting_name' => 'email_template_body'])->row();
-        $css_db  = $this->db->get_where('settings', ['setting_name' => 'email_template_css'])->row();
-
-        // Ambil Overrides Variabel Email (Global)
-        $vars_keys = ['email_vars_company_name', 'email_vars_company_address', 'email_vars_company_logo'];
-        $vars_db   = $this->db->where_in('setting_name', $vars_keys)->get('settings')->result();
-        $email_overrides = [];
-        foreach ($vars_db as $v) {
-            $email_overrides[$v->setting_name] = $v->value;
-        }
+        $tmpl_file = APPPATH . 'modules/email_setting/views/email_template.php';
+        $template_raw = file_exists($tmpl_file) ? file_get_contents($tmpl_file) : '<div>{{content}}</div>';
 
         $success_count = 0;
         $last_error_msg = null;
 
         foreach ($queues as $q) {
             $this->email->clear();
-            
+
             $this->email->from($sender_email, $sender_name);
             if (!empty($reply_to_email)) {
                 $this->email->reply_to($reply_to_email, !empty($reply_to_name) ? $reply_to_name : $sender_name);
@@ -202,39 +171,19 @@ class Cron extends CI_Controller
             $this->email->to($q->to_email);
             $this->email->subject($q->subject);
 
-            // Ambil data perusahaan untuk placeholder dinamis (sebagai fallback)
+            // Ambil data perusahaan untuk placeholder dinamis
             $company = $this->db->get_where('companies', ['id_perusahaan' => $q->company_id])->row();
 
-            if ($body_db) {
-                // Gunakan template terpisah (Body & CSS)
-                $htmlBody = $body_db->value;
-                $htmlCss = ($css_db) ? $css_db->value : '';
-                $htmlMessage = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' . $htmlCss . '</style></head><body class="email-template">' . $htmlBody . '</body></html>';
-            } else {
-                // Fallback 1: Template Full HTML dari database (Lama)
-                $old_db = $this->db->get_where('settings', ['setting_name' => 'email_template_html'])->row();
-                if ($old_db) {
-                    $htmlMessage = $old_db->value;
-                } else {
-                    // Fallback 2: Bungkus pesan dengan template HTML fisik (Lama)
-                    $htmlMessage = $this->load->view('setting/email_template', ['message' => $q->message], true);
-                }
-            }
+            $htmlMessage = $template_raw;
 
             // Ganti Placeholder Dasar
             $htmlMessage = str_replace('{{content}}', $q->message, $htmlMessage);
             $htmlMessage = str_replace('{{subject}}', $q->subject, $htmlMessage);
 
-            // Tentukan Nilai untuk Placeholder (Prioritas: Overrides > Master Perusahaan)
-            $final_name    = (!empty($email_overrides['email_vars_company_name'])) ? $email_overrides['email_vars_company_name'] : ($company ? $company->nm_perusahaan : '');
-            $final_address = (!empty($email_overrides['email_vars_company_address'])) ? $email_overrides['email_vars_company_address'] : ($company ? $company->alamat : '');
-            $final_logo    = '';
-
-            if (!empty($email_overrides['email_vars_company_logo'])) {
-                $final_logo = base_url('directory/COMPANY/' . $email_overrides['email_vars_company_logo']);
-            } elseif ($company && !empty($company->logo)) {
-                $final_logo = base_url($company->path_logo . $company->id_perusahaan . '/' . $company->logo);
-            }
+            // Tentukan Nilai untuk Placeholder
+            $final_name    = $company ? $company->nm_perusahaan : '';
+            $final_address = $company ? $company->alamat : '';
+            $final_logo    = ($company && !empty($company->logo)) ? base_url($company->path_logo . $company->id_perusahaan . '/' . $company->logo) : '';
 
             $htmlMessage = str_replace('{{company_name}}', $final_name, $htmlMessage);
             $htmlMessage = str_replace('{{company_address}}', $final_address, $htmlMessage);
@@ -243,7 +192,7 @@ class Cron extends CI_Controller
             // Ganti Action URL (Jika kosong, arahkan ke Home)
             $final_url = (!empty($q->action_url)) ? $q->action_url : base_url();
             $htmlMessage = str_replace('{{action_url}}', $final_url, $htmlMessage);
-            
+
             $this->email->message($htmlMessage);
 
             if ($this->email->send()) {
@@ -258,12 +207,12 @@ class Cron extends CI_Controller
                 // Failed
                 $error_msg = $this->email->print_debugger(['headers']);
                 $clean_error = strip_tags($error_msg);
-                
+
                 if (strpos($clean_error, 'The following SMTP error was encountered:') !== false) {
                     $parts = explode('The following SMTP error was encountered:', $clean_error);
                     $clean_error = 'SMTP Error: ' . trim(end($parts));
                 }
-                
+
                 if (strlen($clean_error) > 1000) {
                     $clean_error = substr($clean_error, 0, 1000);
                 }
@@ -271,7 +220,7 @@ class Cron extends CI_Controller
                 $last_error_msg = $clean_error;
 
                 $new_status = ($q->attempts >= 3) ? 'FAI' : 'PND'; // 3x gagal = FAI
-                
+
                 $this->db->update('email_queues', [
                     'status'    => $new_status,
                     'error_msg' => $clean_error,
@@ -301,7 +250,7 @@ class Cron extends CI_Controller
             @flock($fp, LOCK_UN);
             @fclose($fp);
         }
-        
+
         echo "[" . date('Y-m-d H:i:s') . "] Batch processed " . count($queues) . " emails.\n";
     }
 

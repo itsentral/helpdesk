@@ -42,42 +42,6 @@ class Email_configuration_model extends CI_Model
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
             $this->db->query($sql);
         }
-
-        // Auto-migrate dari tabel settings jika email_configurations masih kosong
-        if ($this->db->count_all($this->table) == 0) {
-            $this->db->like('setting_name', 'smtp_');
-            $settings = $this->db->get('settings')->result();
-
-            $existing = [];
-            foreach ($settings as $s) {
-                $existing[$s->setting_name] = $s->value;
-            }
-
-            if (!empty($existing['smtp_user'])) {
-                $host = isset($existing['smtp_host']) ? $existing['smtp_host'] : 'ssl://smtp.googlemail.com';
-                $provider = 'custom';
-                if (strpos($host, 'googlemail.com') !== false || strpos($host, 'gmail.com') !== false) {
-                    $provider = 'gmail';
-                }
-
-                $pass = isset($existing['smtp_pass']) ? $existing['smtp_pass'] : '';
-
-                $insert_data = [
-                    'title'         => 'Konfigurasi Utama (Migrasi)',
-                    'provider'      => $provider,
-                    'smtp_host'     => $host,
-                    'smtp_port'     => isset($existing['smtp_port']) ? $existing['smtp_port'] : 465,
-                    'smtp_user'     => $existing['smtp_user'],
-                    'smtp_pass'     => $pass,
-                    'smtp_crypto'   => isset($existing['smtp_crypto']) ? $existing['smtp_crypto'] : 'ssl',
-                    'sender_name'   => 'E-Library Notification System',
-                    'sender_email'  => $existing['smtp_user'],
-                    'is_active'     => 1,
-                    'created_at'    => date('Y-m-d H:i:s')
-                ];
-                $this->db->insert($this->table, $insert_data);
-            }
-        }
     }
 
     /**
@@ -88,8 +52,8 @@ class Email_configuration_model extends CI_Model
         return [
             'gmail' => [
                 'name'        => 'Gmail',
-                'badge'       => 'badge-danger',
-                'icon'        => 'fab fa-google text-danger',
+                'badge'       => 'bg-danger text-white',
+                'icon'        => 'ti ti-brand-google text-danger',
                 'smtp_host'   => 'ssl://smtp.googlemail.com',
                 'smtp_port'   => 465,
                 'smtp_crypto' => 'ssl',
@@ -97,8 +61,8 @@ class Email_configuration_model extends CI_Model
             ],
             'brevo' => [
                 'name'        => 'Brevo (Sendinblue)',
-                'badge'       => 'badge-primary',
-                'icon'        => 'fas fa-paper-plane text-primary',
+                'badge'       => 'bg-primary text-white',
+                'icon'        => 'ti ti-send text-primary',
                 'smtp_host'   => 'smtp-relay.brevo.com',
                 'smtp_port'   => 587,
                 'smtp_crypto' => 'tls',
@@ -106,8 +70,8 @@ class Email_configuration_model extends CI_Model
             ],
             'hostinger' => [
                 'name'        => 'Hostinger',
-                'badge'       => 'badge-purple',
-                'icon'        => 'fas fa-server text-purple',
+                'badge'       => 'bg-purple text-white',
+                'icon'        => 'ti ti-server text-purple',
                 'smtp_host'   => 'smtp.hostinger.com',
                 'smtp_port'   => 465,
                 'smtp_crypto' => 'ssl',
@@ -115,8 +79,8 @@ class Email_configuration_model extends CI_Model
             ],
             'mailgun' => [
                 'name'        => 'Mailgun',
-                'badge'       => 'badge-warning',
-                'icon'        => 'fas fa-envelope-open text-warning',
+                'badge'       => 'bg-warning text-dark',
+                'icon'        => 'ti ti-mail-opened text-warning',
                 'smtp_host'   => 'smtp.mailgun.org',
                 'smtp_port'   => 587,
                 'smtp_crypto' => 'tls',
@@ -124,8 +88,8 @@ class Email_configuration_model extends CI_Model
             ],
             'amazon_ses' => [
                 'name'        => 'Amazon SES',
-                'badge'       => 'badge-warning',
-                'icon'        => 'fab fa-aws text-warning',
+                'badge'       => 'bg-warning text-dark',
+                'icon'        => 'ti ti-brand-amazon text-warning',
                 'smtp_host'   => 'email-smtp.us-east-1.amazonaws.com',
                 'smtp_port'   => 587,
                 'smtp_crypto' => 'tls',
@@ -133,8 +97,8 @@ class Email_configuration_model extends CI_Model
             ],
             'smtp2go' => [
                 'name'        => 'SMTP2GO',
-                'badge'       => 'badge-info',
-                'icon'        => 'fas fa-rocket text-info',
+                'badge'       => 'bg-info text-white',
+                'icon'        => 'ti ti-rocket text-info',
                 'smtp_host'   => 'mail.smtp2go.com',
                 'smtp_port'   => 2525,
                 'smtp_crypto' => 'tls',
@@ -142,21 +106,21 @@ class Email_configuration_model extends CI_Model
             ],
             'microsoft365' => [
                 'name'        => 'Microsoft 365 / Outlook',
-                'badge'       => 'badge-info',
-                'icon'        => 'fab fa-microsoft text-info',
+                'badge'       => 'bg-info text-white',
+                'icon'        => 'ti ti-brand-windows text-info',
                 'smtp_host'   => 'smtp.office365.com',
                 'smtp_port'   => 587,
                 'smtp_crypto' => 'tls',
                 'note'        => 'Pastikan Authenticated SMTP diaktifkan di Microsoft 365 Admin Center.'
             ],
             'custom' => [
-                'name'        => 'Custom SMTP',
-                'badge'       => 'badge-secondary',
-                'icon'        => 'fas fa-cogs text-secondary',
+                'name'        => 'Custom / Other SMTP',
+                'badge'       => 'bg-secondary text-white',
+                'icon'        => 'ti ti-settings text-secondary',
                 'smtp_host'   => '',
                 'smtp_port'   => 587,
                 'smtp_crypto' => 'tls',
-                'note'        => 'Isi konfigurasi SMTP server secara manual sesuai provider Anda.'
+                'note'        => 'Isi detail server SMTP secara manual sesuai petunjuk penyedia hosting/email Anda.'
             ]
         ];
     }
@@ -219,9 +183,10 @@ class Email_configuration_model extends CI_Model
     {
         $this->load->library('encryption');
 
-        // Encrypt pass jika diisi
+        // Encrypt pass jika diisi (fallback ke plain text jika encryption_key belum diset di config)
         if (!empty($data['smtp_pass'])) {
-            $data['smtp_pass'] = $this->encryption->encrypt($data['smtp_pass']);
+            $enc_pass = $this->encryption->encrypt($data['smtp_pass']);
+            $data['smtp_pass'] = ($enc_pass !== FALSE && $enc_pass !== '') ? $enc_pass : $data['smtp_pass'];
         } else {
             unset($data['smtp_pass']); // Jika edit dan password tidak diisi ulang, pertahankan yang lama
         }
@@ -274,5 +239,71 @@ class Email_configuration_model extends CI_Model
         if (!$id) return false;
         $this->db->where('id', $id);
         return $this->db->update($this->table, $status_data);
+    }
+
+    /**
+     * Mengirim email menggunakan konfigurasi SMTP aktif saat ini
+     */
+    public function send_email_active($target_email, $subject, $htmlMessage)
+    {
+        $cfg = $this->get_active();
+        if (!$cfg) {
+            return ['status' => false, 'message' => 'Konfigurasi email aktif belum diatur.'];
+        }
+
+        $this->load->library('encryption');
+        $smtp_host    = $cfg->smtp_host;
+        $smtp_port    = $cfg->smtp_port;
+        $smtp_user    = $cfg->smtp_user;
+        $decrypted    = $this->encryption->decrypt($cfg->smtp_pass);
+        $smtp_pass    = ($decrypted !== FALSE && $decrypted !== '') ? $decrypted : $cfg->smtp_pass;
+        $smtp_crypto  = $cfg->smtp_crypto;
+        $sender_name  = $cfg->sender_name;
+        $sender_email = $cfg->sender_email;
+        $reply_name   = $cfg->reply_to_name;
+        $reply_email  = $cfg->reply_to_email;
+
+        $clean_host = str_replace(['ssl://', 'tls://'], '', $smtp_host);
+
+        $config = [
+            'protocol'    => 'smtp',
+            'smtp_host'   => $clean_host,
+            'smtp_port'   => $smtp_port > 0 ? $smtp_port : 465,
+            'smtp_user'   => $smtp_user,
+            'smtp_pass'   => $smtp_pass,
+            'smtp_crypto' => $smtp_crypto ? $smtp_crypto : 'ssl',
+            'mailtype'    => 'html',
+            'charset'     => 'utf-8',
+            'newline'     => "\r\n",
+            'crlf'        => "\r\n",
+            'wordwrap'    => TRUE
+        ];
+
+        $this->load->library('email');
+        $this->email->initialize($config);
+        $this->email->clear();
+
+        $this->email->from($sender_email, !empty($sender_name) ? $sender_name : 'Helpdesk System');
+        if (!empty($reply_email)) {
+            $this->email->reply_to($reply_email, !empty($reply_name) ? $reply_name : $sender_name);
+        }
+        $this->email->to($target_email);
+        $this->email->subject($subject);
+        $this->email->message($htmlMessage);
+
+        if ($this->email->send()) {
+            return ['status' => true, 'message' => 'Email berhasil dikirim.'];
+        } else {
+            $error_msg = $this->email->print_debugger(['headers']);
+            $clean_error = strip_tags($error_msg);
+            if (strpos($clean_error, 'The following SMTP error was encountered:') !== false) {
+                $parts = explode('The following SMTP error was encountered:', $clean_error);
+                $clean_error = 'SMTP Error: ' . trim(end($parts));
+            }
+            if (strlen($clean_error) > 300) {
+                $clean_error = substr($clean_error, 0, 300);
+            }
+            return ['status' => false, 'message' => $clean_error];
+        }
     }
 }

@@ -545,7 +545,7 @@ class Projects_management extends Admin_Controller
         }
 
         if ($saved > 0) {
-            echo json_encode(array('status' => 1, 'pesan' => $saved . ' task berhasil disimpan.'));
+            echo json_encode(array('status' => 1, 'pesan' => $saved . ' task berhasil disimpan.', 'tahapan_id' => $tahapan_id));
         } else {
             echo json_encode(array('status' => 0, 'pesan' => 'Tidak ada task valid untuk disimpan.'));
         }
@@ -1088,6 +1088,36 @@ class Projects_management extends Admin_Controller
     }
 
     /**
+     * AJAX: Rename module
+     */
+    public function rename_module()
+    {
+        $module_id   = $this->input->post('module_id');
+        $module_name = trim($this->input->post('module_name'));
+
+        if (empty($module_id) || empty($module_name)) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Nama modul tidak boleh kosong.'));
+            return;
+        }
+
+        $module = $this->Module_model->get_module_by_id($module_id);
+        if (!$module) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Modul tidak ditemukan.'));
+            return;
+        }
+
+        if ($module['status'] === 'finish') {
+            echo json_encode(array('status' => 0, 'pesan' => 'Modul yang sudah finish tidak bisa di-rename.'));
+            return;
+        }
+
+        $this->db->where('id', $module_id);
+        $this->db->update('pm_modules', array('module_name' => htmlspecialchars($module_name, ENT_QUOTES, 'UTF-8')));
+
+        echo json_encode(array('status' => 1, 'pesan' => 'Nama modul berhasil diubah.'));
+    }
+
+    /**
      * AJAX: Remove role member from project
      */
     public function remove_role_member()
@@ -1099,5 +1129,108 @@ class Projects_management extends Admin_Controller
         } else {
             echo json_encode(array('status' => 0, 'pesan' => 'ID tidak ditemukan.'));
         }
+    }
+
+    /**
+     * AJAX: Delete a single task (only if tahapan is still active / not finished)
+     */
+    public function delete_task()
+    {
+        $task_id = $this->input->post('task_id');
+
+        if (empty($task_id)) {
+            echo json_encode(array('status' => 0, 'pesan' => 'ID Task tidak valid.'));
+            return;
+        }
+
+        $task = $this->Module_model->get_task_by_id($task_id);
+        if (!$task) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Task tidak ditemukan.'));
+            return;
+        }
+
+        // Check tahapan is still active
+        $tahapan = $this->Module_model->get_tahapan_by_id($task['tahapan_id']);
+        if (!$tahapan || $tahapan['status'] !== 'active') {
+            echo json_encode(array('status' => 0, 'pesan' => 'Tahapan sudah selesai. Task tidak bisa dihapus.'));
+            return;
+        }
+
+        // Block jika project On Hold atau Completed
+        $project = $this->Project_model->get_project_by_id($task['project_id']);
+        if ($project && in_array($project['status'], array('On Hold', 'Completed'))) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Project sedang ' . $project['status'] . '. Tidak bisa menghapus task.'));
+            return;
+        }
+
+        $this->Module_model->delete_tahapan_task($task_id);
+        echo json_encode(array('status' => 1, 'pesan' => 'Task berhasil dihapus.', 'tahapan_id' => $task['tahapan_id']));
+    }
+
+    /**
+     * AJAX: Update a single task (only if tahapan is still active / not finished)
+     */
+    public function update_task()
+    {
+        $task_id          = $this->input->post('task_id');
+        $task_description = $this->input->post('task_description');
+        $manhour          = $this->input->post('manhour');
+        $remarks          = $this->input->post('remarks');
+
+        if (empty($task_id)) {
+            echo json_encode(array('status' => 0, 'pesan' => 'ID Task tidak valid.'));
+            return;
+        }
+
+        $task = $this->Module_model->get_task_by_id($task_id);
+        if (!$task) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Task tidak ditemukan.'));
+            return;
+        }
+
+        // Check tahapan is still active
+        $tahapan = $this->Module_model->get_tahapan_by_id($task['tahapan_id']);
+        if (!$tahapan || $tahapan['status'] !== 'active') {
+            echo json_encode(array('status' => 0, 'pesan' => 'Tahapan sudah selesai. Task tidak bisa diubah.'));
+            return;
+        }
+
+        // Block jika project On Hold atau Completed
+        $project = $this->Project_model->get_project_by_id($task['project_id']);
+        if ($project && in_array($project['status'], array('On Hold', 'Completed'))) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Project sedang ' . $project['status'] . '. Tidak bisa mengubah task.'));
+            return;
+        }
+
+        if (empty($task_description) || (float)$manhour <= 0) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Deskripsi dan manhour wajib diisi.'));
+            return;
+        }
+
+        $update_data = array(
+            'task_description' => htmlspecialchars(trim($task_description), ENT_QUOTES, 'UTF-8'),
+            'manhour'          => (float)$manhour,
+            'remarks'          => $remarks ? htmlspecialchars(trim($remarks), ENT_QUOTES, 'UTF-8') : NULL,
+            'updated_at'       => $this->datetime
+        );
+
+        // Handle file upload if new file provided
+        if (isset($_FILES['task_file']) && !empty($_FILES['task_file']['name'])) {
+            $upload_result = $this->_upload_task_file('task_file');
+            if ($upload_result) {
+                // Delete old file
+                if (!empty($task['file_name_hash'])) {
+                    $old_path = FCPATH . 'uploads/projects_management/' . $task['file_name_hash'];
+                    if (file_exists($old_path)) {
+                        @unlink($old_path);
+                    }
+                }
+                $update_data['file_name_hash']     = $upload_result['file_name_hash'];
+                $update_data['file_name_original'] = $upload_result['file_name_original'];
+            }
+        }
+
+        $this->Module_model->update_tahapan_task($task_id, $update_data);
+        echo json_encode(array('status' => 1, 'pesan' => 'Task berhasil diperbarui.', 'tahapan_id' => $task['tahapan_id']));
     }
 }

@@ -258,7 +258,7 @@
             var progCount = $('#programmer_ids').select2('data').length;
 
             if (baCount === 0 && progCount === 0 && !$('#qa_id').val()) {
-                Swal.fire('Perhatian', 'Pilih minimal 1 Bisnis Analis atau Programmer di header terlebih dahulu.', 'warning');
+                Swal.fire('Perhatian', 'Pilih minimal 1 Bisnis Analis atau Programmer di form terlebih dahulu.', 'warning');
                 return;
             }
 

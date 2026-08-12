@@ -1,11 +1,15 @@
+<!-- Summernote Lite CDN (Bootstrap 5 Compatible) -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
     <div class="d-flex flex-column-fluid">
         <div class="container-fluid">
             <div class="card card-custom card-stretch shadow">
                 <div class="card-header d-flex align-items-center justify-content-between">
-                    <h2 class="mt-5"><i class="<?= $icon; ?> mr-2 text-primary"></i><?= $title; ?></h2>
+                    <h2 class="mt-5"><i class="<?= isset($icon) ? $icon : 'fa fa-edit'; ?> mr-2 text-primary"></i><?= isset($title) ? $title : 'Edit Template Email'; ?></h2>
                     <div class="mt-3">
-                        <a href="<?= site_url('setting/email_settings'); ?>" class="btn btn-light-danger font-weight-bold mr-2">
+                        <a href="<?= site_url('email_setting/email_settings'); ?>" class="btn btn-light-danger font-weight-bold mr-2">
                             <i class="fa fa-arrow-left"></i> Kembali
                         </a>
                         <button type="button" class="btn btn-primary font-weight-bold" id="btn-save-template">
@@ -23,29 +27,25 @@
 
                     <div class="row">
                         <div class="col-lg-12">
-                            <ul class="nav nav-tabs nav-bold nav-tabs-line mb-5">
+                            <ul class="nav nav-tabs mb-4">
                                 <li class="nav-item">
-                                    <a class="nav-link active" data-toggle="tab" href="#tab_visual">
-                                        <span class="nav-icon"><i class="fa fa-eye"></i></span>
-                                        <span class="nav-text">Visual Editor</span>
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#tab_visual">
+                                        <i class="ti ti-eye me-1"></i> Visual Editor
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#tab_css">
-                                        <span class="nav-icon"><i class="fa fa-code"></i></span>
-                                        <span class="nav-text">Custom CSS</span>
+                                    <a class="nav-link" data-bs-toggle="tab" href="#tab_css">
+                                        <i class="ti ti-code me-1"></i> Custom CSS
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#tab_vars">
-                                        <span class="nav-icon"><i class="fa fa-sliders-h"></i></span>
-                                        <span class="nav-text">Variabel Email</span>
+                                    <a class="nav-link" data-bs-toggle="tab" href="#tab_vars">
+                                        <i class="ti ti-adjustments me-1"></i> Variabel Email
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#tab_placeholders">
-                                        <span class="nav-icon"><i class="fa fa-tag"></i></span>
-                                        <span class="nav-text">Placeholders</span>
+                                    <a class="nav-link" data-bs-toggle="tab" href="#tab_placeholders">
+                                        <i class="ti ti-tag me-1"></i> Placeholders
                                     </a>
                                 </li>
                             </ul>
@@ -58,7 +58,7 @@
                                             <div class="form-group">
                                                 <textarea id="template_editor" name="template_body"></textarea>
                                                 <!-- Hidden buffer for initial load -->
-                                                <textarea id="template_body_buffer" style="display:none;"><?= $template_body; ?></textarea>
+                                                <textarea id="template_body_buffer" style="display:none;"><?= isset($template_body) ? $template_body : ''; ?></textarea>
                                             </div>
                                         </div>
                                         <div class="col-lg-5">
@@ -74,7 +74,7 @@
                                 <div class="tab-pane fade" id="tab_css" role="tabpanel">
                                     <div class="form-group">
                                         <label class="font-weight-bold">Custom CSS (Berlaku untuk seluruh template)</label>
-                                        <textarea id="css_editor" name="template_css" class="form-control" style="height: 400px; font-family: monospace; background: #2c3e50; color: #ecf0f1;"><?= htmlspecialchars($template_css); ?></textarea>
+                                        <textarea id="css_editor" name="template_css" class="form-control" style="height: 400px; font-family: monospace; background: #2c3e50; color: #ecf0f1;"><?= isset($template_css) ? htmlspecialchars($template_css) : ''; ?></textarea>
                                     </div>
                                 </div>
 
@@ -90,7 +90,7 @@
                                                 <div class="form-group row">
                                                     <label class="col-3 col-form-label font-weight-bold">Nama Perusahaan ({{company_name}})</label>
                                                     <div class="col-9">
-                                                        <input type="text" name="email_vars[email_vars_company_name]" class="form-control var-input" value="<?= isset($email_vars['email_vars_company_name']) ? $email_vars['email_vars_company_name'] : ''; ?>" placeholder="Contoh: PT E-Library System">
+                                                        <input type="text" name="email_vars[email_vars_company_name]" class="form-control var-input" value="<?= isset($email_vars['email_vars_company_name']) ? $email_vars['email_vars_company_name'] : ''; ?>" placeholder="Contoh: Helpdesk System">
                                                     </div>
                                                 </div>
                                                 <div class="form-group row">
@@ -137,7 +137,7 @@
 
 <script>
     $(document).ready(function() {
-        
+
         // Inisialisasi Summernote
         $('#template_editor').summernote({
             height: 400,
@@ -166,16 +166,16 @@
             var bodyHtml = $('#template_editor').summernote('code');
             var cssContent = $('#css_editor').val();
             var previewDoc = document.getElementById('preview-frame').contentWindow.document;
-            
+
             // Ambil nilai dari variabel email (jika diisi)
-            var cName = $('input[name="email_vars[email_vars_company_name]"]').val() || 'PT E-Library System';
+            var cName = $('input[name="email_vars[email_vars_company_name]"]').val() || 'Helpdesk System';
             var cAddr = $('textarea[name="email_vars[email_vars_company_address]"]').val() || 'Jl. Contoh Alamat No. 123, Jakarta';
             var cLogo = $('input[name="email_vars[email_vars_company_logo]"]').val() || 'https://via.placeholder.com/150x50?text=Logo+Perusahaan';
 
             var sampleContent = '<div style="background:#e3f2fd; padding:15px; border-left:4px solid #2196f3;"><strong>Contoh Notifikasi:</strong><br>Dokumen Prosedur "SOP Pembelian" telah disetujui oleh Direktur.</div>';
-            
+
             var fullHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' + cssContent + '</style></head><body class="email-template">' + bodyHtml + '</body></html>';
-            
+
             var renderedHtml = fullHtml.replace(/{{content}}/g, sampleContent);
             renderedHtml = renderedHtml.replace(/{{company_name}}/g, cName);
             renderedHtml = renderedHtml.replace(/{{company_logo}}/g, cLogo);
@@ -216,10 +216,10 @@
             }).then((result) => {
                 if (result.value) {
                     $.ajax({
-                        url: siteurl + 'setting/email_settings/save_template',
+                        url: siteurl + 'email_setting/email_settings/save_template',
                         type: 'POST',
                         dataType: 'json',
-                        data: { 
+                        data: {
                             template_body: bodyHtml,
                             template_css: cssContent,
                             email_vars: $('#form-vars').serializeArray().reduce(function(obj, item) {

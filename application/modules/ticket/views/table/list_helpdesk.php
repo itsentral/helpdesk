@@ -32,6 +32,7 @@ $loginUserId = $this->auth->user_id();
     .action-btn-wrapper {
         display: inline-block;
     }
+
     .btn-action-toggle {
         width: 32px;
         height: 32px;
@@ -43,6 +44,7 @@ $loginUserId = $this->auth->user_id();
         border: 1px solid #dee2e6;
         background: #f8f9fa;
     }
+
     .btn-action-toggle:hover,
     .btn-action-toggle.active {
         background: #e3e8f0;
@@ -67,8 +69,9 @@ $loginUserId = $this->auth->user_id();
         pointer-events: none;
         transition: opacity 0.2s ease, transform 0.2s ease;
         margin-right: 8px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
+
     .action-popover.show {
         opacity: 1;
         pointer-events: auto;
@@ -82,7 +85,7 @@ $loginUserId = $this->auth->user_id();
         height: 34px;
         border-radius: 50%;
         text-decoration: none !important;
-        transition: all 0.2s cubic-bezier(.4,2,.6,1);
+        transition: all 0.2s cubic-bezier(.4, 2, .6, 1);
         opacity: 0;
         transform: scale(0.3);
         position: relative;
@@ -90,24 +93,53 @@ $loginUserId = $this->auth->user_id();
         border: none;
         padding: 0;
     }
+
     .action-popover.show .action-popover-item {
         opacity: 1;
         transform: scale(1);
     }
-    .action-popover.show .action-popover-item:nth-child(1) { transition-delay: 0.03s; }
-    .action-popover.show .action-popover-item:nth-child(2) { transition-delay: 0.06s; }
-    .action-popover.show .action-popover-item:nth-child(3) { transition-delay: 0.09s; }
-    .action-popover.show .action-popover-item:nth-child(4) { transition-delay: 0.12s; }
-    .action-popover.show .action-popover-item:nth-child(5) { transition-delay: 0.15s; }
-    .action-popover.show .action-popover-item:nth-child(6) { transition-delay: 0.18s; }
-    .action-popover.show .action-popover-item:nth-child(7) { transition-delay: 0.21s; }
-    .action-popover.show .action-popover-item:nth-child(8) { transition-delay: 0.24s; }
-    .action-popover.show .action-popover-item:nth-child(9) { transition-delay: 0.27s; }
+
+    .action-popover.show .action-popover-item:nth-child(1) {
+        transition-delay: 0.03s;
+    }
+
+    .action-popover.show .action-popover-item:nth-child(2) {
+        transition-delay: 0.06s;
+    }
+
+    .action-popover.show .action-popover-item:nth-child(3) {
+        transition-delay: 0.09s;
+    }
+
+    .action-popover.show .action-popover-item:nth-child(4) {
+        transition-delay: 0.12s;
+    }
+
+    .action-popover.show .action-popover-item:nth-child(5) {
+        transition-delay: 0.15s;
+    }
+
+    .action-popover.show .action-popover-item:nth-child(6) {
+        transition-delay: 0.18s;
+    }
+
+    .action-popover.show .action-popover-item:nth-child(7) {
+        transition-delay: 0.21s;
+    }
+
+    .action-popover.show .action-popover-item:nth-child(8) {
+        transition-delay: 0.24s;
+    }
+
+    .action-popover.show .action-popover-item:nth-child(9) {
+        transition-delay: 0.27s;
+    }
 
     .action-popover-item:hover {
         transform: scale(1.25) !important;
         z-index: 2;
     }
+
     .action-popover-item .action-icon {
         width: 34px;
         height: 34px;
@@ -116,7 +148,7 @@ $loginUserId = $this->auth->user_id();
         align-items: center;
         justify-content: center;
         font-size: 14px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
     /* Tooltip on hover */
@@ -136,6 +168,7 @@ $loginUserId = $this->auth->user_id();
         pointer-events: none;
         transition: opacity 0.15s;
     }
+
     .action-popover-item:hover::after {
         opacity: 1;
     }
@@ -351,6 +384,10 @@ $loginUserId = $this->auth->user_id();
                                 <button class="btn btn-sm btn-action-toggle" type="button" title="Aksi">
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
+                                <span class="badge bg-danger toggle-unread-badge toggle-unread-badge-<?= $row['id'] ?>"
+                                    style="<?= $unread_count > 0 ? '' : 'display:none;' ?>">
+                                    <?= $unread_count > 99 ? '99+' : $unread_count ?>
+                                </span>
                                 <div class="action-popover">
                                     <!-- CHAT -->
                                     <button type="button"

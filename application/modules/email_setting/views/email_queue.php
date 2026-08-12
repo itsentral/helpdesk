@@ -6,11 +6,11 @@
             <div class="d-flex align-items-center justify-content-between mb-5">
                 <div>
                     <h2 class="font-weight-bolder text-warning mb-1"><i
-                            class="<?= $icon; ?> mr-2 text-primary"></i><?= $title; ?></h2>
+                            class="<?= isset($icon) ? $icon : 'fa fa-list-alt'; ?> mr-2 text-primary"></i><?= isset($title) ? $title : 'Daftar Antrean Email'; ?></h2>
                     <div class="text-muted font-size-sm">Monitor status pengiriman semua notifikasi email sistem</div>
                 </div>
                 <div class="d-flex">
-                    <a href="<?= site_url('setting/email_settings'); ?>"
+                    <a href="<?= site_url('email_setting/email_settings'); ?>"
                         class="btn btn-light-primary font-weight-bold mr-2">
                         <i class="fa fa-cog"></i> Pengaturan SMTP
                     </a>
@@ -156,7 +156,7 @@
 
         // ─── Summary Counts ───────────────────────────────────────────────────────
         function loadCounts() {
-            $.getJSON(siteurl + 'setting/email_settings/get_queue_counts', function (res) {
+            $.getJSON(siteurl + 'email_setting/email_settings/get_queue_counts', function (res) {
                 if (res.status == 1) {
                     $('#count-pending').text(res.pending);
                     $('#count-sent').text(res.sent);
@@ -173,7 +173,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: siteurl + 'setting/email_settings/get_queue_json',
+                url: siteurl + 'email_setting/email_settings/get_queue_json',
                 type: 'POST',
                 data: function (d) {
                     d.status_filter = currentFilter;
@@ -210,7 +210,7 @@
         // ─── Preview Email ────────────────────────────────────────────────────────
         $(document).on('click', '.btn-preview', function () {
             var id = $(this).data('id');
-            var url = siteurl + 'setting/email_settings/preview/' + id;
+            var url = siteurl + 'email_setting/email_settings/preview/' + id;
             $('#iframe-preview').attr('src', url);
             $('#modal-preview').modal('show');
         });
@@ -238,7 +238,7 @@
                 if (result.value) {
                     $btn.html('<i class="fa fa-spinner fa-spin"></i>').prop('disabled', true);
                     $.ajax({
-                        url: siteurl + 'setting/email_settings/resend_queue',
+                        url: siteurl + 'email_setting/email_settings/resend_queue',
                         type: 'POST',
                         dataType: 'json',
                         data: { id: id },
@@ -274,7 +274,7 @@
             }).then(function (result) {
                 if (result.value) {
                     $.ajax({
-                        url: siteurl + 'setting/email_settings/clear_sent',
+                        url: siteurl + 'email_setting/email_settings/clear_sent',
                         type: 'POST',
                         dataType: 'json',
                         success: function (res) {

@@ -11,7 +11,7 @@ class Email_settings extends Admin_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model('setting/Email_configuration_model', 'email_cfg');
+        $this->load->model('email_setting/Email_configuration_model', 'email_cfg');
         $this->load->library('encryption');
         $this->template->set([
             'title' => 'Pengaturan & Master Server Email',
@@ -112,7 +112,7 @@ class Email_settings extends Admin_Controller
             'smtp_user'      => $smtp_user,
             'smtp_pass'      => $smtp_pass,
             'smtp_crypto'    => in_array($smtp_crypto, ['ssl', 'tls', 'none']) ? $smtp_crypto : 'tls',
-            'sender_name'    => !empty($sender_name) ? $sender_name : 'E-Library System',
+            'sender_name'    => !empty($sender_name) ? $sender_name : 'Helpdesk System',
             'sender_email'   => $sender_email,
             'reply_to_name'  => !empty($post['reply_to_name']) ? trim($post['reply_to_name']) : NULL,
             'reply_to_email' => !empty($post['reply_to_email']) ? trim($post['reply_to_email']) : NULL,
@@ -241,25 +241,25 @@ class Email_settings extends Admin_Controller
         $this->email->initialize($config);
         $this->email->clear();
 
-        $this->email->from($sender_email, !empty($sender_name) ? $sender_name : 'E-Library Notification System');
+        $this->email->from($sender_email, !empty($sender_name) ? $sender_name : 'Helpdesk Notification System');
         if (!empty($reply_email)) {
             $this->email->reply_to($reply_email, !empty($reply_name) ? $reply_name : $sender_name);
         }
         $this->email->to($target_email);
 
-        $subject = "E-Library: Test Configuration Server - " . date('d M Y H:i:s');
+        $subject = "Helpdesk: Test Configuration Server - " . date('d M Y H:i:s');
         $htmlMessage = '
         <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
             <h2 style="color: #2b77d9; margin-top: 0;"><i class="fa fa-check-circle"></i> Uji Coba Email Server Berhasil!</h2>
             <p>Halo,</p>
-            <p>Jika Anda menerima email ini, berarti pengujian konfigurasi SMTP/Server Email di aplikasi <strong>E-Library System</strong> telah sukses beroperasi.</p>
+            <p>Jika Anda menerima email ini, berarti pengujian konfigurasi SMTP/Server Email di aplikasi <strong>Helpdesk System</strong> telah sukses beroperasi.</p>
             <table style="width: 100%; border-collapse: collapse; margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 5px;">
-                <tr><td style="padding: 6px; font-weight: bold; width: 35%;">Server / Provider:</td><td style="padding: 6px;">'.htmlspecialchars($smtp_host).'</td></tr>
-                <tr><td style="padding: 6px; font-weight: bold;">Port & Crypto:</td><td style="padding: 6px;">'.$smtp_port.' ('.strtoupper($smtp_crypto).')</td></tr>
-                <tr><td style="padding: 6px; font-weight: bold;">Sender Email:</td><td style="padding: 6px;">'.htmlspecialchars($sender_email).'</td></tr>
-                <tr><td style="padding: 6px; font-weight: bold;">Waktu Pengujian:</td><td style="padding: 6px;">'.date('d M Y H:i:s').' WIB</td></tr>
+                <tr><td style="padding: 6px; font-weight: bold; width: 35%;">Server / Provider:</td><td style="padding: 6px;">' . htmlspecialchars($smtp_host) . '</td></tr>
+                <tr><td style="padding: 6px; font-weight: bold;">Port & Crypto:</td><td style="padding: 6px;">' . $smtp_port . ' (' . strtoupper($smtp_crypto) . ')</td></tr>
+                <tr><td style="padding: 6px; font-weight: bold;">Sender Email:</td><td style="padding: 6px;">' . htmlspecialchars($sender_email) . '</td></tr>
+                <tr><td style="padding: 6px; font-weight: bold;">Waktu Pengujian:</td><td style="padding: 6px;">' . date('d M Y H:i:s') . ' WIB</td></tr>
             </table>
-            <p style="margin-top: 20px; font-size: 12px; color: #888;">Email ini dikirim secara otomatis oleh fitur pengujian master email E-Library System.</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #888;">Email ini dikirim secara otomatis oleh fitur pengujian master email Helpdesk System.</p>
         </div>';
 
         $this->email->subject($subject);
@@ -371,12 +371,12 @@ class Email_settings extends Admin_Controller
             } elseif ($r->status == 'SND') {
                 $status_badge = '<span class="badge badge-success"><i class="fa fa-check mr-1"></i> Sent</span>';
             } else {
-                $status_badge = '<span class="badge badge-danger" title="'.htmlspecialchars($r->error_msg).'"><i class="fa fa-exclamation-triangle mr-1"></i> Failed</span>';
+                $status_badge = '<span class="badge badge-danger" title="' . htmlspecialchars($r->error_msg) . '"><i class="fa fa-exclamation-triangle mr-1"></i> Failed</span>';
             }
 
-            $actions = '<button type="button" class="btn btn-sm btn-info btn-preview" data-id="'.$r->id.'" title="Preview Email"><i class="fa fa-eye"></i></button> ';
+            $actions = '<button type="button" class="btn btn-sm btn-info btn-preview" data-id="' . $r->id . '" title="Preview Email"><i class="fa fa-eye"></i></button> ';
             if ($r->status == 'FAI') {
-                $actions .= '<button type="button" class="btn btn-sm btn-warning btn-resend" data-id="'.$r->id.'" title="Kirim Ulang"><i class="fa fa-refresh"></i></button>';
+                $actions .= '<button type="button" class="btn btn-sm btn-warning btn-resend" data-id="' . $r->id . '" title="Kirim Ulang"><i class="fa fa-refresh"></i></button>';
             }
 
             $data[] = [
@@ -462,37 +462,25 @@ class Email_settings extends Admin_Controller
     /**
      * Editor Template Email
      */
+    /**
+     * Editor Template Email
+     */
     public function template()
     {
-        $template_body = '';
-        $template_css = '';
+        $tmpl_file = APPPATH . 'modules/email_setting/views/email_template.php';
+        $full_html = file_exists($tmpl_file) ? file_get_contents($tmpl_file) : '';
 
-        // Cek pengaturan baru
-        $body_db = $this->db->get_where('settings', ['setting_name' => 'email_template_body'])->row();
-        $css_db = $this->db->get_where('settings', ['setting_name' => 'email_template_css'])->row();
-        
-        // Ambil Overrides Variabel Email
-        $email_vars = [];
-        $vars_keys = ['email_vars_company_name', 'email_vars_company_address', 'email_vars_company_logo'];
-        $vars_db = $this->db->where_in('setting_name', $vars_keys)->get('settings')->result();
-        foreach ($vars_db as $v) {
-            $email_vars[$v->setting_name] = $v->value;
-        }
+        preg_match('/<style>(.*?)<\/style>/s', $full_html, $css_match);
+        $template_css = isset($css_match[1]) ? trim($css_match[1]) : '';
 
-        if ($body_db) {
-            $template_body = $body_db->value;
-            $template_css = ($css_db) ? $css_db->value : '';
-        } else {
-            // Migrasi dari email_template_html (Lama) atau File
-            $old_db = $this->db->get_where('settings', ['setting_name' => 'email_template_html'])->row();
-            $full_html = ($old_db) ? $old_db->value : file_get_contents(APPPATH . 'modules/setting/views/email_template.php');
+        preg_match('/<body.*?>(.*?)<\/body>/s', $full_html, $body_match);
+        $template_body = isset($body_match[1]) ? trim($body_match[1]) : $full_html;
 
-            preg_match('/<style>(.*?)<\/style>/s', $full_html, $css_match);
-            $template_css = isset($css_match[1]) ? trim($css_match[1]) : '';
-
-            preg_match('/<body.*?>(.*?)<\/body>/s', $full_html, $body_match);
-            $template_body = isset($body_match[1]) ? trim($body_match[1]) : $full_html;
-        }
+        $email_vars = [
+            'email_vars_company_name'    => '',
+            'email_vars_company_address' => '',
+            'email_vars_company_logo'    => ''
+        ];
 
         $this->template->set([
             'title'         => 'Edit Template Email',
@@ -508,34 +496,18 @@ class Email_settings extends Admin_Controller
     {
         $template_body = $this->input->post('template_body');
         $template_css  = $this->input->post('template_css');
-        
-        $email_vars = $this->input->post('email_vars');
-        if (is_array($email_vars)) {
-            foreach ($email_vars as $key => $val) {
-                $this->_upsert_setting($key, $val);
-            }
-        }
 
         if ($template_body) {
-            $this->_upsert_setting('email_template_body', $template_body);
-            $this->_upsert_setting('email_template_css', $template_css);
+            $tmpl_file = APPPATH . 'modules/email_setting/views/email_template.php';
+            $full_html = '<!DOCTYPE html>' . "\n" . '<html lang="en">' . "\n" . '<head>' . "\n" . '    <meta charset="UTF-8">' . "\n" . '    <meta name="viewport" content="width=device-width, initial-scale=1.0">' . "\n" . '    <style>' . "\n" . $template_css . "\n" . '    </style>' . "\n" . '</head>' . "\n" . '<body class="email-template">' . "\n" . $template_body . "\n" . '</body>' . "\n" . '</html>';
 
-            $return = ['status' => 1, 'msg' => 'Template email dan variabel berhasil disimpan.'];
+            @file_put_contents($tmpl_file, $full_html);
+            $return = ['status' => 1, 'msg' => 'Template email berhasil disimpan.'];
         } else {
             $return = ['status' => 0, 'msg' => 'Konten template tidak boleh kosong.'];
         }
-        
-        echo json_encode($return);
-    }
 
-    private function _upsert_setting($name, $value)
-    {
-        $exist = $this->db->get_where('settings', ['setting_name' => $name])->num_rows();
-        if ($exist > 0) {
-            $this->db->update('settings', ['value' => $value], ['setting_name' => $name]);
-        } else {
-            $this->db->insert('settings', ['setting_name' => $name, 'value' => $value]);
-        }
+        echo json_encode($return);
     }
 
     /**
@@ -545,43 +517,21 @@ class Email_settings extends Admin_Controller
     {
         $q = $this->db->get_where('email_queues', ['id' => $id])->row();
         if ($q) {
-            $body_db = $this->db->get_where('settings', ['setting_name' => 'email_template_body'])->row();
-            $css_db  = $this->db->get_where('settings', ['setting_name' => 'email_template_css'])->row();
-
-            $email_vars = [];
-            $vars_keys  = ['email_vars_company_name', 'email_vars_company_address', 'email_vars_company_logo'];
-            $vars_db    = $this->db->where_in('setting_name', $vars_keys)->get('settings')->result();
-            foreach ($vars_db as $v) {
-                $email_vars[$v->setting_name] = $v->value;
-            }
-
             $company = $this->db->get_where('companies', ['id_perusahaan' => $q->company_id])->row();
 
-            if ($body_db) {
-                $htmlBody = $body_db->value;
-                $htmlCss = ($css_db) ? $css_db->value : '';
-                $htmlMessage = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' . $htmlCss . '</style></head><body class="email-template">' . $htmlBody . '</body></html>';
+            $tmpl_file = APPPATH . 'modules/email_setting/views/email_template.php';
+            if (file_exists($tmpl_file)) {
+                $htmlMessage = file_get_contents($tmpl_file);
             } else {
-                $old_db = $this->db->get_where('settings', ['setting_name' => 'email_template_html'])->row();
-                if ($old_db) {
-                    $htmlMessage = $old_db->value;
-                } else {
-                    $htmlMessage = $this->load->view('setting/email_template', ['message' => $q->message], true);
-                }
+                $htmlMessage = '<div>{{content}}</div>';
             }
 
             $htmlMessage = str_replace('{{content}}', $q->message, $htmlMessage);
             $htmlMessage = str_replace('{{subject}}', $q->subject, $htmlMessage);
 
-            $final_name    = (!empty($email_vars['email_vars_company_name'])) ? $email_vars['email_vars_company_name'] : ($company ? $company->nm_perusahaan : '');
-            $final_address = (!empty($email_vars['email_vars_company_address'])) ? $email_vars['email_vars_company_address'] : ($company ? $company->alamat : '');
-            $final_logo    = '';
-
-            if (!empty($email_vars['email_vars_company_logo'])) {
-                $final_logo = base_url('directory/COMPANY/' . $email_vars['email_vars_company_logo']);
-            } elseif ($company && !empty($company->logo)) {
-                $final_logo = base_url($company->path_logo . $company->id_perusahaan . '/' . $company->logo);
-            }
+            $final_name    = $company ? $company->nm_perusahaan : '';
+            $final_address = $company ? $company->alamat : '';
+            $final_logo    = ($company && !empty($company->logo)) ? base_url($company->path_logo . $company->id_perusahaan . '/' . $company->logo) : '';
 
             $htmlMessage = str_replace('{{company_name}}', $final_name, $htmlMessage);
             $htmlMessage = str_replace('{{company_address}}', $final_address, $htmlMessage);

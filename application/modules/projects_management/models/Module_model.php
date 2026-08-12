@@ -117,8 +117,15 @@ class Module_model extends BF_Model
         $this->db->from('pm_tahapan_tasks tt');
         $this->db->join('users u', 'u.id_user = tt.user_id', 'left');
         $this->db->where('tt.tahapan_id', $tahapan_id);
+
+        $this->db->group_start();
+        $this->db->where('tt.is_delete', 0);
+        $this->db->or_where('tt.is_delete IS NULL', null, false);
+        $this->db->group_end();
+
         $this->db->order_by('tt.task_date', 'ASC');
         $this->db->order_by('tt.id', 'ASC');
+
         return $this->db->get()->result_array();
     }
 
@@ -129,6 +136,10 @@ class Module_model extends BF_Model
     {
         $this->db->select_sum('manhour');
         $this->db->where('tahapan_id', $tahapan_id);
+        $this->db->group_start();
+        $this->db->where('is_delete', 0);
+        $this->db->or_where('is_delete IS NULL', null, false);
+        $this->db->group_end();
         $result = $this->db->get('pm_tahapan_tasks')->row();
         return $result && $result->manhour ? (float)$result->manhour : 0;
     }
@@ -437,5 +448,72 @@ class Module_model extends BF_Model
     {
         $this->db->insert('pm_module_meetings', $data);
         return $this->db->insert_id();
+    }
+
+    /**
+     * Get single task by ID
+     */
+    public function get_task_by_id($task_id)
+    {
+        return $this->db->get_where('pm_tahapan_tasks', array('id' => $task_id))->row_array();
+    }
+
+    /**
+     * Update a tahapan task
+     */
+    public function update_tahapan_task($task_id, $data)
+    {
+        $this->db->where('id', $task_id);
+        $this->db->update('pm_tahapan_tasks', $data);
+
+        // Recalculate actual_manhour on tahapan
+        $task = $this->get_task_by_id($task_id);
+        if ($task) {
+            $total = $this->get_tahapan_actual_manhour($task['tahapan_id']);
+            $this->db->where('id', $task['tahapan_id']);
+            $this->db->update('pm_module_tahapan', array(
+                'actual_manhour' => $total,
+                'updated_at'     => date('Y-m-d H:i:s')
+            ));
+
+            if (!empty($task['project_id'])) {
+                $this->update_project_status($task['project_id']);
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete a tahapan task
+     */
+    public function delete_tahapan_task($task_id)
+    {
+        $task = $this->get_task_by_id($task_id);
+        if (!$task) return false;
+
+        $tahapan_id = $task['tahapan_id'];
+        $project_id = $task['project_id'];
+
+        // Soft delete
+        $this->db->where('id', $task_id);
+        $this->db->update('pm_tahapan_tasks', array(
+            'is_delete'  => 1,
+            'deleted_at' => date('Y-m-d H:i:s')
+        ));
+
+        // Recalculate actual_manhour on tahapan
+        $total = $this->get_tahapan_actual_manhour($tahapan_id);
+        $this->db->where('id', $tahapan_id);
+        $this->db->update('pm_module_tahapan', array(
+            'actual_manhour' => $total,
+            'updated_at'     => date('Y-m-d H:i:s')
+        ));
+
+        if (!empty($project_id)) {
+            $this->update_project_status($project_id);
+        }
+
+        return true;
     }
 }
