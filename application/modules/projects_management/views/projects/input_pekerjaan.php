@@ -169,7 +169,7 @@
     <!-- Rollback History -->
     <?php if (!empty($rollback_history)): ?>
     <div class="card border border-warning mb-3">
-        <div class="card-header bg-warning bg-opacity-10 pt-2">
+        <div class="card-header bg-warning bg-opacity-10 p-2">
             <strong class="small text-warning"><i class="fa fa-undo me-1"></i> Riwayat Rollback</strong>
         </div>
         <div class="card-body p-2">

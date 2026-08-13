@@ -474,27 +474,37 @@
                                 </button>
                             <?php endif; ?>
                             <?php if ($mod['status'] === 'finish'): ?>
-                                <span class="badge bg-success ms-2"><i class="fa fa-check me-1"></i> Finish</span>
-                                <?php
-                                    // Hitung plan MH & aktual MH tahapan 1-10
-                                    $plan_mh_1_10 = 0;
-                                    $actual_mh_1_10 = 0;
-                                    foreach ($mod['tahapan'] as $_t) {
-                                        if ($_t['tahapan_order'] >= 1 && $_t['tahapan_order'] <= 10) {
-                                            $plan_mh_1_10 += (float)$_t['plan_manhour'];
-                                            $actual_mh_1_10 += (float)$_t['actual_manhour'];
-                                        }
-                                    }
-                                ?>
-                                <span class="badge bg-light text-dark border" title="Plan MH (Tahapan 1-10)">
-                                    <i class="fa fa-clock text-muted me-1"></i>Plan: <?= $plan_mh_1_10; ?>
-                                </span>
-                                <span class="badge bg-light text-primary border ms-1" title="Aktual MH (Tahapan 1-10)">
-                                    <i class="fa fa-check-circle text-primary me-1"></i>Aktual: <?= $actual_mh_1_10; ?>
-                                </span>
-                            <?php else: ?>
-                                <span class="badge bg-warning text-dark ms-2"><?= $mod['finished_tahapan']; ?>/<?= $mod['total_tahapan']; ?> tahapan</span>
-                            <?php endif; ?>
+    <span class="badge bg-success ms-2"><i class="fa fa-check me-1"></i> Finish</span>
+<?php else: ?>
+    <span class="badge bg-warning text-dark ms-2"><?= $mod['finished_tahapan']; ?>/<?= $mod['total_tahapan']; ?> tahapan</span>
+<?php endif; ?>
+
+<?php
+    // Hitung plan MH & aktual MH tahapan 1-10 (selalu dihitung, bukan cuma saat finish)
+    $plan_mh_1_10 = 0;
+    $actual_mh_1_10 = 0;
+    foreach ($mod['tahapan'] as $_t) {
+        if ($_t['tahapan_order'] >= 1 && $_t['tahapan_order'] <= 10) {
+            $plan_mh_1_10 += (float)$_t['plan_manhour'];
+            $actual_mh_1_10 += (float)$_t['actual_manhour'];
+        }
+    }
+    $selisih_mh_1_10 = $actual_mh_1_10 - $plan_mh_1_10;
+    // Selisih positif (aktual > plan) = over budget -> merah
+    // Selisih negatif/nol (aktual <= plan) = aman -> hijau
+    $selisih_class = ($selisih_mh_1_10 > 0) ? 'text-danger' : 'text-success';
+    $selisih_icon  = ($selisih_mh_1_10 > 0) ? 'fa-arrow-up' : 'fa-arrow-down';
+    $selisih_sign  = ($selisih_mh_1_10 > 0) ? '+' : '';
+?>
+<span class="badge bg-light text-dark border" title="Plan MH (Tahapan 1-10)">
+    <i class="fa fa-clock text-muted me-1"></i>Plan: <?= $plan_mh_1_10; ?>
+</span>
+<span class="badge bg-light text-primary border ms-1" title="Aktual MH (Tahapan 1-10)">
+    <i class="fa fa-check-circle text-primary me-1"></i>Aktual: <?= $actual_mh_1_10; ?>
+</span>
+<span class="badge bg-light border ms-1 <?= $selisih_class; ?>" title="Selisih MH (Aktual - Plan)">
+    <i class="fa <?= $selisih_icon; ?> me-1"></i>Selisih: <?= $selisih_sign . $selisih_mh_1_10; ?>
+</span>
                         </div>
                         <div>
                             <?php if (!$is_readonly && $is_pm && $mod['status'] !== 'finish' && $mod['all_finished']): ?>
