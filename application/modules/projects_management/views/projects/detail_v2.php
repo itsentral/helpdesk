@@ -171,15 +171,112 @@
         color: #198754;
     }
 
-    .badge-role-pm,
-    .badge-role-ba,
-    .badge-role-prog,
-    .badge-role-qa {
-        font-weight: 600;
-        font-size: 11px;
-        padding: 5px 10px;
-        border-radius: 20px;
-    }
+    .role-mh {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 9px 12px !important;
+    gap: 6px;   /* <-- atur jarak antar baris (judul, bar, selisih) di sini */
+}
+
+.role-mh .mh-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.role-mh .mh-side-label {
+    font-size: 9px;
+    color: #8a93a3;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+
+.role-mh .mh-title-block {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.role-mh .mh-title-block .info-stat-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.role-mh .mh-title-block .mh-title-text {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #5f5e5a;
+    white-space: nowrap;
+}
+
+.role-mh .mh-bar {
+    position: relative;
+    height: 20px;
+    border-radius: 5px;
+    background: #fef3e2;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+.role-mh .mh-bar-actual-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: #f59e0b;
+    border-radius: 5px 0 0 5px;
+}
+
+.role-mh .mh-bar-plan-value {
+    position: absolute;
+    left: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6a2e00ff;
+}
+
+.role-mh .mh-bar-actual-value {
+    position: relative;
+    z-index: 1;
+    margin-left: auto;
+    padding-right: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #b45309;
+}
+
+.role-mh .mh-diff-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.role-mh .mh-diff-label {
+    font-size: 10px;
+    color: #8a93a3;
+}
+
+.role-mh .mh-diff-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.role-mh .mh-diff-over {
+    background: #fdecec;
+    color: #a32d2d;
+}
+
+.role-mh .mh-diff-safe {
+    background: #e6f7ec;
+    color: #198754;
+}
 
     /* --- Anggota Project section --- */
     .team-avatar {
@@ -302,7 +399,23 @@
     </div>
     <div class="card-body">
         <!-- Project Info -->
-        <!-- Project Info -->
+       <?php
+$total_plan_mh_project = 0;
+$total_actual_mh_project = 0;
+foreach ($modules as $m_calc) {
+    foreach ($m_calc['tahapan'] as $t_calc) {
+        if ($t_calc['tahapan_order'] >= 1 && $t_calc['tahapan_order'] <= 10) {
+            $total_plan_mh_project += (float)$t_calc['plan_manhour'];
+            $total_actual_mh_project += (float)$t_calc['actual_manhour'];
+        }
+    }
+}
+$total_selisih_mh_project = $total_actual_mh_project - $total_plan_mh_project;
+$mh_over = $total_selisih_mh_project > 0;
+$mh_actual_pct_bar = $total_plan_mh_project > 0
+    ? min(100, ($total_actual_mh_project / $total_plan_mh_project) * 100)
+    : 0;
+?>
         <div class="info-stat-grid mb-4">
             <div class="info-stat-card role-pm">
                 <span class="info-stat-icon"><i class="fa fa-user-tie"></i></span>
@@ -355,6 +468,28 @@
                 <div>
                     <div class="info-stat-label">Finish</div>
                     <div class="info-stat-value"><?= $fin; ?> / <?= count($modules); ?></div>
+                </div>
+            </div>
+        <div class="info-stat-card role-mh">
+                <div class="mh-top-row">
+                    <span class="mh-side-label">Plan</span>
+                    <span class="mh-title-block">
+                        <span class="info-stat-icon" style="background:#fef3e2; color:#d97706;"><i class="fa fa-hourglass-half"></i></span>
+                        <span class="mh-title-text">Manhour project</span>
+                    </span>
+                    <span class="mh-side-label">Aktual</span>
+                </div>
+                <div class="mh-bar">
+                    <div class="mh-bar-actual-fill" style="width:<?= $mh_actual_pct_bar; ?>%;"></div>
+                    <span class="mh-bar-plan-value"><?= $total_plan_mh_project; ?></span>
+                    <span class="mh-bar-actual-value"><?= $total_actual_mh_project; ?></span>
+                </div>
+                <div class="mh-diff-row">
+                    <span class="mh-diff-label">Selisih</span>
+                    <span class="mh-diff-badge <?= $mh_over ? 'mh-diff-over' : 'mh-diff-safe'; ?>">
+                        <i class="fa <?= $mh_over ? 'fa-arrow-up' : 'fa-arrow-down'; ?>"></i>
+                        <?= ($mh_over ? '+' : '') . $total_selisih_mh_project; ?>
+                    </span>
                 </div>
             </div>
         </div>
@@ -456,214 +591,214 @@
         <!-- ========== MODULES & TAHAPAN ========== -->
         <?php if (!empty($modules)): ?>
             <div id="modules-sortable-container">
-            <?php foreach ($modules as $mod_idx => $mod): ?>
-                <div class="card border mb-3 module-sortable-item" data-module-id="<?= $mod['id']; ?>">
-                    <div class="card-header toggle-header module-header <?= ($mod['status'] === 'finish') ? 'is-finish' : ''; ?> d-flex justify-content-between align-items-center"
-                        data-bs-toggle="collapse" data-bs-target="#module-collapse-<?= $mod['id']; ?>"
-                        aria-expanded="<?= ($mod['status'] !== 'finish') ? 'true' : 'false'; ?>">
-                        <div class="d-flex align-items-center">
-                            <?php if (!$is_readonly && $is_pm): ?>
-                                <span class="drag-handle me-2 text-muted" style="cursor:grab;" onclick="event.stopPropagation();"><i class="fa fa-grip-vertical"></i></span>
-                            <?php endif; ?>
-                            <i class="fa fa-chevron-down toggle-chevron me-2 text-muted"></i>
-                            <span class="module-icon"><i class="fa fa-cube"></i></span>
-                            <strong class="text-dark"><?= html_escape($mod['module_name']); ?></strong>
-                            <?php if (!$is_readonly && $is_pm && $mod['status'] !== 'finish'): ?>
-                                <button type="button" class="btn btn-sm btn-link text-warning p-0 btn-rename-module" data-id="<?= $mod['id']; ?>" data-name="<?= html_escape($mod['module_name']); ?>" title="Rename Modul">
-                                    <i class="fa fa-pencil"></i>
-                                </button>
-                            <?php endif; ?>
-                            <?php if ($mod['status'] === 'finish'): ?>
-    <span class="badge bg-success ms-2"><i class="fa fa-check me-1"></i> Finish</span>
-<?php else: ?>
-    <span class="badge bg-warning text-dark ms-2"><?= $mod['finished_tahapan']; ?>/<?= $mod['total_tahapan']; ?> tahapan</span>
-<?php endif; ?>
+                <?php foreach ($modules as $mod_idx => $mod): ?>
+                    <div class="card border mb-3 module-sortable-item" data-module-id="<?= $mod['id']; ?>">
+                        <div class="card-header toggle-header module-header <?= ($mod['status'] === 'finish') ? 'is-finish' : ''; ?> d-flex justify-content-between align-items-center"
+                            data-bs-toggle="collapse" data-bs-target="#module-collapse-<?= $mod['id']; ?>"
+                            aria-expanded="<?= ($mod['status'] !== 'finish') ? 'true' : 'false'; ?>">
+                            <div class="d-flex align-items-center">
+                                <?php if (!$is_readonly && $is_pm): ?>
+                                    <span class="drag-handle me-2 text-muted" style="cursor:grab;" onclick="event.stopPropagation();"><i class="fa fa-grip-vertical"></i></span>
+                                <?php endif; ?>
+                                <i class="fa fa-chevron-down toggle-chevron me-2 text-muted"></i>
+                                <span class="module-icon"><i class="fa fa-cube"></i></span>
+                                <strong class="text-dark"><?= html_escape($mod['module_name']); ?></strong>
+                                <?php if (!$is_readonly && $is_pm && $mod['status'] !== 'finish'): ?>
+                                    <button type="button" class="btn btn-sm btn-link text-warning p-0 btn-rename-module" data-id="<?= $mod['id']; ?>" data-name="<?= html_escape($mod['module_name']); ?>" title="Rename Modul">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                <?php endif; ?>
+                                <?php if ($mod['status'] === 'finish'): ?>
+                                    <span class="badge bg-success ms-2"><i class="fa fa-check me-1"></i> Finish</span>
+                                <?php else: ?>
+                                    <span class="badge bg-warning text-dark ms-2"><?= $mod['finished_tahapan']; ?>/<?= $mod['total_tahapan']; ?> tahapan</span>
+                                <?php endif; ?>
 
-<?php
-    // Hitung plan MH & aktual MH tahapan 1-10 (selalu dihitung, bukan cuma saat finish)
-    $plan_mh_1_10 = 0;
-    $actual_mh_1_10 = 0;
-    foreach ($mod['tahapan'] as $_t) {
-        if ($_t['tahapan_order'] >= 1 && $_t['tahapan_order'] <= 10) {
-            $plan_mh_1_10 += (float)$_t['plan_manhour'];
-            $actual_mh_1_10 += (float)$_t['actual_manhour'];
-        }
-    }
-    $selisih_mh_1_10 = $actual_mh_1_10 - $plan_mh_1_10;
-    // Selisih positif (aktual > plan) = over budget -> merah
-    // Selisih negatif/nol (aktual <= plan) = aman -> hijau
-    $selisih_class = ($selisih_mh_1_10 > 0) ? 'text-danger' : 'text-success';
-    $selisih_icon  = ($selisih_mh_1_10 > 0) ? 'fa-arrow-up' : 'fa-arrow-down';
-    $selisih_sign  = ($selisih_mh_1_10 > 0) ? '+' : '';
-?>
-<span class="badge bg-light text-dark border" title="Plan MH (Tahapan 1-10)">
-    <i class="fa fa-clock text-muted me-1"></i>Plan: <?= $plan_mh_1_10; ?>
-</span>
-<span class="badge bg-light text-primary border ms-1" title="Aktual MH (Tahapan 1-10)">
-    <i class="fa fa-check-circle text-primary me-1"></i>Aktual: <?= $actual_mh_1_10; ?>
-</span>
-<span class="badge bg-light border ms-1 <?= $selisih_class; ?>" title="Selisih MH (Aktual - Plan)">
-    <i class="fa <?= $selisih_icon; ?> me-1"></i>Selisih: <?= $selisih_sign . $selisih_mh_1_10; ?>
-</span>
-                        </div>
-                        <div>
-                            <?php if (!$is_readonly && $is_pm && $mod['status'] !== 'finish' && $mod['all_finished']): ?>
-                                <button type="button" class="btn btn-sm btn-success btn-finish-module" data-id="<?= $mod['id']; ?>" data-name="<?= html_escape($mod['module_name']); ?>">
-                                    <i class="fa fa-check-circle me-1"></i> Modul Finish
-                                </button>
-                            <?php endif; ?>
-                            <?php if (!$is_readonly && $is_pm && $mod['status'] !== 'finish'): ?>
-                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-module" data-id="<?= $mod['id']; ?>" data-name="<?= html_escape($mod['module_name']); ?>">
-                                    <i class="fa fa-trash"></i> Hapus Modul
-                                </button>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="collapse <?= ($is_readonly && $mod['status'] !== 'finish') ? 'show' : ''; ?>" id="module-collapse-<?= $mod['id']; ?>">
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm align-middle mb-0">
-                                    <thead class="table text-center small">
-                                        <tr>
-                                            <th width="35">No</th>
-                                            <th>Tahapan</th>
-                                            <th width="110">PIC</th>
-                                            <th width="55">Plan MH</th>
-                                            <th width="95">Due Date</th>
-                                            <th width="55">Aktual MH</th>
-                                            <th width="85">Aktual Date</th>
-                                            <th width="65">Status</th>
-                                            <th width="155">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($mod['tahapan'] as $t):
-                                            $row_class = '';
-                                            if ($t['status'] === 'finish') $row_class = 'tahapan-finish';
-                                            elseif ($t['status'] === 'active') $row_class = 'tahapan-active';
-                                            else $row_class = 'tahapan-locked';
-                                        ?>
-                                            <tr class="<?= $row_class; ?>">
-                                                <td class="text-center small"><?= $t['tahapan_order']; ?></td>
-                                                <td class="small"><?= html_escape($t['tahapan_name']); ?></td>
-                                                <td class="text-center small fw-bold"><?= html_escape($t['pic_name'] ? $t['pic_name'] : '-'); ?></td>
-                                                <td class="text-center fw-bold">
-                                                    <?php if (!$is_readonly && !$mod['has_finished_tahapan'] && $is_pm): ?>
-                                                        <input type="number" step="0.5" min="0" class="form-control form-control-sm text-center input-plan-mh" data-tahapan-id="<?= $t['id']; ?>" value="<?= $t['plan_manhour']; ?>" style="font-size:11px; width:70px; margin:0 auto;" />
-                                                    <?php else: ?>
-                                                        <?= $t['plan_manhour'] > 0 ? $t['plan_manhour'] : '-'; ?>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="text-center small">
-                                                    <?php if (!$is_readonly && !$mod['has_finished_tahapan'] && $is_pm): ?>
-                                                        <input type="text" class="form-control form-control-sm flatpickr-duedate text-center" data-tahapan-id="<?= $t['id']; ?>" value="<?= $t['plan_due_date'] ? $t['plan_due_date'] : ''; ?>" placeholder="Pilih" style="font-size:11px;" />
-                                                    <?php else: ?>
-                                                        <?= $t['plan_due_date'] ? date('d-M-y', strtotime($t['plan_due_date'])) : '-'; ?>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="text-center fw-bold text-primary"><?= $t['actual_manhour'] > 0 ? $t['actual_manhour'] : '0'; ?></td>
-                                                <td class="text-center small"><?= $t['actual_finish_date'] ? date('d-M-y', strtotime($t['actual_finish_date'])) : ''; ?></td>
-                                                <td class="text-center">
-                                                    <?php if ($t['status'] === 'finish'): ?>
-                                                        <span class="badge bg-success" style="font-size:10px;">Finish</span>
-                                                    <?php elseif ($t['status'] === 'active'): ?>
-                                                        <span class="badge bg-warning text-dark" style="font-size:10px;">Active</span>
-                                                    <?php else: ?>
-                                                        <span class="badge bg-secondary" style="font-size:10px;">Locked</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="text-center">
-                                                    <?php if ($t['status'] === 'finish'): ?>
-                                                        <button type="button" class="btn btn-sm btn-outline-info btn-view-task" data-id="<?= $t['id']; ?>" style="width: 90px;"><i class="fa fa-eye"></i> View</button>
-                                                    <?php elseif ($t['status'] === 'active' && !$is_on_hold && !$is_completed && !$is_readonly): ?>
-                                                        <?php $is_my_task = $is_admin || (isset($current_user_id) && $t['pic_user_id'] == $current_user_id); ?>
-                                                        <?php if ($is_my_task): ?>
-                                                            <div class="d-inline-flex align-items-center justify-content-center gap-1">
-                                                                <button type="button" class="btn btn-sm btn-primary btn-input-task" data-id="<?= $t['id']; ?>" style="width: 90px;"><i class="fa fa-pencil"></i> Isi Task</button>
-                                                                <button type="button" class="btn btn-sm btn-success btn-finish-tahapan" data-id="<?= $t['id']; ?>" data-name="<?= html_escape($t['tahapan_name']); ?>" style="width: 90px;"><i class="fa fa-check"></i> Finish</button>
-                                                                <?php if ($t['tahapan_order'] > 1):
-                                                                    $prev_steps = array();
-                                                                    foreach ($mod['tahapan'] as $pt) {
-                                                                        if ($pt['tahapan_order'] < $t['tahapan_order']) {
-                                                                            $prev_steps[$pt['tahapan_order']] = $pt['tahapan_name'];
-                                                                        }
-                                                                    }
-                                                                ?>
-                                                                    <button type="button" class="btn btn-sm btn-outline-danger btn-rollback" data-module-id="<?= $mod['id']; ?>" data-module-name="<?= html_escape($mod['module_name']); ?>" data-current-order="<?= $t['tahapan_order']; ?>" data-prev-steps='<?= json_encode($prev_steps); ?>' style="width: 90px;"><i class="fa fa-undo"></i> Rollback</button>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                        <?php else: ?>
-                                                            <span class="text-muted small"><i class="fa fa-clock-o me-1"></i>Menunggu PIC</span>
-                                                        <?php endif; ?>
-                                                    <?php elseif ($t['status'] === 'active' && $is_on_hold): ?>
-                                                        <span class="badge bg-secondary" style="font-size:10px;"><i class="fa fa-pause me-1"></i>Hold</span>
-                                                    <?php elseif ($t['status'] === 'active'): ?>
-                                                        <button type="button" class="btn btn-sm btn-outline-info btn-view-task" data-id="<?= $t['id']; ?>"><i class="fa fa-eye"></i> View</button>
-                                                    <?php else: ?>
-                                                        <span class="text-muted"><i class="fa fa-lock"></i></span>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                                <?php
+                                // Hitung plan MH & aktual MH tahapan 1-10 (selalu dihitung, bukan cuma saat finish)
+                                $plan_mh_1_10 = 0;
+                                $actual_mh_1_10 = 0;
+                                foreach ($mod['tahapan'] as $_t) {
+                                    if ($_t['tahapan_order'] >= 1 && $_t['tahapan_order'] <= 10) {
+                                        $plan_mh_1_10 += (float)$_t['plan_manhour'];
+                                        $actual_mh_1_10 += (float)$_t['actual_manhour'];
+                                    }
+                                }
+                                $selisih_mh_1_10 = $actual_mh_1_10 - $plan_mh_1_10;
+                                // Selisih positif (aktual > plan) = over budget -> merah
+                                // Selisih negatif/nol (aktual <= plan) = aman -> hijau
+                                $selisih_class = ($selisih_mh_1_10 > 0) ? 'text-danger' : 'text-success';
+                                $selisih_icon  = ($selisih_mh_1_10 > 0) ? 'fa-arrow-up' : 'fa-arrow-down';
+                                $selisih_sign  = ($selisih_mh_1_10 > 0) ? '+' : '';
+                                ?>
+                                <span class="badge bg-light text-dark border" title="Plan MH (Tahapan 1-10)">
+                                    <i class="fa fa-clock text-muted me-1"></i>Plan: <?= $plan_mh_1_10; ?>
+                                </span>
+                                <span class="badge bg-light text-primary border ms-1" title="Aktual MH (Tahapan 1-10)">
+                                    <i class="fa fa-check-circle text-primary me-1"></i>Aktual: <?= $actual_mh_1_10; ?>
+                                </span>
+                                <span class="badge bg-light border ms-1 <?= $selisih_class; ?>" title="Selisih MH (Aktual - Plan)">
+                                    <i class="fa <?= $selisih_icon; ?> me-1"></i>Selisih: <?= $selisih_sign . $selisih_mh_1_10; ?>
+                                </span>
                             </div>
-                        </div>
-                        <!-- Meeting/Others Card (terpisah dari tahapan) -->
-                        <div class="card-footer bg-light p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong class="small"><i class="fa fa-comments me-1"></i> Others / Meeting</strong>
-                                <?php if (!$is_readonly && !$is_on_hold && !$is_completed): ?>
-                                    <button type="button" class="btn btn-sm btn-dark btn-add-meeting" data-module-id="<?= $mod['id']; ?>" data-project-id="<?= $project['id']; ?>"><i class="fa fa-plus me-1"></i> Tambah</button>
+                            <div>
+                                <?php if (!$is_readonly && $is_pm && $mod['status'] !== 'finish' && $mod['all_finished']): ?>
+                                    <button type="button" class="btn btn-sm btn-success btn-finish-module" data-id="<?= $mod['id']; ?>" data-name="<?= html_escape($mod['module_name']); ?>">
+                                        <i class="fa fa-check-circle me-1"></i> Modul Finish
+                                    </button>
+                                <?php endif; ?>
+                                <?php if (!$is_readonly && $is_pm && $mod['status'] !== 'finish'): ?>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete-module" data-id="<?= $mod['id']; ?>" data-name="<?= html_escape($mod['module_name']); ?>">
+                                        <i class="fa fa-trash"></i> Hapus Modul
+                                    </button>
                                 <?php endif; ?>
                             </div>
-                            <?php if (!empty($mod['meetings'])): ?>
+                        </div>
+                        <div class="collapse <?= ($is_readonly && $mod['status'] !== 'finish') ? 'show' : ''; ?>" id="module-collapse-<?= $mod['id']; ?>">
+                            <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-bordered align-middle mb-0">
-                                        <thead class="table-light text-center small">
+                                    <table class="table table-bordered table-sm align-middle mb-0">
+                                        <thead class="table text-center small">
                                             <tr>
-                                                <th width="90">Tanggal</th>
-                                                <th>Aktivitas</th>
-                                                <th width="50">MH</th>
-                                                <th>Oleh</th>
-                                                <th>Ket</th>
-                                                <th width="100">File</th>
+                                                <th width="35">No</th>
+                                                <th>Tahapan</th>
+                                                <th width="110">PIC</th>
+                                                <th width="55">Plan MH</th>
+                                                <th width="95">Due Date</th>
+                                                <th width="55">Aktual MH</th>
+                                                <th width="85">Aktual Date</th>
+                                                <th width="65">Status</th>
+                                                <th width="155">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($mod['meetings'] as $mt): ?>
-                                                <tr>
-                                                    <td class="text-center small"><?= date('d M Y', strtotime($mt['task_date'])); ?></td>
-                                                    <td class="small"><?= html_escape($mt['task_description']); ?></td>
-                                                    <td class="text-center fw-bold"><?= $mt['manhour']; ?></td>
-                                                    <td class="small"><?= html_escape($mt['user_name']); ?></td>
-                                                    <td class="small"><?= html_escape($mt['remarks'] ? $mt['remarks'] : '-'); ?></td>
-                                                    <td class="text-center small">
-                                                        <?php if (!empty($mt['file_name_hash'])): ?>
-                                                            <a href="<?= base_url('uploads/projects_management/' . $mt['file_name_hash']); ?>" target="_blank" class="btn btn-sm btn-outline-primary" title="<?= html_escape($mt['file_name_original']); ?>">
-                                                                <i class="fa fa-paperclip me-1"></i> <?= html_escape(strlen($mt['file_name_original']) > 15 ? substr($mt['file_name_original'], 0, 12) . '...' : $mt['file_name_original']); ?>
-                                                            </a>
+                                            <?php foreach ($mod['tahapan'] as $t):
+                                                $row_class = '';
+                                                if ($t['status'] === 'finish') $row_class = 'tahapan-finish';
+                                                elseif ($t['status'] === 'active') $row_class = 'tahapan-active';
+                                                else $row_class = 'tahapan-locked';
+                                            ?>
+                                                <tr class="<?= $row_class; ?>">
+                                                    <td class="text-center small"><?= $t['tahapan_order']; ?></td>
+                                                    <td class="small"><?= html_escape($t['tahapan_name']); ?></td>
+                                                    <td class="text-center small fw-bold"><?= html_escape($t['pic_name'] ? $t['pic_name'] : '-'); ?></td>
+                                                    <td class="text-center fw-bold">
+                                                        <?php if (!$is_readonly && !$mod['has_finished_tahapan'] && $is_pm): ?>
+                                                            <input type="number" step="0.5" min="0" class="form-control form-control-sm text-center input-plan-mh" data-tahapan-id="<?= $t['id']; ?>" value="<?= $t['plan_manhour']; ?>" style="font-size:11px; width:70px; margin:0 auto;" />
                                                         <?php else: ?>
-                                                            -
+                                                            <?= $t['plan_manhour'] > 0 ? $t['plan_manhour'] : '-'; ?>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="text-center small">
+                                                        <?php if (!$is_readonly && !$mod['has_finished_tahapan'] && $is_pm): ?>
+                                                            <input type="text" class="form-control form-control-sm flatpickr-duedate text-center" data-tahapan-id="<?= $t['id']; ?>" value="<?= $t['plan_due_date'] ? $t['plan_due_date'] : ''; ?>" placeholder="Pilih" style="font-size:11px;" />
+                                                        <?php else: ?>
+                                                            <?= $t['plan_due_date'] ? date('d-M-y', strtotime($t['plan_due_date'])) : '-'; ?>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="text-center fw-bold text-primary"><?= $t['actual_manhour'] > 0 ? $t['actual_manhour'] : '0'; ?></td>
+                                                    <td class="text-center small"><?= $t['actual_finish_date'] ? date('d-M-y', strtotime($t['actual_finish_date'])) : ''; ?></td>
+                                                    <td class="text-center">
+                                                        <?php if ($t['status'] === 'finish'): ?>
+                                                            <span class="badge bg-success" style="font-size:10px;">Finish</span>
+                                                        <?php elseif ($t['status'] === 'active'): ?>
+                                                            <span class="badge bg-warning text-dark" style="font-size:10px;">Active</span>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-secondary" style="font-size:10px;">Locked</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <?php if ($t['status'] === 'finish'): ?>
+                                                            <button type="button" class="btn btn-sm btn-outline-info btn-view-task" data-id="<?= $t['id']; ?>" style="width: 90px;"><i class="fa fa-eye"></i> View</button>
+                                                        <?php elseif ($t['status'] === 'active' && !$is_on_hold && !$is_completed && !$is_readonly): ?>
+                                                            <?php $is_my_task = $is_admin || (isset($current_user_id) && $t['pic_user_id'] == $current_user_id); ?>
+                                                            <?php if ($is_my_task): ?>
+                                                                <div class="d-inline-flex align-items-center justify-content-center gap-1">
+                                                                    <button type="button" class="btn btn-sm btn-primary btn-input-task" data-id="<?= $t['id']; ?>" style="width: 90px;"><i class="fa fa-pencil"></i> Isi Task</button>
+                                                                    <button type="button" class="btn btn-sm btn-success btn-finish-tahapan" data-id="<?= $t['id']; ?>" data-name="<?= html_escape($t['tahapan_name']); ?>" style="width: 90px;"><i class="fa fa-check"></i> Finish</button>
+                                                                    <?php if ($t['tahapan_order'] > 1):
+                                                                        $prev_steps = array();
+                                                                        foreach ($mod['tahapan'] as $pt) {
+                                                                            if ($pt['tahapan_order'] < $t['tahapan_order']) {
+                                                                                $prev_steps[$pt['tahapan_order']] = $pt['tahapan_name'];
+                                                                            }
+                                                                        }
+                                                                    ?>
+                                                                        <button type="button" class="btn btn-sm btn-outline-danger btn-rollback" data-module-id="<?= $mod['id']; ?>" data-module-name="<?= html_escape($mod['module_name']); ?>" data-current-order="<?= $t['tahapan_order']; ?>" data-prev-steps='<?= json_encode($prev_steps); ?>' style="width: 90px;"><i class="fa fa-undo"></i> Rollback</button>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            <?php else: ?>
+                                                                <span class="text-muted small"><i class="fa fa-clock-o me-1"></i>Menunggu PIC</span>
+                                                            <?php endif; ?>
+                                                        <?php elseif ($t['status'] === 'active' && $is_on_hold): ?>
+                                                            <span class="badge bg-secondary" style="font-size:10px;"><i class="fa fa-pause me-1"></i>Hold</span>
+                                                        <?php elseif ($t['status'] === 'active'): ?>
+                                                            <button type="button" class="btn btn-sm btn-outline-info btn-view-task" data-id="<?= $t['id']; ?>"><i class="fa fa-eye"></i> View</button>
+                                                        <?php else: ?>
+                                                            <span class="text-muted"><i class="fa fa-lock"></i></span>
                                                         <?php endif; ?>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
-                                            <tr class="table">
-                                                <td colspan="2" class="text-end fw-bold small">Total MH Meeting:</td>
-                                                <td class="text-center fw-bold"><?= $mod['meeting_manhour']; ?></td>
-                                                <td colspan="3"></td>
-                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                            <?php else: ?>
-                                <p class="text-muted small mb-0">Belum ada catatan meeting/others.</p>
-                            <?php endif; ?>
+                            </div>
+                            <!-- Meeting/Others Card (terpisah dari tahapan) -->
+                            <div class="card-footer bg-light p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong class="small"><i class="fa fa-comments me-1"></i> Others / Meeting</strong>
+                                    <?php if (!$is_readonly && !$is_on_hold && !$is_completed): ?>
+                                        <button type="button" class="btn btn-sm btn-dark btn-add-meeting" data-module-id="<?= $mod['id']; ?>" data-project-id="<?= $project['id']; ?>"><i class="fa fa-plus me-1"></i> Tambah</button>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if (!empty($mod['meetings'])): ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered align-middle mb-0">
+                                            <thead class="table-light text-center small">
+                                                <tr>
+                                                    <th width="90">Tanggal</th>
+                                                    <th>Aktivitas</th>
+                                                    <th width="50">MH</th>
+                                                    <th>Oleh</th>
+                                                    <th>Ket</th>
+                                                    <th width="100">File</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($mod['meetings'] as $mt): ?>
+                                                    <tr>
+                                                        <td class="text-center small"><?= date('d M Y', strtotime($mt['task_date'])); ?></td>
+                                                        <td class="small"><?= html_escape($mt['task_description']); ?></td>
+                                                        <td class="text-center fw-bold"><?= $mt['manhour']; ?></td>
+                                                        <td class="small"><?= html_escape($mt['user_name']); ?></td>
+                                                        <td class="small"><?= html_escape($mt['remarks'] ? $mt['remarks'] : '-'); ?></td>
+                                                        <td class="text-center small">
+                                                            <?php if (!empty($mt['file_name_hash'])): ?>
+                                                                <a href="<?= base_url('uploads/projects_management/' . $mt['file_name_hash']); ?>" target="_blank" class="btn btn-sm btn-outline-primary" title="<?= html_escape($mt['file_name_original']); ?>">
+                                                                    <i class="fa fa-paperclip me-1"></i> <?= html_escape(strlen($mt['file_name_original']) > 15 ? substr($mt['file_name_original'], 0, 12) . '...' : $mt['file_name_original']); ?>
+                                                                </a>
+                                                            <?php else: ?>
+                                                                -
+                                                            <?php endif; ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                                <tr class="table">
+                                                    <td colspan="2" class="text-end fw-bold small">Total MH Meeting:</td>
+                                                    <td class="text-center fw-bold"><?= $mod['meeting_manhour']; ?></td>
+                                                    <td colspan="3"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <p class="text-muted small mb-0">Belum ada catatan meeting/others.</p>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
-                </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
             </div><!-- end modules-sortable-container -->
         <?php else: ?>
             <div class="text-center text-muted py-4">Belum ada modul. Klik "Add Modul" untuk menambahkan.</div>
@@ -697,17 +832,46 @@
                     // Collect new order
                     var order = [];
                     $(sortableContainer).find('.module-sortable-item').each(function(i) {
-                        order.push({ module_id: $(this).data('module-id'), position: i + 1 });
+                        order.push({
+                            module_id: $(this).data('module-id'),
+                            position: i + 1
+                        });
                     });
                     // Save to server
-                    $.post('<?= site_url("projects_management/reorder_modules"); ?>', { order: JSON.stringify(order) }, function(res) {
+                    $.post('<?= site_url("projects_management/reorder_modules"); ?>', {
+                        order: JSON.stringify(order)
+                    }, function(res) {
                         if (res && res.status === 1) {
-                            Swal.fire({ icon:'success', title:'Tersimpan', text:'Urutan modul berhasil diubah.', timer:1200, showConfirmButton:false, toast:true, position:'top-end' });
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Tersimpan',
+                                text: 'Urutan modul berhasil diubah.',
+                                timer: 1200,
+                                showConfirmButton: false,
+                                toast: true,
+                                position: 'top-end'
+                            });
                         } else {
-                            Swal.fire({ icon:'error', title:'Gagal', text:(res && res.pesan) ? res.pesan : 'Gagal menyimpan urutan.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: (res && res.pesan) ? res.pesan : 'Gagal menyimpan urutan.',
+                                timer: 2000,
+                                showConfirmButton: false,
+                                toast: true,
+                                position: 'top-end'
+                            });
                         }
                     }, 'json').fail(function() {
-                        Swal.fire({ icon:'error', title:'Error', text:'Gagal menyimpan urutan.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Gagal menyimpan urutan.',
+                            timer: 2000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
                     });
                 }
             });
@@ -734,13 +898,37 @@
                     }, function(res) {
                         $el.css('opacity', '1');
                         if (res.status === 1) {
-                            Swal.fire({ icon:'success', title:'Tersimpan', text:'Due date berhasil diupdate.', timer:1200, showConfirmButton:false, toast:true, position:'top-end' });
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Tersimpan',
+                                text: 'Due date berhasil diupdate.',
+                                timer: 1200,
+                                showConfirmButton: false,
+                                toast: true,
+                                position: 'top-end'
+                            });
                         } else {
-                            Swal.fire({ icon:'error', title:'Gagal', text:res.pesan, timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: res.pesan,
+                                timer: 2000,
+                                showConfirmButton: false,
+                                toast: true,
+                                position: 'top-end'
+                            });
                         }
                     }, 'json').fail(function() {
                         $el.css('opacity', '1');
-                        Swal.fire({ icon:'error', title:'Error', text:'Gagal menyimpan.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Gagal menyimpan.',
+                            timer: 2000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
                     });
                 }
             }
@@ -759,13 +947,37 @@
                 }, function(res) {
                     $el.css('opacity', '1');
                     if (res.status === 1) {
-                        Swal.fire({ icon:'success', title:'Tersimpan', text:'Plan manhour berhasil diupdate.', timer:1200, showConfirmButton:false, toast:true, position:'top-end' });
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Tersimpan',
+                            text: 'Plan manhour berhasil diupdate.',
+                            timer: 1200,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
                     } else {
-                        Swal.fire({ icon:'error', title:'Gagal', text:res.pesan, timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: res.pesan,
+                            timer: 2000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
                     }
                 }, 'json').fail(function() {
                     $el.css('opacity', '1');
-                    Swal.fire({ icon:'error', title:'Error', text:'Gagal menyimpan.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal menyimpan.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
                 });
             }
         });
@@ -1088,10 +1300,22 @@
                 cancelButtonText: 'Batal'
             }).then(function(r) {
                 if (r.isConfirmed) {
-                    $.post('<?= site_url("projects_management/delete_module"); ?>', { module_id: id }, function(res) {
+                    $.post('<?= site_url("projects_management/delete_module"); ?>', {
+                        module_id: id
+                    }, function(res) {
                         if (res.status === 1) {
-                            Swal.fire({ icon:'success', title:'Dihapus!', text:res.pesan, timer:1500, showConfirmButton:false }).then(function(){ location.reload(); });
-                        } else { Swal.fire('Gagal', res.pesan, 'error'); }
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Dihapus!',
+                                text: res.pesan,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(function() {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.pesan, 'error');
+                        }
                     }, 'json');
                 }
             });

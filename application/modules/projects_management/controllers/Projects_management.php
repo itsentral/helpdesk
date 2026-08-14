@@ -630,6 +630,21 @@ class Projects_management extends Admin_Controller
             return;
         }
 
+        // Validasi: harus ada minimal 1 task di versi saat ini
+        $current_version = isset($tahapan['current_version']) ? (int)$tahapan['current_version'] : 1;
+        $this->db->where('tahapan_id', $tahapan_id);
+        $this->db->where('version', $current_version);
+        $this->db->group_start();
+        $this->db->where('is_delete', 0);
+        $this->db->or_where('is_delete IS NULL', null, false);
+        $this->db->group_end();
+        $task_count = $this->db->count_all_results('pm_tahapan_tasks');
+
+        if ($task_count < 1) {
+            echo json_encode(array('status' => 0, 'pesan' => 'Tidak bisa finish. Minimal harus ada 1 task yang diisi.'));
+            return;
+        }
+
         $this->Module_model->finish_tahapan($tahapan_id);
 
         echo json_encode(array('status' => 1, 'pesan' => 'Tahapan berhasil ditandai selesai. Tahapan berikutnya telah dibuka.'));
@@ -791,6 +806,7 @@ class Projects_management extends Admin_Controller
     {
         $module_id    = $this->input->post('module_id');
         $target_order = $this->input->post('target_order');
+        $from_order   = $this->input->post('from_order');
         $reason       = trim($this->input->post('reason'));
 
         if (empty($module_id) || empty($target_order) || empty($reason)) {
@@ -811,7 +827,29 @@ class Projects_management extends Admin_Controller
             return;
         }
 
-        $this->Module_model->rollback_to_tahapan($module_id, (int)$target_order, (int)$this->input->post('from_order'), $reason, $this->id_user);
+        // Validasi: tahapan aktif (from_order) harus punya minimal 1 task di versi saat ini
+        $this->db->select('id, current_version');
+        $this->db->where('module_id', $module_id);
+        $this->db->where('tahapan_order', (int)$from_order);
+        $active_tahapan = $this->db->get('pm_module_tahapan')->row_array();
+
+        if ($active_tahapan) {
+            $current_version = isset($active_tahapan['current_version']) ? (int)$active_tahapan['current_version'] : 1;
+            $this->db->where('tahapan_id', $active_tahapan['id']);
+            $this->db->where('version', $current_version);
+            $this->db->group_start();
+            $this->db->where('is_delete', 0);
+            $this->db->or_where('is_delete IS NULL', null, false);
+            $this->db->group_end();
+            $task_count = $this->db->count_all_results('pm_tahapan_tasks');
+
+            if ($task_count < 1) {
+                echo json_encode(array('status' => 0, 'pesan' => 'Tidak bisa rollback. Minimal harus ada 1 task yang diisi.'));
+                return;
+            }
+        }
+
+        $this->Module_model->rollback_to_tahapan($module_id, (int)$target_order, (int)$from_order, $reason, $this->id_user);
 
         echo json_encode(array('status' => 1, 'pesan' => 'Tahapan berhasil dikembalikan ke step ' . $target_order . '. Versi baru dimulai.'));
     }

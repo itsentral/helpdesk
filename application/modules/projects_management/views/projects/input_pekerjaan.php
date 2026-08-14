@@ -129,7 +129,6 @@
                                             </div>
                                         <?php endif; ?>
                                         <input type="file" class="form-control form-control-sm edit-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
-                                        <small class="text-muted">Kosongkan jika tidak ganti</small>
                                     </td>
                                     <?php endif; ?>
 
@@ -287,36 +286,48 @@
             return;
         }
 
-        var formData = new FormData(document.getElementById('form-save-tasks'));
-        var $btn = $(this);
-        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Saving...');
+        Swal.fire({
+            title: 'Simpan Task?',
+            text: 'Apakah Anda yakin ingin menyimpan semua task yang telah diisi?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d6efd',
+            confirmButtonText: '<i class="fa fa-save me-1"></i> Ya, Simpan',
+            cancelButtonText: 'Batal'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                var formData = new FormData(document.getElementById('form-save-tasks'));
+                var $btn = $('#btn-save-all-tasks');
+                $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-1"></i> Saving...');
 
-        $.ajax({
-            url: '<?= site_url("projects_management/save_tasks_bulk"); ?>',
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: 'json',
-            success: function(res) {
-                $btn.prop('disabled', false).html('<i class="fa fa-save me-1"></i> Save Semua Task');
-                if (res.status === 1) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: res.pesan,
-                        timer: 1200,
-                        showConfirmButton: false
-                    }).then(function() {
-                        reloadModalContent();
-                    });
-                } else {
-                    Swal.fire('Gagal', res.pesan, 'error');
-                }
-            },
-            error: function() {
-                $btn.prop('disabled', false).html('<i class="fa fa-save me-1"></i> Save Semua Task');
-                Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
+                $.ajax({
+                    url: '<?= site_url("projects_management/save_tasks_bulk"); ?>',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(res) {
+                        $btn.prop('disabled', false).html('<i class="fa fa-save me-1"></i> Save Semua Task');
+                        if (res.status === 1) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: res.pesan,
+                                timer: 1200,
+                                showConfirmButton: false
+                            }).then(function() {
+                                reloadModalContent();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.pesan, 'error');
+                        }
+                    },
+                    error: function() {
+                        $btn.prop('disabled', false).html('<i class="fa fa-save me-1"></i> Save Semua Task');
+                        Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
+                    }
+                });
             }
         });
     });
@@ -355,45 +366,57 @@
             $row.find('.edit-manhour').removeClass('is-invalid');
         }
 
-        var formData = new FormData();
-        formData.append('task_id', taskId);
-        formData.append('task_description', desc);
-        formData.append('manhour', mh);
-        formData.append('remarks', remarks);
+        Swal.fire({
+            title: 'Simpan Perubahan?',
+            text: 'Apakah Anda yakin ingin menyimpan perubahan task ini?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d6efd',
+            confirmButtonText: '<i class="fa fa-save me-1"></i> Ya, Simpan',
+            cancelButtonText: 'Batal'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                var formData = new FormData();
+                formData.append('task_id', taskId);
+                formData.append('task_description', desc);
+                formData.append('manhour', mh);
+                formData.append('remarks', remarks);
 
-        if (fileInput && fileInput.files.length > 0) {
-            formData.append('task_file', fileInput.files[0]);
-        }
-
-        var $btn = $(this);
-        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
-
-        $.ajax({
-            url: '<?= site_url("projects_management/update_task"); ?>',
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: 'json',
-            success: function(res) {
-                $btn.prop('disabled', false).html('<i class="fa fa-check"></i>');
-                if (res.status === 1) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: res.pesan,
-                        timer: 1200,
-                        showConfirmButton: false
-                    }).then(function() {
-                        reloadModalContent();
-                    });
-                } else {
-                    Swal.fire('Gagal', res.pesan, 'error');
+                if (fileInput && fileInput.files.length > 0) {
+                    formData.append('task_file', fileInput.files[0]);
                 }
-            },
-            error: function() {
-                $btn.prop('disabled', false).html('<i class="fa fa-check"></i>');
-                Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
+
+                var $btn = $row.find('.btn-save-edit-task');
+                $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+                $.ajax({
+                    url: '<?= site_url("projects_management/update_task"); ?>',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(res) {
+                        $btn.prop('disabled', false).html('<i class="fa fa-check"></i>');
+                        if (res.status === 1) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: res.pesan,
+                                timer: 1200,
+                                showConfirmButton: false
+                            }).then(function() {
+                                reloadModalContent();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.pesan, 'error');
+                        }
+                    },
+                    error: function() {
+                        $btn.prop('disabled', false).html('<i class="fa fa-check"></i>');
+                        Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
+                    }
+                });
             }
         });
     });
