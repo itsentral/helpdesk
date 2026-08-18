@@ -29,3 +29,4 @@ application/config/constants.php
 
 #/artifacts/
 .artifacts/*
+.kiro/*

@@ -172,111 +172,156 @@
     }
 
     .role-mh {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 9px 12px !important;
-    gap: 6px;   /* <-- atur jarak antar baris (judul, bar, selisih) di sini */
-}
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 9px 12px !important;
+        gap: 6px;
+        /* <-- atur jarak antar baris (judul, bar, selisih) di sini */
+    }
 
-.role-mh .mh-top-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+    .role-mh .mh-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
 
-.role-mh .mh-side-label {
-    font-size: 9px;
-    color: #8a93a3;
-    text-transform: uppercase;
-    letter-spacing: .03em;
-}
+    .role-mh .mh-side-label {
+        font-size: 9px;
+        color: #8a93a3;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+    }
 
-.role-mh .mh-title-block {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
+    .role-mh .mh-title-block {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
 
-.role-mh .mh-title-block .info-stat-icon {
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
-    flex-shrink: 0;
-}
+    .role-mh .mh-title-block .info-stat-icon {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+        flex-shrink: 0;
+    }
 
-.role-mh .mh-title-block .mh-title-text {
-    font-size: 11.5px;
-    font-weight: 500;
-    color: #5f5e5a;
-    white-space: nowrap;
-}
+    .role-mh .mh-title-block .mh-title-text {
+        font-size: 11.5px;
+        font-weight: 500;
+        color: #5f5e5a;
+        white-space: nowrap;
+    }
 
-.role-mh .mh-bar {
-    position: relative;
-    height: 20px;
-    border-radius: 5px;
-    background: #fef3e2;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-}
+    .role-mh .mh-bar {
+        position: relative;
+        height: 20px;
+        border-radius: 5px;
+        background: #fef3e2;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+    }
 
-.role-mh .mh-bar-actual-fill {
+    /* .role-mh .mh-bar-actual-fill {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     background: #f59e0b;
     border-radius: 5px 0 0 5px;
-}
+} */
 
-.role-mh .mh-bar-plan-value {
-    position: absolute;
-    left: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #6a2e00ff;
-}
+    .role-mh .mh-bar-actual-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        background: #f59e0b;
+        border-radius: 5px 0 0 5px;
+        width: 0%;
+        transition: width 1.2s cubic-bezier(.4, 0, .2, 1);
+        overflow: hidden;
+        /* penting biar sweep-nya kepotong sesuai lebar fill */
+    }
 
-.role-mh .mh-bar-actual-value {
-    position: relative;
-    z-index: 1;
-    margin-left: auto;
-    padding-right: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #b45309;
-}
+    /* Layer sweep yang jalan terus di dalam area terisi */
+    .role-mh .mh-bar-actual-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -40%;
+        width: 40%;
+        background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, .35),
+                transparent);
+        animation: mh-sweep 1.8s ease-in-out infinite;
+    }
 
-.role-mh .mh-diff-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+    @keyframes mh-sweep {
+        0% {
+            left: -40%;
+        }
 
-.role-mh .mh-diff-label {
-    font-size: 10px;
-    color: #8a93a3;
-}
+        100% {
+            left: 100%;
+        }
+    }
 
-.role-mh .mh-diff-badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-}
+    /* Matikan animasi kalau project sudah Completed */
+    .mh-bar-static .mh-bar-actual-fill::after {
+        animation: none;
+        display: none;
+    }
 
-.role-mh .mh-diff-over {
-    background: #fdecec;
-    color: #a32d2d;
-}
+    .role-mh .mh-bar-plan-value {
+        position: absolute;
+        left: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #6a2e00ff;
+    }
 
-.role-mh .mh-diff-safe {
-    background: #e6f7ec;
-    color: #198754;
-}
+    .role-mh .mh-bar-actual-value {
+        position: relative;
+        z-index: 1;
+        margin-left: auto;
+        padding-right: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #b45309;
+    }
+
+    .role-mh .mh-diff-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .role-mh .mh-diff-label {
+        font-size: 10px;
+        color: #8a93a3;
+    }
+
+    .role-mh .mh-diff-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .role-mh .mh-diff-over {
+        background: #fdecec;
+        color: #a32d2d;
+    }
+
+    .role-mh .mh-diff-safe {
+        background: #e6f7ec;
+        color: #198754;
+    }
 
     /* --- Anggota Project section --- */
     .team-avatar {
@@ -399,23 +444,23 @@
     </div>
     <div class="card-body">
         <!-- Project Info -->
-       <?php
-$total_plan_mh_project = 0;
-$total_actual_mh_project = 0;
-foreach ($modules as $m_calc) {
-    foreach ($m_calc['tahapan'] as $t_calc) {
-        if ($t_calc['tahapan_order'] >= 1 && $t_calc['tahapan_order'] <= 10) {
-            $total_plan_mh_project += (float)$t_calc['plan_manhour'];
-            $total_actual_mh_project += (float)$t_calc['actual_manhour'];
+        <?php
+        $total_plan_mh_project = 0;
+        $total_actual_mh_project = 0;
+        foreach ($modules as $m_calc) {
+            foreach ($m_calc['tahapan'] as $t_calc) {
+                if ($t_calc['tahapan_order'] >= 1 && $t_calc['tahapan_order'] <= 10) {
+                    $total_plan_mh_project += (float)$t_calc['plan_manhour'];
+                    $total_actual_mh_project += (float)$t_calc['actual_manhour'];
+                }
+            }
         }
-    }
-}
-$total_selisih_mh_project = $total_actual_mh_project - $total_plan_mh_project;
-$mh_over = $total_selisih_mh_project > 0;
-$mh_actual_pct_bar = $total_plan_mh_project > 0
-    ? min(100, ($total_actual_mh_project / $total_plan_mh_project) * 100)
-    : 0;
-?>
+        $total_selisih_mh_project = $total_actual_mh_project - $total_plan_mh_project;
+        $mh_over = $total_selisih_mh_project > 0;
+        $mh_actual_pct_bar = $total_plan_mh_project > 0
+            ? min(100, ($total_actual_mh_project / $total_plan_mh_project) * 100)
+            : 0;
+        ?>
         <div class="info-stat-grid mb-4">
             <div class="info-stat-card role-pm">
                 <span class="info-stat-icon"><i class="fa fa-user-tie"></i></span>
@@ -470,7 +515,7 @@ $mh_actual_pct_bar = $total_plan_mh_project > 0
                     <div class="info-stat-value"><?= $fin; ?> / <?= count($modules); ?></div>
                 </div>
             </div>
-        <div class="info-stat-card role-mh">
+            <div class="info-stat-card role-mh">
                 <div class="mh-top-row">
                     <span class="mh-side-label">Plan</span>
                     <span class="mh-title-block">
@@ -479,8 +524,8 @@ $mh_actual_pct_bar = $total_plan_mh_project > 0
                     </span>
                     <span class="mh-side-label">Aktual</span>
                 </div>
-                <div class="mh-bar">
-                    <div class="mh-bar-actual-fill" style="width:<?= $mh_actual_pct_bar; ?>%;"></div>
+                <div class="mh-bar <?= $is_completed ? 'mh-bar-static' : ''; ?>">
+                    <div class="mh-bar-actual-fill" data-target-width="<?= $mh_actual_pct_bar; ?>"></div>
                     <span class="mh-bar-plan-value"><?= $total_plan_mh_project; ?></span>
                     <span class="mh-bar-actual-value"><?= $total_actual_mh_project; ?></span>
                 </div>
@@ -1433,5 +1478,13 @@ $mh_actual_pct_bar = $total_plan_mh_project > 0
                 }
             });
         });
+
+        // Animasi fill untuk bar manhour project
+        setTimeout(function() {
+            $('.mh-bar-actual-fill').each(function() {
+                var target = $(this).data('target-width');
+                $(this).css('width', target + '%');
+            });
+        }, 150); // delay kecil biar transition CSS kepicu
     });
 </script>
