@@ -44,6 +44,78 @@ class Activity_model extends BF_Model
     }
 
     /**
+     * Get activities grouped by date for a user
+     *
+     * @param int $user_id
+     * @return array Keyed by activity_date
+     */
+    public function get_activities_grouped($user_id)
+    {
+        $activities = $this->get_activities($user_id);
+        return $this->_group_by_date($activities);
+    }
+
+    /**
+     * Get all activities grouped by date (admin)
+     *
+     * @return array Keyed by activity_date
+     */
+    public function get_all_activities_grouped()
+    {
+        $activities = $this->get_all_activities();
+        return $this->_group_by_date($activities);
+    }
+
+    /**
+     * Get all activities for a user on a specific date
+     *
+     * @param int $user_id
+     * @param string $date (Y-m-d)
+     * @return array
+     */
+    public function get_activities_by_date($user_id, $date)
+    {
+        $this->db->select('*');
+        $this->db->from('npa_activities');
+        $this->db->where('user_id', $user_id);
+        $this->db->where('activity_date', $date);
+        $this->db->where('is_deleted', 0);
+        $this->db->order_by('id', 'ASC');
+
+        return $this->db->get()->result_array();
+    }
+
+    /**
+     * Helper: group activities array by activity_date
+     */
+    private function _group_by_date($activities)
+    {
+        $grouped = array();
+        foreach ($activities as $act) {
+            $date = $act['activity_date'];
+            if (!isset($grouped[$date])) {
+                $grouped[$date] = array(
+                    'activity_date' => $date,
+                    'user_id'       => $act['user_id'],
+                    'user_name'     => isset($act['user_name']) ? $act['user_name'] : '',
+                    'created_at'    => $act['created_at'],
+                    'items'         => array(),
+                    'total_manhour' => 0,
+                    'attachment_count' => 0,
+                    'attachments'   => array(),
+                );
+            }
+            $grouped[$date]['items'][] = $act;
+            $grouped[$date]['total_manhour'] += (float)$act['manhour'];
+            // Keep earliest created_at for deadline calc
+            if ($act['created_at'] < $grouped[$date]['created_at']) {
+                $grouped[$date]['created_at'] = $act['created_at'];
+            }
+        }
+        return array_values($grouped);
+    }
+
+    /**
      * Get a single activity by ID (non-deleted only)
      *
      * @param int $id
