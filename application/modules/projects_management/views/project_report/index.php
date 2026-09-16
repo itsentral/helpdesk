@@ -86,8 +86,9 @@ $report_date = isset($report_date) ? $report_date : date('d M Y');
                 <label class="form-label small fw-bold text-muted mb-1">Pilih Project</label>
                 <select name="project_id" id="pr-project-select" class="form-select" onchange="this.form.submit()">
                     <?php if (!empty($projects)): foreach ($projects as $opt): ?>
+                        <?php $opt_client = !empty($opt['client_name']) ? $opt['client_name'] : '(Tanpa Client)'; ?>
                         <option value="<?= $opt['id']; ?>" <?= ($project_id == $opt['id']) ? 'selected' : ''; ?>>
-                            <?= html_escape($opt['project_code'] . ' — ' . $opt['project_name']); ?>
+                            <?= html_escape($opt_client . ' — ' . $opt['project_name']); ?>
                         </option>
                     <?php endforeach; else: ?>
                         <option value="">Belum ada project</option>
@@ -97,7 +98,7 @@ $report_date = isset($report_date) ? $report_date : date('d M Y');
             <div class="col-12 col-md-6 text-md-end">
                 <?php if (!empty($project)): ?>
                     <a href="<?= site_url('projects_management/project_report/print_report/' . $project_id); ?>" class="btn btn-outline-danger btn-sm" target="_blank"><i class="fa fa-print me-1"></i> Print / PDF</a>
-                    <a href="<?= site_url('projects_management/project_report/export_excel/' . $project_id); ?>" class="btn btn-outline-success btn-sm"><i class="fa fa-file-excel-o me-1"></i> Export Excel</a>
+                    <a href="<?= site_url('projects_management/project_report/export_excel/' . $project_id); ?>" class="btn btn-outline-success btn-sm"><i class="fa fa-file-excel me-1"></i> Export Excel</a>
                 <?php endif; ?>
             </div>
         </form>
@@ -322,7 +323,7 @@ $report_date = isset($report_date) ? $report_date : date('d M Y');
             <div class="tab-pane fade" id="tab-jadwal" role="tabpanel">
 
                 <div class="d-flex justify-content-between align-items-start gap-2 mb-3 flex-wrap">
-                    <div class="alert alert-warning small mb-0 flex-fill">
+                    <div class="alert alert-warning small mb-0 flex-fill"><i class="fa fa-info-circle me-1 fa-sm"></i>
                         Garis <b>Today</b> menandai minggu berjalan. Panjang bar = rentang perkiraan pengerjaan modul (skala mingguan); isian terang = <b>% MH terpakai terhadap plan</b> sebagai proksi progress.
                     </div>
                     <a href="<?= site_url('projects_management/project_report/print_gantt/' . $project_id); ?>" class="btn btn-outline-primary btn-sm" target="_blank">

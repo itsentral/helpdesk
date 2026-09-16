@@ -23,18 +23,19 @@ class Project_report_model extends BF_Model
      */
     public function get_project_options($allowed_ids = null)
     {
-        $this->db->select('id, project_code, project_name, status');
-        $this->db->from('pm_projects');
-        $this->db->where('deleted', 0);
+        $this->db->select('p.id, p.project_code, p.project_name, p.status, c.name_app as client_name');
+        $this->db->from('pm_projects p');
+        $this->db->join('helpdesk_client c', 'c.id = p.client_id', 'left');
+        $this->db->where('p.deleted', 0);
 
         if (is_array($allowed_ids)) {
             if (empty($allowed_ids)) {
                 return array(); // user tidak terlibat di project mana pun
             }
-            $this->db->where_in('id', $allowed_ids);
+            $this->db->where_in('p.id', $allowed_ids);
         }
 
-        $this->db->order_by('id', 'DESC');
+        $this->db->order_by('p.id', 'DESC');
         return $this->db->get()->result_array();
     }
 
