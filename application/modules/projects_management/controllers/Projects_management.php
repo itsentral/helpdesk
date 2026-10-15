@@ -15,8 +15,7 @@ class Projects_management extends Admin_Controller
         parent::__construct();
         $this->load->model(array(
             'projects_management/Project_model',
-            'projects_management/Module_model',
-            'projects_management/Document_model'
+            'projects_management/Module_model'
         ));
 
         date_default_timezone_set('Asia/Bangkok');

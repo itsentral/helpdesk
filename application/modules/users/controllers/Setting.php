@@ -31,8 +31,7 @@ class Setting extends Admin_Controller
             'users/groups_model',
             'users/user_groups_model',
             'users/permissions_model',
-            'users/user_permissions_model',
-            'Cabang/Cabang_model',
+            'users/user_permissions_model'
         ));
 
         $this->template->page_icon('fa fa-users');
