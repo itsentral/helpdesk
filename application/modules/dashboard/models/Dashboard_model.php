@@ -189,4 +189,61 @@ class Dashboard_model extends BF_Model
 
         return $this->db->get()->result();
     }
+
+    /**
+     * Ambil data modul per project yang sedang aktif (nyangkut di tahapan mana)
+     * Difilter berdasarkan keterlibatan user jika bukan admin
+     */
+    public function get_active_project_modules($user_id, $is_admin = false)
+    {
+        $this->db->select('
+            t.id AS tahapan_id,
+            t.tahapan_order,
+            t.tahapan_name,
+            t.tahapan_role,
+            t.plan_due_date,
+            t.plan_manhour,
+            t.actual_manhour,
+            t.pic_user_id,
+            t.status AS tahapan_status,
+            m.id AS module_id,
+            m.module_name,
+            m.module_order,
+            p.id AS project_id,
+            p.project_code,
+            p.project_name,
+            p.status AS project_status,
+            p.end_date AS project_end_date,
+            c.name_app AS client_name,
+            u_pic.nm_lengkap AS pic_name
+        ');
+        $this->db->from('pm_module_tahapan t');
+        $this->db->join('pm_modules m', 'm.id = t.module_id', 'inner');
+        $this->db->join('pm_projects p', 'p.id = m.project_id', 'inner');
+        $this->db->join('helpdesk_client c', 'c.id = p.client_id', 'left');
+        $this->db->join('users u_pic', 'u_pic.id_user = t.pic_user_id', 'left');
+
+        $this->db->where('t.status', 'active');
+        $this->db->where('m.status !=', 'finish');
+        $this->db->where('m.is_deleted', 0);
+        $this->db->where('p.deleted', 0);
+        $this->db->where_in('p.status', ['Planning', 'In Progress']);
+
+        if (!$is_admin) {
+            $user_id_int = (int)$user_id;
+            $this->db->group_start();
+            $this->db->where('t.pic_user_id', $user_id_int);
+            $this->db->or_where('p.pm_id', $user_id_int);
+            $this->db->or_where("p.id IN (SELECT project_id FROM pm_project_roles WHERE user_id = {$user_id_int})", NULL, FALSE);
+            $this->db->or_where("p.id IN (SELECT project_id FROM pm_project_members WHERE user_id = {$user_id_int})", NULL, FALSE);
+            $this->db->group_end();
+        }
+
+        $this->db->order_by('t.plan_due_date IS NULL', 'ASC', FALSE);
+        $this->db->order_by('t.plan_due_date', 'ASC');
+        $this->db->order_by('p.project_name', 'ASC');
+        $this->db->order_by('m.module_order', 'ASC');
+
+        return $this->db->get()->result();
+    }
 }

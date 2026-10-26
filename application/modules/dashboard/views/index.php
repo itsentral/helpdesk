@@ -701,6 +701,251 @@
         border-radius: 20px;
         font-weight: 600;
     }
+
+    /* === MONITORING TAHAPAN MODUL PROJECT === */
+    .pm-mod-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .pm-mod-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pm-mod-icon-box {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #EEEDFE;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pm-mod-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .pm-mod-subtitle {
+        font-size: 12px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .pm-mod-filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+    }
+
+    .pm-mod-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .pm-mod-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #495057;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        user-select: none;
+    }
+
+    .pm-mod-pill:hover {
+        border-color: #534AB7;
+        color: #534AB7;
+    }
+
+    .pm-mod-pill.active {
+        background: #534AB7;
+        border-color: #534AB7;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .pm-mod-pill.active .badge {
+        background: #fff !important;
+        color: #534AB7 !important;
+    }
+
+    .pm-mod-search-box {
+        position: relative;
+        min-width: 220px;
+    }
+
+    .pm-mod-search-input {
+        width: 100%;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        padding: 5px 12px 5px 32px;
+        font-size: 12px;
+        outline: none;
+        background: #fff;
+        transition: border-color 0.2s;
+    }
+
+    .pm-mod-search-input:focus {
+        border-color: #534AB7;
+    }
+
+    .pm-mod-search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+        font-size: 13px;
+        pointer-events: none;
+    }
+
+    .pm-mod-table-scroll {
+        max-height: 480px;
+        overflow-y: auto;
+        overflow-x: auto;
+        position: relative;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        background: #fff;
+    }
+
+    .pm-mod-table-scroll::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .pm-mod-table-scroll::-webkit-scrollbar-track {
+        background: #f1f3f5;
+        border-radius: 4px;
+    }
+
+    .pm-mod-table-scroll::-webkit-scrollbar-thumb {
+        background: #ced4da;
+        border-radius: 4px;
+    }
+
+    .pm-mod-table-scroll::-webkit-scrollbar-thumb:hover {
+        background: #adb5bd;
+    }
+
+    .pm-mod-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+
+    .pm-mod-table thead th {
+        background-color: #f8f9fa !important;
+        padding: 11px 14px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        border-bottom: 2px solid #dee2e6;
+        white-space: nowrap;
+        position: relative;
+        z-index: 10;
+        box-shadow: inset 0 -1px 0 #dee2e6, 0 2px 4px rgba(0, 0, 0, 0.04);
+        will-change: transform;
+    }
+
+    .pm-mod-table tbody tr {
+        transition: background 0.15s;
+    }
+
+    .pm-mod-table tbody tr:hover {
+        background: #f8f9ff;
+    }
+
+    .pm-mod-table td {
+        padding: 10px 14px;
+        color: #343a40;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .pm-mod-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .pm-mod-status-overdue {
+        background: #FCEBEB;
+        color: #A32D2D;
+        border: 1px solid #F7C5C5;
+    }
+
+    .pm-mod-status-near {
+        background: #FAEEDA;
+        color: #854F0B;
+        border: 1px solid #F5DCB7;
+    }
+
+    .pm-mod-status-ontrack {
+        background: #E9F7EF;
+        color: #196F3D;
+        border: 1px solid #C8ECD5;
+    }
+
+    .pm-mod-status-nodue {
+        background: #f1f3f5;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+    }
+
+    .pm-mod-btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #534AB7;
+        background: #EEEDFE;
+        border: 1px solid #D5D1FC;
+        border-radius: 20px;
+        text-decoration: none;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+
+    .pm-mod-btn-action:hover {
+        background: #534AB7;
+        color: #fff;
+        text-decoration: none;
+    }
 </style>
 
 <?php
@@ -767,6 +1012,89 @@ if ($is_admin != 1):
 endif; ?>
 
 <?php if (($is_programmer == 1 || $is_ba == 1 || $is_admin == 1) && $is_exclude != 1): ?>
+
+    <!-- ===== SECTION MONITORING TAHAPAN MODUL PROJECT ===== -->
+    <div class="card mt-3">
+        <div class="card-body">
+            <div class="pm-mod-header">
+                <div class="pm-mod-header-left">
+                    <div class="pm-mod-icon-box">
+                        <i class="ti ti-layout-kanban" style="font-size:18px; color:#534AB7;"></i>
+                    </div>
+                    <div>
+                        <p class="pm-mod-title">Monitoring Tahapan Modul Project</p>
+                        <p class="pm-mod-subtitle" id="pm_mod_subtitle">Memuat status tahapan modul...</p>
+                    </div>
+                </div>
+                <button class="prio-toggle-btn" id="pm_mod_toggle_btn">
+                    <span id="pm_mod_toggle_label">Sembunyikan</span>
+                    <i class="ti ti-chevron-down prio-chevron" id="pm_mod_chevron"></i>
+                </button>
+            </div>
+
+            <div id="pm_mod_body">
+                <!-- Filter bar: Pills & Search -->
+                <div class="pm-mod-filter-bar" id="pm_mod_filter_bar" style="display:none;">
+                    <div class="pm-mod-pills">
+                        <div class="pm-mod-pill active" data-filter="all">
+                            <span>Semua</span>
+                            <span class="badge bg-secondary" id="pm_mod_count_all">0</span>
+                        </div>
+                        <div class="pm-mod-pill" data-filter="overdue">
+                            <span style="color:#A32D2D;">●</span> Terlambat
+                            <span class="badge bg-danger" id="pm_mod_count_overdue">0</span>
+                        </div>
+                        <div class="pm-mod-pill" data-filter="near_due">
+                            <span style="color:#854F0B;">●</span> Mendekati Due Date (H-7)
+                            <span class="badge bg-warning text-dark" id="pm_mod_count_near_due">0</span>
+                        </div>
+                        <div class="pm-mod-pill" data-filter="on_track">
+                            <span style="color:#196F3D;">●</span> On Track
+                            <span class="badge bg-success" id="pm_mod_count_on_track">0</span>
+                        </div>
+                    </div>
+                    <div class="pm-mod-search-box">
+                        <i class="ti ti-search pm-mod-search-icon"></i>
+                        <input type="text" id="pm_mod_search" class="pm-mod-search-input" placeholder="Cari project, modul, PIC...">
+                    </div>
+                </div>
+
+                <!-- Skeleton Loading -->
+                <div id="pm_mod_loading">
+                    <?php for ($i = 0; $i < 4; $i++): ?>
+                        <div class="pd-skeleton-line mb-2" style="width:100%;height:38px;"></div>
+                    <?php endfor; ?>
+                </div>
+
+                <!-- Table Container -->
+                <div id="pm_mod_table_wrap" style="display:none;" class="pm-mod-table-scroll">
+                    <table class="pm-mod-table">
+                        <thead>
+                            <tr>
+                                <th width="35" class="text-center">#</th>
+                                <th>Project & Klien</th>
+                                <th>Modul</th>
+                                <th>Tahapan Aktif</th>
+                                <th>PIC Tahapan</th>
+                                <th>Due Date & Plan MH</th>
+                                <th>Status / Keterlambatan</th>
+                                <th width="90" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pm_mod_table_body"></tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="pm_mod_empty" style="display:none;" class="pd-empty">
+                    <i class="ti ti-mood-smile text-success" style="font-size:36px; display:block; margin-bottom:8px;"></i>
+                    <p id="pm_mod_empty_text">Tidak ada modul aktif yang terlambat atau mendekati deadline. Semua beres!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ===== END SECTION MONITORING TAHAPAN MODUL PROJECT ===== -->
+
     <div class="card mt-3">
         <div class="card-body">
 
@@ -1021,6 +1349,206 @@ endif; ?>
             });
         })();
 
+        // ===================================================
+        // SECTION 1.5: MONITORING TAHAPAN MODUL PROJECT
+        // ===================================================
+        (function() {
+            var rawItems = [];
+            var currentFilter = 'all';
+
+            $('#pm_mod_toggle_btn').on('click', function() {
+                var body = $('#pm_mod_body');
+                var chevron = $('#pm_mod_chevron');
+                var label = $('#pm_mod_toggle_label');
+                if (body.is(':visible')) {
+                    body.slideUp(200);
+                    chevron.addClass('collapsed');
+                    label.text('Tampilkan');
+                } else {
+                    body.slideDown(200);
+                    chevron.removeClass('collapsed');
+                    label.text('Sembunyikan');
+                }
+            });
+
+            function renderRows() {
+                var search = ($('#pm_mod_search').val() || '').toLowerCase().trim();
+
+                var filtered = rawItems.filter(function(item) {
+                    if (currentFilter !== 'all' && item.status_type !== currentFilter) {
+                        return false;
+                    }
+                    if (search) {
+                        var matchProject = (item.project_name || '').toLowerCase().indexOf(search) !== -1;
+                        var matchCode = (item.project_code || '').toLowerCase().indexOf(search) !== -1;
+                        var matchClient = (item.client_name || '').toLowerCase().indexOf(search) !== -1;
+                        var matchModule = (item.module_name || '').toLowerCase().indexOf(search) !== -1;
+                        var matchTahapan = (item.tahapan_name || '').toLowerCase().indexOf(search) !== -1;
+                        var matchPic = (item.pic_name || '').toLowerCase().indexOf(search) !== -1;
+                        if (!matchProject && !matchCode && !matchClient && !matchModule && !matchTahapan && !matchPic) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+                if (filtered.length === 0) {
+                    $('#pm_mod_table_wrap').hide();
+                    $('#pm_mod_empty').show();
+                    if (search) {
+                        $('#pm_mod_empty_text').text('Tidak ada data yang cocok dengan pencarian "' + search + '".');
+                    } else if (currentFilter === 'overdue') {
+                        $('#pm_mod_empty_text').text('Hebat! Tidak ada modul yang terlambat 🎉');
+                    } else if (currentFilter === 'near_due') {
+                        $('#pm_mod_empty_text').text('Tidak ada modul yang mendekati due date (H-7).');
+                    } else {
+                        $('#pm_mod_empty_text').text('Tidak ada modul project yang sedang aktif saat ini.');
+                    }
+                    return;
+                }
+
+                $('#pm_mod_empty').hide();
+                $('#pm_mod_table_wrap').show();
+
+                var html = '';
+                filtered.forEach(function(item, idx) {
+                    var statusBadgeClass = 'pm-mod-status-nodue';
+                    var statusIcon = 'ti-calendar';
+
+                    if (item.status_type === 'overdue') {
+                        statusBadgeClass = 'pm-mod-status-overdue';
+                        statusIcon = 'ti-alert-circle';
+                    } else if (item.status_type === 'near_due') {
+                        statusBadgeClass = 'pm-mod-status-near';
+                        statusIcon = 'ti-clock-hour-4';
+                    } else if (item.status_type === 'on_track') {
+                        statusBadgeClass = 'pm-mod-status-ontrack';
+                        statusIcon = 'ti-circle-check';
+                    }
+
+                    var picInitial = (item.pic_name || '?').substring(0, 1).toUpperCase();
+                    var dueText = item.plan_due_date ? item.plan_due_date : '-';
+                    var planMhText = item.plan_manhour ? item.plan_manhour + ' MH' : '-';
+
+                    html += '<tr>' +
+                        '<td class="text-center pd-index">' + (idx + 1) + '</td>' +
+                        '<td>' +
+                            '<div style="font-weight:600; color:#212529;">' + escHtml(item.project_name) + '</div>' +
+                            '<div style="margin-top:2px; font-size:11px; color:#6c757d; display:flex; align-items:center; gap:4px;">' +
+                                '<i class="ti ti-building" style="font-size:12px; color:#8c98a4;"></i>' +
+                                '<span>' + escHtml(item.client_name || '-') + '</span>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td>' +
+                            '<div style="font-weight:600; color:#495057; display:flex; align-items:center; gap:5px;">' +
+                                '<i class="ti ti-cube" style="color:#534AB7; font-size:14px;"></i>' +
+                                '<span>' + escHtml(item.module_name) + '</span>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td>' +
+                            '<div style="font-weight:600; color:#212529;">Step ' + item.tahapan_order + ': ' + escHtml(item.tahapan_name) + '</div>' +
+                            '<span class="pd-badge" style="font-size:10px; background:#e6f6fd; color:#0ea5e9; text-transform:uppercase;">' + escHtml(item.tahapan_role || 'General') + '</span>' +
+                        '</td>' +
+                        '<td>' +
+                            '<div style="display:flex; align-items:center; gap:6px;">' +
+                                '<span style="width:24px; height:24px; border-radius:50%; background:#EEEDFE; color:#534AB7; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">' + picInitial + '</span>' +
+                                '<span style="font-weight:500;">' + escHtml(item.pic_name) + '</span>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td>' +
+                            '<div style="font-weight:600; font-size:12px;">' + dueText + '</div>' +
+                            '<div class="pd-muted" style="font-size:11px;">Plan: ' + planMhText + '</div>' +
+                        '</td>' +
+                        '<td>' +
+                            '<span class="pm-mod-status-badge ' + statusBadgeClass + '">' +
+                                '<i class="ti ' + statusIcon + '" style="font-size:12px;"></i> ' +
+                                escHtml(item.status_label) +
+                            '</span>' +
+                        '</td>' +
+                        '<td class="text-center">' +
+                            '<a href="' + siteurl + 'projects_management/update/' + item.project_id + '" class="pm-mod-btn-action" title="Buka Detail Project">' +
+                                '<i class="ti ti-external-link" style="font-size:11px;"></i> Detail' +
+                            '</a>' +
+                        '</td>' +
+                    '</tr>';
+                });
+
+                $('#pm_mod_table_body').html(html);
+
+                // Reset scroll container ke atas dan posisikan sticky header
+                var tableWrap = document.getElementById('pm_mod_table_wrap');
+                if (tableWrap) {
+                    tableWrap.scrollTop = 0;
+                }
+                syncStickyHeader();
+            }
+
+            function escHtml(str) {
+                return $('<div>').text(str || '').html();
+            }
+
+            // Sinkronisasi posisi header tabel saat scroll (JS Sticky Header khusus template Berry)
+            function syncStickyHeader() {
+                var wrap = document.getElementById('pm_mod_table_wrap');
+                if (!wrap) return;
+                var scrollTop = wrap.scrollTop;
+                var ths = wrap.querySelectorAll('.pm-mod-table thead th');
+                for (var i = 0; i < ths.length; i++) {
+                    ths[i].style.transform = 'translateY(' + scrollTop + 'px)';
+                }
+            }
+
+            // Bind scroll event pada container tabel
+            $('#pm_mod_table_wrap').on('scroll', syncStickyHeader);
+            $(window).on('resize', syncStickyHeader);
+
+            // Filter pills click
+            $('.pm-mod-pill').on('click', function() {
+                $('.pm-mod-pill').removeClass('active');
+                $(this).addClass('active');
+                currentFilter = $(this).data('filter');
+                renderRows();
+            });
+
+            // Search input realtime
+            $('#pm_mod_search').on('input', function() {
+                renderRows();
+            });
+
+            // Load Data via AJAX
+            $.ajax({
+                url: siteurl + 'dashboard/get_active_project_modules',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    $('#pm_mod_loading').hide();
+                    $('#pm_mod_filter_bar').show();
+
+                    rawItems = (res && res.items) ? res.items : [];
+                    var summary = (res && res.summary) ? res.summary : { total: 0, overdue: 0, near_due: 0, on_track: 0 };
+
+                    $('#pm_mod_count_all').text(summary.total);
+                    $('#pm_mod_count_overdue').text(summary.overdue);
+                    $('#pm_mod_count_near_due').text(summary.near_due);
+                    $('#pm_mod_count_on_track').text(summary.on_track);
+
+                    var subtitleText = summary.total + ' modul aktif sedang dikerjakan';
+                    if (summary.overdue > 0) {
+                        subtitleText += ' (' + summary.overdue + ' terlambat ⚠️)';
+                    }
+                    $('#pm_mod_subtitle').text(subtitleText);
+
+                    renderRows();
+                },
+                error: function() {
+                    $('#pm_mod_loading').hide();
+                    $('#pm_mod_subtitle').text('Gagal memuat status tahapan modul');
+                    $('#pm_mod_table_wrap').hide();
+                    $('#pm_mod_empty').show();
+                    $('#pm_mod_empty_text').html('<span class="text-danger"><i class="ti ti-alert-circle"></i> Gagal memuat data modul project.</span>');
+                }
+            });
+        })();
 
         // ===================================================
         // SECTION 2: PROJECT BUGS & ISSUES DASHBOARD

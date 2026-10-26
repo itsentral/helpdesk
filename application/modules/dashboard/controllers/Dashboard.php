@@ -100,6 +100,97 @@ class Dashboard extends Admin_Controller
         echo json_encode($priorities);
     }
 
+    public function get_active_project_modules()
+    {
+        $user_id   = $this->auth->user_id();
+        $user_info = $this->db->get_where('users', ['id_user' => $user_id])->row();
+        $is_admin  = ($user_info && ($user_info->id_user == 7 || $this->auth->is_admin())) ? true : false;
+
+        $rows = $this->dashboard_model->get_active_project_modules($user_id, $is_admin);
+
+        $today = date('Y-m-d');
+        $today_time = strtotime($today);
+
+        $summary = [
+            'total'    => count($rows),
+            'overdue'  => 0,
+            'near_due' => 0,
+            'on_track' => 0,
+            'no_due'   => 0,
+        ];
+
+        $items = [];
+
+        foreach ($rows as $r) {
+            $due_date    = $r->plan_due_date ? substr($r->plan_due_date, 0, 10) : null;
+            $diff_days   = null;
+            $status_type = 'no_due';
+            $status_label = 'Belum Ditentukan';
+            $sort_score  = 99999;
+
+            if (!empty($due_date)) {
+                $due_time  = strtotime($due_date);
+                $diff_days = (int) round(($due_time - $today_time) / 86400);
+
+                if ($diff_days < 0) {
+                    $status_type  = 'overdue';
+                    $status_label = 'Terlambat ' . abs($diff_days) . ' hari';
+                    $summary['overdue']++;
+                    $sort_score = $diff_days; // semakin minus semakin awal/kritis
+                } elseif ($diff_days <= 7) {
+                    $status_type  = 'near_due';
+                    if ($diff_days === 0) {
+                        $status_label = 'Hari Ini (Due Date)';
+                    } else {
+                        $status_label = 'H-' . $diff_days . ' hari lagi';
+                    }
+                    $summary['near_due']++;
+                    $sort_score = 1000 + $diff_days;
+                } else {
+                    $status_type  = 'on_track';
+                    $status_label = 'On Track (' . $diff_days . ' hari)';
+                    $summary['on_track']++;
+                    $sort_score = 2000 + $diff_days;
+                }
+            } else {
+                $summary['no_due']++;
+                $sort_score = 50000;
+            }
+
+            $items[] = [
+                'tahapan_id'        => $r->tahapan_id,
+                'tahapan_order'     => $r->tahapan_order,
+                'tahapan_name'      => $r->tahapan_name,
+                'tahapan_role'      => $r->tahapan_role,
+                'plan_due_date'     => $due_date,
+                'plan_manhour'      => (float)$r->plan_manhour,
+                'actual_manhour'    => (float)$r->actual_manhour,
+                'pic_user_id'       => $r->pic_user_id,
+                'pic_name'          => $r->pic_name ?: '-',
+                'module_id'         => $r->module_id,
+                'module_name'       => $r->module_name,
+                'project_id'        => $r->project_id,
+                'project_code'      => $r->project_code,
+                'project_name'      => $r->project_name,
+                'client_name'       => $r->client_name ?: '-',
+                'project_status'    => $r->project_status,
+                'project_end_date'  => $r->project_end_date ? substr($r->project_end_date, 0, 10) : '-',
+                'diff_days'         => $diff_days,
+                'status_type'       => $status_type,
+                'status_label'      => $status_label,
+                'sort_score'        => $sort_score,
+            ];
+        }
+
+        // Urutkan berdasarkan skor urgensi
+        usort($items, fn($a, $b) => $a['sort_score'] <=> $b['sort_score']);
+
+        echo json_encode([
+            'summary' => $summary,
+            'items'   => $items,
+        ]);
+    }
+
     public function get_all_subcategories()
     {
         $subcats = $this->dashboard_model->get_all_subcategories();
