@@ -50,31 +50,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @author		EllisLab Dev Team
  * @link		https://codeigniter.com/userguide3/general/controllers.html
  */
+#[AllowDynamicProperties]
 class CI_Controller {
 
-  public $benchmark;
-
-    /**
-     * Reference to the CI_Hooks class
-     * @var CI_Hooks
-     */
-    public $hooks;
-    
-    /**
-     * Reference to the CI_Config class
-     * @var CI_Config
-     */
-    public $config;
-    
-    // Add other properties as they appear in the errors (e.g., $log, $uri, $input, $output, $security, etc.)
-    public $log;
-    public $uri;
-    public $input;
-    public $output;
-    public $security;
-	public $utf8;
-	public $router;
-	public $lang;
 	/**
 	 * Reference to the CI singleton
 	 *
